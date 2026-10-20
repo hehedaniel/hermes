@@ -8,6 +8,7 @@ import { Vacio } from '@/components/vacio';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
+import { MODULOS, moduloDe } from '@/lib/horario';
 import { useCourseColors, useMoodle } from '@/lib/store';
 
 export default function CursosScreen() {
@@ -67,6 +68,15 @@ export default function CursosScreen() {
               <ThemedText type="smallBold" numberOfLines={2}>
                 {c.fullname}
               </ThemedText>
+              {profesorDe(c.fullname) ? (
+                <ThemedText
+                  type="small"
+                  themeColor="textSecondary"
+                  numberOfLines={1}
+                  style={styles.profe}>
+                  {profesorDe(c.fullname)}
+                </ThemedText>
+              ) : null}
               <ThemedText
                 type="small"
                 themeColor={n ? undefined : 'textSecondary'}
@@ -83,6 +93,11 @@ export default function CursosScreen() {
     </Screen>
   );
 }
+
+const profesorDe = (nombreCurso: string) => {
+  const m = moduloDe(nombreCurso);
+  return m ? MODULOS[m].profesor : null;
+};
 
 /** "Sistemas de Big Data" -> "SBD"; "S A A (Sistemas de...)" -> "SAA" */
 function iniciales(nombre: string) {
@@ -111,4 +126,5 @@ const styles = StyleSheet.create({
   },
   avatarText: { color: '#fff', fontWeight: 700, fontSize: 15 },
   body: { flex: 1, gap: 2 },
+  profe: { fontSize: 12, lineHeight: 16 },
 });

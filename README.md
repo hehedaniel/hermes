@@ -29,14 +29,14 @@ En la FP a distancia todo pasa por el aula virtual: cada módulo tiene sus unida
 <p align="center">
   <img src="docs/screenshots/1-pendientes.png" width="32%" alt="Pendientes" />
   <img src="docs/screenshots/6-novedades.png" width="32%" alt="Novedades" />
-  <img src="docs/screenshots/2-calendario.png" width="32%" alt="Calendario" />
+  <img src="docs/screenshots/7-horario.png" width="32%" alt="Horario" />
 </p>
 <p align="center">
+  <img src="docs/screenshots/2-calendario.png" width="32%" alt="Calendario" />
   <img src="docs/screenshots/3-asignaturas.png" width="32%" alt="Asignaturas" />
   <img src="docs/screenshots/4-asignatura.png" width="32%" alt="Contenido de una asignatura" />
-  <img src="docs/screenshots/5-entrega.png" width="32%" alt="Detalle de una entrega" />
 </p>
-<p align="center"><sub>Pendientes · Novedades · Calendario con tu horario · Asignaturas · Contenido de una asignatura · Detalle de una entrega (datos de ejemplo)</sub></p>
+<p align="center"><sub>Pendientes · Novedades · Horario del día · Calendario del mes · Asignaturas con su profesor · Contenido de una asignatura (datos de ejemplo)</sub></p>
 
 ## Qué hace
 
@@ -44,8 +44,9 @@ En la FP a distancia todo pasa por el aula virtual: cada módulo tiene sus unida
 
 - **Pendientes.** Todas las entregas de todos los módulos en una lista: vencidas, próximos 7 días, más adelante. Cada una con su estado (*pendiente, borrador, entregada, vencida*), la **nota** si ya está corregida y cuánto falta. Lo que vence en menos de 3 días se marca en naranja y sale en el globo de la pestaña.
 - **Novedades.** Lo que ha cambiado desde la última vez, en todas las asignaturas: **apuntes nuevos**, archivos que el profesor ha **actualizado**, **actividades** y **entregas nuevas**, **notas publicadas** y **cambios de fecha**. Con globo de no leídas; al tocar una, te lleva al archivo, la tarea o la asignatura.
+- **Horario.** Desliza en Calendario y ves **las clases del día**: hora, módulo, profesor y aula, con el descanso y la clase en curso marcada como "AHORA". Arriba, una tira con los días de la semana para saltar a ayer, mañana o cualquier otro día. Los **festivos y vacaciones** del calendario escolar aparecen como "No hay clase" con el motivo. Debajo salen las entregas de ese día y el resto de tus eventos de Google.
 - **Calendario.** Vista de mes con un punto por entrega, del color de su estado, y **tu Google Calendar dentro**: horario de clases y eventos personales en la agenda de cada día.
-- **Asignaturas.** Cada módulo con sus bloques y actividades, como en Moodle. Los archivos se **descargan al móvil** (uno a uno o "Descargar todo") y se abren sin conexión.
+- **Asignaturas.** Cada módulo con su profesor, sus bloques y actividades, como en Moodle. Los archivos se **descargan al móvil** (uno a uno o "Descargar todo") y se abren sin conexión.
 - **Visor integrado.** Los PDF e imágenes se ven dentro de la app, con zoom; Word, PowerPoint o ZIP se abren con la app del móvil que corresponda.
 - **Detalle de entrega.** Enunciado, fechas de apertura, entrega y cierre, estado, nota y archivos adjuntos.
 - **Login desde el móvil.** Inicias sesión con tu usuario de la Junta (CAS) y la app recibe el token sola.
@@ -148,6 +149,7 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 │       ├── data.ts           tareas + eventos → lista de entregas con estado
 │       ├── contents.ts       bloques → actividades → archivos de cada curso
 │       ├── novedades.ts      qué ha cambiado desde la última sincronización
+│       ├── horario.ts        horario del grupo, profesores y días sin clase
 │       ├── downloads.tsx     descargas al móvil (expo-file-system)
 │       ├── google-cal.tsx    eventos de Google Calendar (vía Apps Script)
 │       └── store.tsx         token, caché y sincronización
@@ -179,6 +181,7 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Google Calendar dentro de la app
 - [x] APK con login desde el móvil
 - [x] Novedades: apuntes nuevos o actualizados, entregas nuevas, notas y cambios de fecha
+- [x] Horario de clases con profesores, festivos y vacaciones (curso 2026-27)
 - [ ] Notificaciones en el móvil y sincronización en segundo plano
 - [ ] Notas personales y checklist por entrega
 - [ ] Versión web
