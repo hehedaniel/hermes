@@ -6,7 +6,9 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { Archivo } from '@/lib/data';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
+import { claveArchivo } from '@/lib/novedades';
 import { abrirArchivo, abrirCon, extension, mimeDe } from '@/lib/open-file';
+import { useMoodle } from '@/lib/store';
 
 const ICONO: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   pdf: 'picture-as-pdf',
@@ -30,6 +32,11 @@ const ICONO: Record<string, keyof typeof MaterialIcons.glyphMap> = {
 export function ArchivoRow({ archivo }: { archivo: Archivo }) {
   const theme = useTheme();
   const { estado, archivoLocal, descargar, borrar } = useDownloads();
+  const { novedades } = useMoodle();
+  const k = claveArchivo(archivo.fileurl);
+  const esNuevo = novedades.some(
+    (n) => !n.leida && n.archivo && claveArchivo(n.archivo.fileurl) === k,
+  );
   const st = estado(archivo);
   const ext = extension(archivo.nombre);
 
@@ -86,6 +93,13 @@ export function ArchivoRow({ archivo }: { archivo: Archivo }) {
         <ThemedText type="small" themeColor="textSecondary" style={styles.meta}>
           {ext.toUpperCase() || 'ARCHIVO'} · {formatoTamano(archivo.size)}
           {st === 'desactualizado' ? ' · hay versión nueva' : ''}
+          {esNuevo ? (
+            <ThemedText
+              type="small"
+              style={[styles.meta, { color: theme.accent, fontWeight: 700 }]}>
+              {'  '}NUEVO
+            </ThemedText>
+          ) : null}
         </ThemedText>
       </View>
       {st === 'descargando' ? (

@@ -61,7 +61,11 @@ const strip = (s?: string) =>
     .trim();
 
 /** Ejecuta las promesas de `n` en `n` para no saturar al servidor. */
-async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R>): Promise<R[]> {
+export async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (t: T) => Promise<R>,
+): Promise<R[]> {
   const out: R[] = new Array(items.length);
   let i = 0;
   const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {

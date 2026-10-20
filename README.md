@@ -27,19 +27,23 @@ En la FP a distancia todo pasa por el aula virtual: cada módulo tiene sus unida
 ## Capturas
 
 <p align="center">
-  <img src="docs/screenshots/1-pendientes.png" width="19%" alt="Pendientes" />
-  <img src="docs/screenshots/2-calendario.png" width="19%" alt="Calendario" />
-  <img src="docs/screenshots/3-asignaturas.png" width="19%" alt="Asignaturas" />
-  <img src="docs/screenshots/4-asignatura.png" width="19%" alt="Contenido de una asignatura" />
-  <img src="docs/screenshots/5-entrega.png" width="19%" alt="Detalle de una entrega" />
+  <img src="docs/screenshots/1-pendientes.png" width="32%" alt="Pendientes" />
+  <img src="docs/screenshots/6-novedades.png" width="32%" alt="Novedades" />
+  <img src="docs/screenshots/2-calendario.png" width="32%" alt="Calendario" />
 </p>
-<p align="center"><sub>Pendientes · Calendario con tu horario · Asignaturas · Contenido de una asignatura · Detalle de una entrega (datos de ejemplo)</sub></p>
+<p align="center">
+  <img src="docs/screenshots/3-asignaturas.png" width="32%" alt="Asignaturas" />
+  <img src="docs/screenshots/4-asignatura.png" width="32%" alt="Contenido de una asignatura" />
+  <img src="docs/screenshots/5-entrega.png" width="32%" alt="Detalle de una entrega" />
+</p>
+<p align="center"><sub>Pendientes · Novedades · Calendario con tu horario · Asignaturas · Contenido de una asignatura · Detalle de una entrega (datos de ejemplo)</sub></p>
 
 ## Qué hace
 
 ### 📱 La app (Android)
 
 - **Pendientes.** Todas las entregas de todos los módulos en una lista: vencidas, próximos 7 días, más adelante. Cada una con su estado (*pendiente, borrador, entregada, vencida*), la **nota** si ya está corregida y cuánto falta. Lo que vence en menos de 3 días se marca en naranja y sale en el globo de la pestaña.
+- **Novedades.** Lo que ha cambiado desde la última vez, en todas las asignaturas: **apuntes nuevos**, archivos que el profesor ha **actualizado**, **actividades** y **entregas nuevas**, **notas publicadas** y **cambios de fecha**. Con globo de no leídas; al tocar una, te lleva al archivo, la tarea o la asignatura.
 - **Calendario.** Vista de mes con un punto por entrega, del color de su estado, y **tu Google Calendar dentro**: horario de clases y eventos personales en la agenda de cada día.
 - **Asignaturas.** Cada módulo con sus bloques y actividades, como en Moodle. Los archivos se **descargan al móvil** (uno a uno o "Descargar todo") y se abren sin conexión.
 - **Visor integrado.** Los PDF e imágenes se ven dentro de la app, con zoom; Word, PowerPoint o ZIP se abren con la app del móvil que corresponda.
@@ -133,7 +137,7 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 ```
 ├── src/
 │   ├── app/                  pantallas (Expo Router)
-│   │   ├── (tabs)/           Pendientes · Calendario · Asignaturas · Ajustes
+│   │   ├── (tabs)/           Pendientes · Novedades · Calendario · Asignaturas · Ajustes
 │   │   ├── curso/[id].tsx    contenido de una asignatura
 │   │   ├── tarea/[key].tsx   detalle de una entrega
 │   │   ├── visor.tsx         visor de PDF (pdf.js) e imágenes
@@ -143,6 +147,7 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 │       ├── moodle.ts         cliente de la API REST de Moodle
 │       ├── data.ts           tareas + eventos → lista de entregas con estado
 │       ├── contents.ts       bloques → actividades → archivos de cada curso
+│       ├── novedades.ts      qué ha cambiado desde la última sincronización
 │       ├── downloads.tsx     descargas al móvil (expo-file-system)
 │       ├── google-cal.tsx    eventos de Google Calendar (vía Apps Script)
 │       └── store.tsx         token, caché y sincronización
@@ -173,7 +178,7 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Google Tasks y Google Calendar con Apps Script
 - [x] Google Calendar dentro de la app
 - [x] APK con login desde el móvil
-- [ ] **Novedades**: "BDA ha subido 3 archivos a la UD2"
+- [x] Novedades: apuntes nuevos o actualizados, entregas nuevas, notas y cambios de fecha
 - [ ] Notificaciones en el móvil y sincronización en segundo plano
 - [ ] Notas personales y checklist por entrega
 - [ ] Versión web

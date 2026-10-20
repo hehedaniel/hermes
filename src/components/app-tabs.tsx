@@ -8,7 +8,7 @@ import { useMoodle } from '@/lib/store';
 export default function AppTabs() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
-  const { snapshot } = useMoodle();
+  const { snapshot, noLeidas } = useMoodle();
 
   // Globo en la pestaña con las entregas abiertas que vencen en menos de 3 días
   const now = useNow() / 1000;
@@ -26,6 +26,12 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Label>Pendientes</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="checklist" md="checklist" />
         {urgentes ? <NativeTabs.Trigger.Badge>{String(urgentes)}</NativeTabs.Trigger.Badge> : null}
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="novedades">
+        <NativeTabs.Trigger.Label>Novedades</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="bell" md="notifications" />
+        {noLeidas ? <NativeTabs.Trigger.Badge>{String(noLeidas)}</NativeTabs.Trigger.Badge> : null}
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="calendario">

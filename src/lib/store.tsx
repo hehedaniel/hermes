@@ -16,6 +16,13 @@ import { COURSE_PALETTE } from '@/constants/theme';
 
 import { fetchSnapshot, type Snapshot } from './data';
 import {
+  type BaseNovedades,
+  calcularNovedades,
+  fetchTodosLosContenidos,
+  fusionarNovedades,
+  type Novedad,
+} from './novedades';
+import {
   DEFAULT_MOODLE_URL,
   MoodleClient,
   MoodleError,
@@ -37,6 +44,9 @@ const tokenStore =
     : SecureStore;
 const URL_KEY = 'moodle_url';
 const CACHE_KEY = 'snapshot_v1';
+const NOVEDADES_KEY = 'novedades_v1';
+const BASE_KEY = 'novedades_base_v1';
+const contentsKey = (id: number) => `contents_v1_${id}`;
 const AUTO_REFRESH_MS = 15 * 60 * 1000; // al volver a la app, sincroniza si han pasado 15 min
 
 type Ctx = {
@@ -49,6 +59,9 @@ type Ctx = {
   refresh: () => Promise<void>;
   connect: (url: string, tokenInput: string) => Promise<SiteInfo>;
   disconnect: () => Promise<void>;
+  novedades: Novedad[];
+  noLeidas: number;
+  marcarLeidas: () => void;
 };
 
 const MoodleContext = createContext<Ctx | null>(null);
@@ -60,38 +73,73 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [novedades, setNovedades] = useState<Novedad[]>([]);
   const syncingRef = useRef(false);
+  const novedadesRef = useRef<Novedad[]>([]);
 
-  const sync = useCallback(async (c: MoodleClient) => {
-    if (syncingRef.current) return;
-    syncingRef.current = true;
-    setSyncing(true);
-    setError(null);
-    try {
-      const snap = await fetchSnapshot(c);
-      setSnapshot(snap);
-      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(snap));
-    } catch (e) {
-      const err = e as MoodleError;
-      setError(
-        err.code === 'invalidtoken'
-          ? 'El token ya no es válido. Vuelve a pegarlo en Ajustes.'
-          : (err.message ?? 'Error al sincronizar'),
-      );
-    } finally {
-      syncingRef.current = false;
-      setSyncing(false);
-    }
+  const guardarNovedades = useCallback((lista: Novedad[]) => {
+    novedadesRef.current = lista;
+    setNovedades(lista);
+    AsyncStorage.setItem(NOVEDADES_KEY, JSON.stringify(lista));
   }, []);
+
+  const sync = useCallback(
+    async (c: MoodleClient) => {
+      if (syncingRef.current) return;
+      syncingRef.current = true;
+      setSyncing(true);
+      setError(null);
+      try {
+        const snap = await fetchSnapshot(c);
+        setSnapshot(snap);
+        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(snap));
+
+        // Novedades: contenido de todos los cursos comparado con la foto anterior
+        const contenidos = await fetchTodosLosContenidos(c, snap);
+        const rawBase = await AsyncStorage.getItem(BASE_KEY);
+        const base: BaseNovedades | null = rawBase ? JSON.parse(rawBase) : null;
+        const r = calcularNovedades(base, contenidos, snap);
+        await AsyncStorage.multiSet([
+          [BASE_KEY, JSON.stringify(r.base)],
+          ...contenidos.map(
+            (ct) => [contentsKey(ct.cursoId), JSON.stringify(ct)] as [string, string],
+          ),
+        ]);
+        if (r.novedades.length)
+          guardarNovedades(fusionarNovedades(novedadesRef.current, r.novedades));
+      } catch (e) {
+        const err = e as MoodleError;
+        setError(
+          err.code === 'invalidtoken'
+            ? 'El token ya no es válido. Vuelve a pegarlo en Ajustes.'
+            : (err.message ?? 'Error al sincronizar'),
+        );
+      } finally {
+        syncingRef.current = false;
+        setSyncing(false);
+      }
+    },
+    [guardarNovedades],
+  );
 
   // Arranque: carga token y la última copia guardada (para verla al instante y sin conexión)
   useEffect(() => {
     (async () => {
-      const [token, url, cache] = await Promise.all([
+      const [token, url, cache, nov] = await Promise.all([
         tokenStore.getItemAsync(TOKEN_KEY),
         AsyncStorage.getItem(URL_KEY),
         AsyncStorage.getItem(CACHE_KEY),
+        AsyncStorage.getItem(NOVEDADES_KEY),
       ]);
+      if (nov) {
+        try {
+          const lista = JSON.parse(nov);
+          novedadesRef.current = lista;
+          setNovedades(lista);
+        } catch {
+          // lista corrupta: se ignora
+        }
+      }
       const base = url || DEFAULT_MOODLE_URL;
       setMoodleUrl(base);
       if (cache) {
@@ -148,11 +196,21 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
 
   const disconnect = useCallback(async () => {
     await tokenStore.deleteItemAsync(TOKEN_KEY);
-    await AsyncStorage.removeItem(CACHE_KEY);
+    await AsyncStorage.multiRemove([CACHE_KEY, NOVEDADES_KEY, BASE_KEY]);
     setClient(null);
     setSnapshot(null);
     setError(null);
+    novedadesRef.current = [];
+    setNovedades([]);
   }, []);
+
+  const marcarLeidas = useCallback(() => {
+    if (novedadesRef.current.some((n) => !n.leida)) {
+      guardarNovedades(novedadesRef.current.map((n) => (n.leida ? n : { ...n, leida: true })));
+    }
+  }, [guardarNovedades]);
+
+  const noLeidas = useMemo(() => novedades.filter((n) => !n.leida).length, [novedades]);
 
   const value = useMemo(
     () => ({
@@ -165,8 +223,24 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
       refresh,
       connect,
       disconnect,
+      novedades,
+      noLeidas,
+      marcarLeidas,
     }),
-    [ready, client, moodleUrl, snapshot, syncing, error, refresh, connect, disconnect],
+    [
+      ready,
+      client,
+      moodleUrl,
+      snapshot,
+      syncing,
+      error,
+      refresh,
+      connect,
+      disconnect,
+      novedades,
+      noLeidas,
+      marcarLeidas,
+    ],
   );
   return <MoodleContext.Provider value={value}>{children}</MoodleContext.Provider>;
 }
