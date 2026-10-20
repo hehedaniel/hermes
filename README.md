@@ -107,16 +107,17 @@ Responde **Yes** a crear el proyecto y la *keystore*. A los 10-20 minutos tendr�
 </details>
 
 <details>
-<summary><b>Desarrollo con Expo Go</b></summary>
+<summary><b>Desarrollo (development build)</b></summary>
+
+La app de desarrollo se llama **Hermes Dev** (`es.danihermoso.campus.dev`) y se instala **al lado** de la normal, sin sustituirla. Se compila una vez y después carga el código desde el PC, con recarga instantánea igual que Expo Go, pero con todos los módulos nativos (login desde el móvil, widgets…).
 
 ```bash
 npm install
-npx expo start
+npx eas-cli@latest build -p android --profile development   # solo la primera vez o al añadir algo nativo
+npm run dev                                                  # cada día: arranca el servidor
 ```
 
-Escanea el QR con **Expo Go** (misma WiFi o `--tunnel`). En Expo Go el login automático no funciona: pega el token en Ajustes. Vale el `MOODLE_TOKEN` del sincronizador o el `moodlemobile://token=…` que sale en la consola del navegador (F12) al hacer login.
-
-Antes de subir cambios: `npx tsc --noEmit` y `npx expo lint`.
+Abre **Hermes Dev** en el móvil (misma WiFi que el PC) y elige el servidor que aparece, o escanea el QR de la terminal. Antes de subir cambios: `npx tsc --noEmit` y `npx expo lint`.
 </details>
 
 ### 2. Conectar Google (opcional)

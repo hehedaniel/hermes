@@ -9,6 +9,7 @@
     "expo": "~57.0.30",
     "expo-clipboard": "~57.0.2",
     "expo-constants": "~57.0.22",
+    "expo-dev-client": "~57.0.20",
     "expo-device": "~57.0.2",
     "expo-file-system": "~57.0.7",
     "expo-font": "~57.0.4",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.39.5",
     "eslint-config-expo": "^57.0.2",
     "typescript": "~6.0.3"
@@ -47,7 +49,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "dev": "cross-env APP_VARIANT=development expo start --dev-client"
   },
   "private": true
 }
