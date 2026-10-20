@@ -1,0 +1,187 @@
+<div align="center">
+
+<img src="docs/icon.png" width="96" alt="Icono de Hermes" />
+
+# Hermes
+
+**El mensajero de tu FP a distancia.**
+Entregas, apuntes y horario del Moodle de la Junta de Andalucía en el bolsillo, sin entrar asignatura por asignatura.
+
+![Expo SDK 57](https://img.shields.io/badge/Expo-SDK%2057-000020?logo=expo&logoColor=white)
+![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Android](https://img.shields.io/badge/Android-APK-3DDC84?logo=android&logoColor=white)
+![Google Apps Script](https://img.shields.io/badge/Google-Apps%20Script-4285F4?logo=google&logoColor=white)
+![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green)
+
+</div>
+
+---
+
+## ¿Por qué?
+
+En la FP a distancia todo pasa por el aula virtual: cada módulo tiene sus unidades, sus PDFs, sus tareas con fecha y sus lecciones SCORM. Saber qué tienes que entregar implica **entrar en cada asignatura, una por una**, descargar los archivos a mano y apuntar las fechas en otro sitio.
+
+**Hermes hace ese trabajo por ti.** Habla directamente con la API de Moodle (la misma que usa la app oficial), junta todo en un solo sitio y lo lleva donde ya miras cada día: tu móvil, Google Tasks y Google Calendar.
+
+## Capturas
+
+<p align="center">
+  <img src="docs/screenshots/1-pendientes.png" width="19%" alt="Pendientes" />
+  <img src="docs/screenshots/2-calendario.png" width="19%" alt="Calendario" />
+  <img src="docs/screenshots/3-asignaturas.png" width="19%" alt="Asignaturas" />
+  <img src="docs/screenshots/4-asignatura.png" width="19%" alt="Contenido de una asignatura" />
+  <img src="docs/screenshots/5-entrega.png" width="19%" alt="Detalle de una entrega" />
+</p>
+<p align="center"><sub>Pendientes · Calendario con tu horario · Asignaturas · Contenido de una asignatura · Detalle de una entrega (datos de ejemplo)</sub></p>
+
+## Qué hace
+
+### 📱 La app (Android)
+
+- **Pendientes.** Todas las entregas de todos los módulos en una lista: vencidas, próximos 7 días, más adelante. Cada una con su estado (*pendiente, borrador, entregada, vencida*), la **nota** si ya está corregida y cuánto falta. Lo que vence en menos de 3 días se marca en naranja y sale en el globo de la pestaña.
+- **Calendario.** Vista de mes con un punto por entrega, del color de su estado, y **tu Google Calendar dentro**: horario de clases y eventos personales en la agenda de cada día.
+- **Asignaturas.** Cada módulo con sus bloques y actividades, como en Moodle. Los archivos se **descargan al móvil** (uno a uno o "Descargar todo") y se abren sin conexión.
+- **Visor integrado.** Los PDF e imágenes se ven dentro de la app, con zoom; Word, PowerPoint o ZIP se abren con la app del móvil que corresponda.
+- **Detalle de entrega.** Enunciado, fechas de apertura, entrega y cierre, estado, nota y archivos adjuntos.
+- **Login desde el móvil.** Inicias sesión con tu usuario de la Junta (CAS) y la app recibe el token sola.
+- **Sin servidor propio.** Habla directamente con Moodle y funciona sin conexión con lo último que descargó.
+
+### ✅ Google Tasks + 📅 Google Calendar (Apps Script)
+
+Un script que vive en **tu cuenta de Google** y se ejecuta solo cada hora:
+
+- Crea cada entrega en **la lista de Google Tasks de su asignatura**, con la fecha y hora exactas en las notas. Si ya la tenías apuntada a mano, **la reconoce y la reutiliza**.
+- Cuando entregas en Moodle, **la marca como completada**.
+- Crea un evento a la hora exacta en el calendario **"Entregas Moodle"**, con avisos 1 semana, 5 días, 3 días, 1 día, 6 h y 2 h antes.
+- Le sirve tus eventos de Google Calendar a la app con un enlace privado.
+
+### 💻 Sincronizador para el PC
+
+Un script de Python que **descarga todo el material a tu ordenador**, ordenado por asignatura y bloque, con un `PENDIENTES.md` y un calendario `.ics`. Se puede programar para que se ejecute solo.
+
+## Cómo encaja todo
+
+```mermaid
+flowchart LR
+    M[("🎓 Moodle<br/>Educación a Distancia")]
+    A["📱 App Hermes"]
+    G["⚙️ Google Apps Script<br/><sub>cada hora</sub>"]
+    T["✅ Google Tasks<br/><sub>una lista por módulo</sub>"]
+    C["📅 Google Calendar<br/><sub>Entregas Moodle + tu horario</sub>"]
+    P["💻 Sincronizador PC"]
+    F["📁 Carpetas por asignatura<br/>+ PENDIENTES.md"]
+
+    M -- "API REST + token" --> A
+    M -- "API REST" --> G
+    G --> T
+    G --> C
+    C -- "tus eventos (enlace privado)" --> A
+    M -- "API REST" --> P
+    P --> F
+```
+
+## Empezar
+
+### 1. Instalar la app
+
+Descarga el APK de la última compilación e instálalo; Android te pedirá permitir "orígenes desconocidos". Abre **Hermes → Ajustes → Iniciar sesión en Moodle** y entra con tu usuario de la Junta. Si el móvil pregunta con qué app abrir el enlace, elige **Hermes**.
+
+<details>
+<summary><b>Compilar el APK tú mismo</b></summary>
+
+Se compila en la nube de Expo (EAS), gratis; solo necesitas una cuenta en [expo.dev](https://expo.dev/signup).
+
+```bash
+npm install
+npx eas-cli@latest login
+npx eas-cli@latest build -p android --profile preview
+```
+
+Responde **Yes** a crear el proyecto y la *keystore*. A los 10-20 minutos tendrás un enlace y un QR para descargar el APK.
+</details>
+
+<details>
+<summary><b>Desarrollo con Expo Go</b></summary>
+
+```bash
+npm install
+npx expo start
+```
+
+Escanea el QR con **Expo Go** (misma WiFi o `--tunnel`). En Expo Go el login automático no funciona: pega el token en Ajustes. Vale el `MOODLE_TOKEN` del sincronizador o el `moodlemobile://token=…` que sale en la consola del navegador (F12) al hacer login.
+
+Antes de subir cambios: `npx tsc --noEmit` y `npx expo lint`.
+</details>
+
+### 2. Conectar Google (opcional)
+
+Sigue [`google-apps-script/README.md`](google-apps-script/README.md). Son unos 5 minutos: pegar el script, poner tu token, ejecutar `simular` para ver qué hará y luego `instalar`. Para ver tu Google Calendar en la app, impleméntalo como aplicación web y pega el enlace en **Ajustes → Google Calendar**.
+
+### 3. Sincronizador del PC (opcional)
+
+Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
+
+## Privacidad y seguridad
+
+- **No hay servidor de por medio.** La app habla directamente con Moodle desde tu móvil; el script de Google se ejecuta en tu propia cuenta.
+- **El token de Moodle se guarda cifrado** en el móvil (SecureStore) y en las *Propiedades del script*, nunca en el código. Da acceso a tu Moodle: no lo compartas. Si se filtra, anúlalo en *Moodle → Preferencias → Claves de seguridad*.
+- El enlace de Google Calendar lleva una **clave privada**. Si lo compartes por error, ejecuta `cambiarClaveApp`.
+
+## Estructura del repositorio
+
+```
+├── src/
+│   ├── app/                  pantallas (Expo Router)
+│   │   ├── (tabs)/           Pendientes · Calendario · Asignaturas · Ajustes
+│   │   ├── curso/[id].tsx    contenido de una asignatura
+│   │   ├── tarea/[key].tsx   detalle de una entrega
+│   │   ├── visor.tsx         visor de PDF (pdf.js) e imágenes
+│   │   └── +native-intent.tsx  recibe el token del login (moodlemobile://)
+│   ├── components/           tarjetas, calendario de mes, filas de archivo…
+│   └── lib/
+│       ├── moodle.ts         cliente de la API REST de Moodle
+│       ├── data.ts           tareas + eventos → lista de entregas con estado
+│       ├── contents.ts       bloques → actividades → archivos de cada curso
+│       ├── downloads.tsx     descargas al móvil (expo-file-system)
+│       ├── google-cal.tsx    eventos de Google Calendar (vía Apps Script)
+│       └── store.tsx         token, caché y sincronización
+├── google-apps-script/       Moodle → Google Tasks + Calendar, y eventos para la app
+├── sincronizador-pc/         descarga del material al PC (Python)
+└── docs/                     icono y capturas
+```
+
+<details>
+<summary><b>Funciones de la API de Moodle que se usan</b></summary>
+
+| Función | Para qué |
+|---|---|
+| `core_webservice_get_site_info` | validar el token y saber tu usuario |
+| `core_enrol_get_users_courses` | tus cursos |
+| `mod_assign_get_assignments` | tareas de todos los cursos, con fechas y adjuntos |
+| `mod_assign_get_submission_status` | si la has entregado y la nota |
+| `core_calendar_get_action_events_by_timesort` | otras actividades con fecha (SCORM, cuestionarios…) |
+| `core_course_get_contents` | bloques, actividades y archivos de cada curso |
+
+El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/launch.php`, que redirige a `moodlemobile://token=…`.
+</details>
+
+## Hoja de ruta
+
+- [x] Pendientes, calendario y detalle de entregas
+- [x] Asignaturas, descargas al móvil y visor de PDF
+- [x] Google Tasks y Google Calendar con Apps Script
+- [x] Google Calendar dentro de la app
+- [x] APK con login desde el móvil
+- [ ] **Novedades**: "BDA ha subido 3 archivos a la UD2"
+- [ ] Notificaciones en el móvil y sincronización en segundo plano
+- [ ] Notas personales y checklist por entrega
+- [ ] Versión web
+
+## Créditos
+
+Hecho por **Dani Hermoso** · idea original de **Jose**, compañero del curso de especialización en IA y Big Data.
+
+> **Aviso:** Hermes es un proyecto personal de estudiantes y **no es oficial**. No está afiliado a la Junta de Andalucía ni a Moodle Pty Ltd. *Moodle™* es una marca registrada de Moodle Pty Ltd. Cada persona usa su propia cuenta y su propio token.
+
+Licencia [MIT](LICENSE).
