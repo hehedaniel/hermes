@@ -38,6 +38,9 @@ export function flatten(params: Params | unknown[], prefix = '', out: Record<str
   return out;
 }
 
+/** Tiempo máximo de cada petición a Moodle. */
+const TIMEOUT_MS = 25_000;
+
 export class MoodleClient {
   readonly base: string;
 
@@ -55,19 +58,42 @@ export class MoodleClient {
       moodlewsrestformat: 'json',
       ...flatten(params),
     });
-    let res: Response;
+    // Sin límite, una petición que Moodle no contesta deja la app "sincronizando" para siempre
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+    let data: any;
     try {
-      res = await fetch(`${this.base}/webservice/rest/server.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-      });
-    } catch {
-      throw new MoodleError('network', 'No se pudo conectar con Moodle. ¿Tienes internet?');
+      let res: Response;
+      try {
+        res = await fetch(`${this.base}/webservice/rest/server.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+          signal: ctrl.signal,
+        });
+      } catch {
+        throw ctrl.signal.aborted
+          ? new MoodleError(
+              'timeout',
+              'Moodle está tardando demasiado en responder. Prueba en un rato.',
+            )
+          : new MoodleError('network', 'No se pudo conectar con Moodle. ¿Tienes internet?');
+      }
+      if (!res.ok)
+        throw new MoodleError(`http${res.status}`, `Moodle respondió con un error ${res.status}`);
+      try {
+        data = await res.json();
+      } catch {
+        throw ctrl.signal.aborted
+          ? new MoodleError(
+              'timeout',
+              'Moodle está tardando demasiado en responder. Prueba en un rato.',
+            )
+          : new MoodleError('badjson', 'Moodle devolvió una respuesta que no se entiende.');
+      }
+    } finally {
+      clearTimeout(timer);
     }
-    if (!res.ok)
-      throw new MoodleError(`http${res.status}`, `Moodle respondió con un error ${res.status}`);
-    const data = await res.json();
     if (
       data &&
       typeof data === 'object' &&

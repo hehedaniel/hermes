@@ -61,6 +61,8 @@ Un script que vive en **tu cuenta de Google** y se ejecuta solo cada hora:
 - Crea un evento a la hora exacta en el calendario **"Entregas Moodle"**, con avisos 1 semana, 5 días, 3 días, 1 día, 6 h y 2 h antes.
 - Le sirve tus eventos de Google Calendar a la app con un enlace privado.
 
+Cada parte es **opcional e independiente**; la app no necesita el script para nada.
+
 ### 💻 Sincronizador para el PC
 
 Un script de Python que **descarga todo el material a tu ordenador**, ordenado por asignatura y bloque, con un `PENDIENTES.md` y un calendario `.ics`. Se puede programar para que se ejecute solo.
@@ -122,7 +124,9 @@ Abre **Hermes Dev** en el móvil (misma WiFi que el PC) y elige el servidor que 
 
 ### 2. Conectar Google (opcional)
 
-Sigue [`google-apps-script/README.md`](google-apps-script/README.md). Son unos 5 minutos: pegar el script, poner tu token, ejecutar `simular` para ver qué hará y luego `instalar`. Para ver tu Google Calendar en la app, impleméntalo como aplicación web y pega el enlace en **Ajustes → Google Calendar**.
+La app funciona sin esto, **Novedades incluidas**. El script es solo para quien quiera sus entregas también en Google, y cada parte se activa por separado: solo Tasks, solo Calendar, las dos, o solo ver tu Google Calendar dentro de la app.
+
+Sigue [`google-apps-script/README.md`](google-apps-script/README.md). Son unos 5 minutos: pegar el script, elegir qué quieres con `USAR_TASKS` / `USAR_CALENDAR`, poner tu token, ejecutar `simular` para ver qué hará y luego `instalar`. Para ver tu Google Calendar en la app, impleméntalo como aplicación web y pega el enlace en **Ajustes → Google Calendar**.
 
 ### 3. Sincronizador del PC (opcional)
 

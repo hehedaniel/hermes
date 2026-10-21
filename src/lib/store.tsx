@@ -48,6 +48,30 @@ const NOVEDADES_KEY = 'novedades_v1';
 const BASE_KEY = 'novedades_base_v1';
 const contentsKey = (id: number) => `contents_v1_${id}`;
 const AUTO_REFRESH_MS = 15 * 60 * 1000; // al volver a la app, sincroniza si han pasado 15 min
+const SYNC_MAX_MS = 2 * 60 * 1000; // pase lo que pase, a los 2 minutos se deja de "sincronizar"
+
+/** Lee de AsyncStorage sin romper el arranque si un valor no se puede leer. */
+const leer = (k: string) => AsyncStorage.getItem(k).catch(() => null);
+
+function conLimite<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(
+      () =>
+        reject(new MoodleError('timeout', 'Moodle está tardando demasiado. Prueba en un rato.')),
+      ms,
+    );
+    p.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      },
+    );
+  });
+}
 
 type Ctx = {
   ready: boolean;
@@ -83,6 +107,41 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
     AsyncStorage.setItem(NOVEDADES_KEY, JSON.stringify(lista));
   }, []);
 
+  // Novedades: contenido de todos los cursos comparado con la foto anterior. Va aparte de la
+  // sincronización principal para que Pendientes no espere a que se descarguen todos los cursos.
+  const novedadesEnCurso = useRef(false);
+  const actualizarNovedades = useCallback(
+    async (c: MoodleClient, snap: Snapshot) => {
+      if (novedadesEnCurso.current) return;
+      novedadesEnCurso.current = true;
+      try {
+        const contenidos = await fetchTodosLosContenidos(c, snap);
+        if (!contenidos.length) return; // sin conexión con ningún curso: no se toca la foto anterior
+        const rawBase = await leer(BASE_KEY);
+        let base: BaseNovedades | null = null;
+        try {
+          base = rawBase ? JSON.parse(rawBase) : null;
+        } catch {
+          // foto corrupta: se empieza de cero
+        }
+        const r = calcularNovedades(base, contenidos, snap);
+        if (r.novedades.length)
+          guardarNovedades(fusionarNovedades(novedadesRef.current, r.novedades));
+        await AsyncStorage.multiSet([
+          [BASE_KEY, JSON.stringify(r.base)],
+          ...contenidos.map(
+            (ct) => [contentsKey(ct.cursoId), JSON.stringify(ct)] as [string, string],
+          ),
+        ]);
+      } catch {
+        // Las novedades no son críticas: ya se calcularán en la próxima sincronización
+      } finally {
+        novedadesEnCurso.current = false;
+      }
+    },
+    [guardarNovedades],
+  );
+
   const sync = useCallback(
     async (c: MoodleClient) => {
       if (syncingRef.current) return;
@@ -90,23 +149,10 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
       setSyncing(true);
       setError(null);
       try {
-        const snap = await fetchSnapshot(c);
+        const snap = await conLimite(fetchSnapshot(c), SYNC_MAX_MS);
         setSnapshot(snap);
-        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(snap));
-
-        // Novedades: contenido de todos los cursos comparado con la foto anterior
-        const contenidos = await fetchTodosLosContenidos(c, snap);
-        const rawBase = await AsyncStorage.getItem(BASE_KEY);
-        const base: BaseNovedades | null = rawBase ? JSON.parse(rawBase) : null;
-        const r = calcularNovedades(base, contenidos, snap);
-        await AsyncStorage.multiSet([
-          [BASE_KEY, JSON.stringify(r.base)],
-          ...contenidos.map(
-            (ct) => [contentsKey(ct.cursoId), JSON.stringify(ct)] as [string, string],
-          ),
-        ]);
-        if (r.novedades.length)
-          guardarNovedades(fusionarNovedades(novedadesRef.current, r.novedades));
+        AsyncStorage.setItem(CACHE_KEY, JSON.stringify(snap)).catch(() => {});
+        actualizarNovedades(c, snap);
       } catch (e) {
         const err = e as MoodleError;
         setError(
@@ -119,17 +165,22 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
         setSyncing(false);
       }
     },
-    [guardarNovedades],
+    [actualizarNovedades],
   );
 
   // Arranque: carga token y la última copia guardada (para verla al instante y sin conexión)
   useEffect(() => {
     (async () => {
-      const [token, url, cache, nov] = await Promise.all([
-        tokenStore.getItemAsync(TOKEN_KEY),
-        AsyncStorage.getItem(URL_KEY),
-        AsyncStorage.getItem(CACHE_KEY),
-        AsyncStorage.getItem(NOVEDADES_KEY),
+      let token: string | null = null;
+      try {
+        token = await tokenStore.getItemAsync(TOKEN_KEY);
+      } catch {
+        // sin acceso al almacén cifrado: habrá que volver a iniciar sesión
+      }
+      const [url, cache, nov] = await Promise.all([
+        leer(URL_KEY),
+        leer(CACHE_KEY),
+        leer(NOVEDADES_KEY),
       ]);
       if (nov) {
         try {

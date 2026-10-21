@@ -15,6 +15,15 @@
  */
 
 const CONFIG = {
+  // ---- Qué quieres que haga el script (cada parte es independiente) ----
+  // Entregas → Google Tasks (una lista por asignatura)
+  USAR_TASKS: true,
+  // Entregas → eventos en el calendario "Entregas Moodle", con avisos
+  USAR_CALENDAR: true,
+  // (Ver tu Google Calendar dentro de la app solo se activa si implementas el script como
+  //  aplicación web; ver README.)
+  // -----------------------------------------------------------------------
+
   MOODLE_URL: 'https://educacionadistancia.juntadeandalucia.es/centros/huelva',
   CALENDARIO: 'Entregas Moodle',
   ZONA: 'Europe/Madrid',
@@ -71,15 +80,25 @@ function ejecutar_(simulacion) {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) return;
   try {
+    if (!CONFIG.USAR_TASKS && !CONFIG.USAR_CALENDAR) {
+      console.log('USAR_TASKS y USAR_CALENDAR están desactivados: no hay nada que sincronizar.');
+      return;
+    }
     const entregas = leerEntregas_();
     console.log(`${Object.keys(entregas).length} entregas con fecha leídas de Moodle.`);
-    const t = sincronizarTasks_(entregas, simulacion);
-    const c = sincronizarCalendar_(entregas, simulacion);
-    console.log(
-      `${simulacion ? '[SIMULACIÓN] ' : ''}Tasks: ${t.creadas} creadas, ${t.reutilizadas} reutilizadas, ` +
-        `${t.actualizadas} actualizadas, ${t.completadas} completadas. ` +
-        `Calendar: ${c.creados} creados, ${c.actualizados} actualizados.`,
-    );
+    const partes = [];
+    if (CONFIG.USAR_TASKS) {
+      const t = sincronizarTasks_(entregas, simulacion);
+      partes.push(
+        `Tasks: ${t.creadas} creadas, ${t.reutilizadas} reutilizadas, ` +
+          `${t.actualizadas} actualizadas, ${t.completadas} completadas`,
+      );
+    }
+    if (CONFIG.USAR_CALENDAR) {
+      const c = sincronizarCalendar_(entregas, simulacion);
+      partes.push(`Calendar: ${c.creados} creados, ${c.actualizados} actualizados`);
+    }
+    console.log(`${simulacion ? '[SIMULACIÓN] ' : ''}${partes.join('. ')}.`);
   } finally {
     lock.releaseLock();
   }

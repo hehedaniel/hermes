@@ -2,6 +2,20 @@
 
 Script de Google Apps Script que se ejecuta **solo, cada hora, en los servidores de Google**: no necesita el PC encendido ni la app abierta. Es gratis.
 
+## Elige qué quieres
+
+El script tiene tres partes **independientes**. Ninguna es necesaria para usar la app: las **Novedades**, Pendientes, Asignaturas y el Horario de Hermes funcionan solo con el token de Moodle.
+
+| Quiero… | Qué hacer |
+|---|---|
+| Solo la app (Novedades incluidas) | **Nada.** No hace falta instalar el script. |
+| Mis entregas en **Google Tasks** | `USAR_TASKS: true` · `USAR_CALENDAR: false` |
+| Eventos con avisos en **Google Calendar** | `USAR_TASKS: false` · `USAR_CALENDAR: true` |
+| Las dos cosas | `USAR_TASKS: true` · `USAR_CALENDAR: true` (como viene) |
+| Ver **mi Google Calendar dentro de la app** | Implementarlo como aplicación web ([ver abajo](#ver-tu-google-calendar-dentro-de-la-app-hermes)). Es aparte: funciona aunque tengas las dos opciones de arriba en `false`. |
+
+Los interruptores están al principio de `Code.gs`, dentro de `CONFIG`. Si cambias alguno, guarda (💾) y listo: la siguiente ejecución horaria ya lo usa.
+
 ## Qué hace
 
 **Google Tasks**
@@ -31,12 +45,13 @@ Hazlo con **la cuenta de Google donde tienes tus listas de Tasks**.
 
 1. Ve a **https://script.google.com** → **Nuevo proyecto**. Ponle de nombre, por ejemplo, *Moodle → Google*.
 2. Borra lo que hay en `Código.gs` y pega todo el contenido de **`Code.gs`**.
-3. Activa la API de Tasks: en el menú de la izquierda, **Servicios (+)** → **Google Tasks API** → **Añadir**. Tiene que quedar con el identificador `Tasks`.
+3. Pon los interruptores `USAR_TASKS` y `USAR_CALENDAR` de `CONFIG` según lo que quieras (tabla de arriba).
+   Si usas Tasks, activa su API: en el menú de la izquierda, **Servicios (+)** → **Google Tasks API** → **Añadir**. Tiene que quedar con el identificador `Tasks`. Si no usas Tasks, sáltatelo.
 4. Pon la zona horaria y el token: ⚙️ **Configuración del proyecto**
    - **Zona horaria**: `(GMT+01:00) Madrid`.
    - Abajo, **Propiedades del script** → **Añadir propiedad del script**:
      - Propiedad: `MOODLE_TOKEN`
-     - Valor: el `MOODLE_TOKEN` de `IA_BG\_moodle\.env`
+     - Valor: tu token de Moodle (el mismo que usas en la app)
 5. **Prueba primero sin cambiar nada**: vuelve al editor, elige la función **`simular`** en el desplegable de arriba y pulsa **Ejecutar**. La primera vez Google pide permisos ("Google no ha verificado esta aplicación" → *Configuración avanzada* → *Ir a … (no seguro)* → *Permitir*; es tu propio script). En el **registro de ejecución** verás:
    - qué asignatura va a qué lista,
    - qué tareas tuyas va a reutilizar,
@@ -44,6 +59,8 @@ Hazlo con **la cuenta de Google donde tienes tus listas de Tasks**.
 6. Si todo cuadra, elige **`instalar`** y pulsa **Ejecutar**. Hace la primera sincronización y deja programada una cada hora.
 
 Para pararlo: ejecuta **`desinstalar`**. No borra nada de Tasks ni de Calendar.
+
+Si solo quieres ver tu Google Calendar en la app (las dos opciones en `false`), no hace falta `instalar`: salta directamente a la sección siguiente.
 
 ## Ver tu Google Calendar dentro de la app Hermes
 
@@ -69,6 +86,8 @@ Al principio de `Code.gs`, en `CONFIG`:
 
 | Opción | Para qué |
 |---|---|
+| `USAR_TASKS` | Crear y completar las entregas en Google Tasks. |
+| `USAR_CALENDAR` | Crear los eventos con avisos en el calendario "Entregas Moodle". |
 | `AVISOS_MIN` | Avisos del evento en minutos antes (máx. 5). Por defecto: 5 d, 3 d, 1 d, 6 h, 2 h. |
 | `AVISO_UNA_SEMANA` / `HORA_AVISO_SEMANA` | El evento extra de "queda 1 semana" y a qué hora salta. |
 | `CALENDARIO` | Nombre del calendario de Google que se crea. |
