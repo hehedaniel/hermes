@@ -48,6 +48,7 @@ En la FP a distancia todo pasa por el aula virtual: cada módulo tiene sus unida
 - **Horario.** Desliza en Calendario y ves **las clases del día**: hora, módulo, profesor y aula, con el descanso y la clase en curso marcada como "AHORA". Arriba, una tira con los días de la semana para saltar a ayer, mañana o cualquier otro día. Los **festivos y vacaciones** del calendario escolar aparecen como "No hay clase" con el motivo. Debajo salen las entregas de ese día y el resto de tus eventos de Google.
 - **Calendario.** Vista de mes con un punto por entrega, del color de su estado, y **tu Google Calendar dentro**: horario de clases y eventos personales en la agenda de cada día.
 - **Asignaturas.** Cada módulo con su profesor, sus bloques y actividades, como en Moodle. Los archivos se **descargan al móvil** (uno a uno o "Descargar todo") y se abren sin conexión.
+- **Widgets (Android).** *Próximas entregas*, con cuánto falta para cada una, y *Clases de hoy*, con la que toca **ahora**; si ya han acabado, enseña las de mañana. Se ven sin abrir la app y se actualizan solos.
 - **Visor integrado.** Los PDF e imágenes se ven dentro de la app, con zoom; Word, PowerPoint o ZIP se abren con la app del móvil que corresponda.
 - **Detalle de entrega.** Enunciado, fechas de apertura, entrega y cierre, estado, nota y archivos adjuntos.
 - **Login desde el móvil.** Inicias sesión con tu usuario de la Junta (CAS) y la app recibe el token sola.
@@ -168,6 +169,7 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 │   │   ├── visor.tsx         visor de PDF (pdf.js) e imágenes
 │   │   └── +native-intent.tsx  recibe el token del login (moodlemobile://)
 │   ├── components/           tarjetas, calendario de mes, filas de archivo…
+│   ├── widgets/              widgets de Android: próximas entregas y clases de hoy
 │   └── lib/
 │       ├── moodle.ts         cliente de la API REST de Moodle
 │       ├── data.ts           tareas + eventos → lista de entregas con estado
@@ -209,6 +211,7 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Releases automáticas del APK
 - [x] Novedades: apuntes nuevos o actualizados, entregas nuevas, notas y cambios de fecha
 - [x] Horario de clases con profesores, festivos y vacaciones (curso 2026-27)
+- [x] Widgets de entregas y clases para la pantalla de inicio
 - [ ] Notificaciones en el móvil y sincronización en segundo plano
 - [ ] Notas personales y checklist por entrega
 - [x] Versión web instalable en iPhone

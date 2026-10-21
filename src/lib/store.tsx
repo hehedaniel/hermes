@@ -14,6 +14,8 @@ import { AppState, Platform } from 'react-native';
 
 import { COURSE_PALETTE } from '@/constants/theme';
 
+import { actualizarWidgets } from '@/widgets/actualizar';
+
 import { fetchSnapshot, type Snapshot } from './data';
 import {
   type BaseNovedades,
@@ -152,6 +154,7 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
         const snap = await conLimite(fetchSnapshot(c), SYNC_MAX_MS);
         setSnapshot(snap);
         AsyncStorage.setItem(CACHE_KEY, JSON.stringify(snap)).catch(() => {});
+        actualizarWidgets(snap);
         actualizarNovedades(c, snap);
       } catch (e) {
         const err = e as MoodleError;
