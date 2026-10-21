@@ -2,7 +2,7 @@
  * Qué enseña cada widget, sin nada de React: así se puede probar en el PC.
  * Los widgets se dibujan en segundo plano (sin la app abierta) con lo último que guardó la app.
  */
-import { COURSE_PALETTE } from '@/constants/theme';
+import { COURSE_PALETTE } from '@/constants/colors';
 import type { Entrega, Snapshot } from '@/lib/data';
 import { fechaLarga, relativo } from '@/lib/format';
 import {

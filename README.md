@@ -120,10 +120,14 @@ Hay dos GitHub Actions:
 - **Web** (`.github/workflows/web.yml`): cada push a `main` publica la versión web en GitHub Pages. La primera vez: *Settings → Pages → Source: GitHub Actions*.
 - **Release APK** (`.github/workflows/release.yml`): al subir una etiqueta `vX.Y.Z`, compila el APK en EAS y crea la release con el APK adjunto. La primera vez, guarda un token de [expo.dev](https://expo.dev/settings/access-tokens) como secreto `EXPO_TOKEN` en *Settings → Secrets and variables → Actions*.
 
+Antes de etiquetar, pasa lo de *Sin publicar* del [`CHANGELOG.md`](CHANGELOG.md) a una sección `## [1.1.0] - fecha`: las notas de la release salen de ahí.
+
 ```bash
 git tag v1.1.0
 git push origin v1.1.0
 ```
+
+Las dos Actions pasan antes las **comprobaciones** (`.github/workflows/ci.yml`): tipos, lint, pruebas y detección de secretos con gitleaks. Si algo falla, no se publica nada. En local, lo mismo con `npm run check`.
 
 Para probar la web en local: `npm run web`. Para generarla como en GitHub Pages: `npm run build:web` (sale en `dist/`).
 </details>
@@ -139,7 +143,7 @@ npx eas-cli@latest build -p android --profile development   # solo la primera ve
 npm run dev                                                  # cada día: arranca el servidor
 ```
 
-Abre **Hermes Dev** en el móvil (misma WiFi que el PC) y elige el servidor que aparece, o escanea el QR de la terminal. Antes de subir cambios: `npx tsc --noEmit` y `npx expo lint`.
+Abre **Hermes Dev** en el móvil (misma WiFi que el PC) y elige el servidor que aparece, o escanea el QR de la terminal. Antes de subir cambios: `npm run check` (tipos, lint y pruebas).
 </details>
 
 ### 2. Conectar Google (opcional)

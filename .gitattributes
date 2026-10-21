@@ -1,0 +1,16 @@
+# El repositorio guarda los finales de línea como LF (así no salen avisos de CRLF en Windows)
+* text=auto eol=lf
+
+# Scripts de Windows: CRLF, que es lo que esperan cmd y PowerShell
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binarios: sin conversión
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.pdf binary
+*.ttf binary
+*.apk binary

@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { Colors } from '@/constants/colors';
 
 export type Hex = `#${string}`;
 export type Paleta = {

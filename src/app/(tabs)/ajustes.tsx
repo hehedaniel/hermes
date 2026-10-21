@@ -21,6 +21,7 @@ import { onTokenPendiente, tomarTokenPendiente } from '@/lib/token-pendiente';
 const loginMovil =
   Platform.OS !== 'web' && Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
 const esWeb = Platform.OS === 'web';
+const CAMBIOS_URL = 'https://github.com/hehedaniel/hermes/blob/main/CHANGELOG.md';
 
 export default function AjustesScreen() {
   const { client, snapshot, moodleUrl, connect, disconnect, refresh, syncing } = useMoodle();
@@ -264,6 +265,14 @@ export default function AjustesScreen() {
           </View>
         </>
       )}
+
+      <ThemedText
+        type="small"
+        themeColor="textSecondary"
+        style={styles.version}
+        onPress={() => WebBrowser.openBrowserAsync(CAMBIOS_URL)}>
+        Hermes {Constants.expoConfig?.version ?? ''} · Ver cambios
+      </ThemedText>
     </Screen>
   );
 }
@@ -286,4 +295,5 @@ const styles = StyleSheet.create({
   tokenInput: { minHeight: 70, textAlignVertical: 'top' },
   row: { flexDirection: 'row', gap: Spacing.two },
   flex: { flex: 1 },
+  version: { textAlign: 'center', marginTop: Spacing.three, fontSize: 12 },
 });
