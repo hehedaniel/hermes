@@ -1,7 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Screen, SectionTitle } from '@/components/screen';
@@ -10,10 +10,10 @@ import { Vacio } from '@/components/vacio';
 import { Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
+import { avisar } from '@/lib/dialogo';
 import { useDownloads } from '@/lib/downloads';
 import { dayKey, fechaLarga, hora } from '@/lib/format';
 import type { Novedad, TipoNovedad } from '@/lib/novedades';
-import { abrirArchivo } from '@/lib/open-file';
 import { useCourseColors, useMoodle } from '@/lib/store';
 
 const ICONO: Record<TipoNovedad, keyof typeof MaterialIcons.glyphMap> = {
@@ -103,13 +103,12 @@ export default function NovedadesScreen() {
 function NovedadRow({ novedad: n }: { novedad: Novedad }) {
   const theme = useTheme();
   const colorOf = useCourseColors();
-  const { archivoLocal, descargar } = useDownloads();
+  const { abrir: abrirArchivo } = useDownloads();
 
   async function abrir() {
     try {
       if (n.archivo) {
-        const file = archivoLocal(n.archivo) ?? (await descargar(n.archivo));
-        await abrirArchivo(n.archivo, file);
+        await abrirArchivo(n.archivo);
       } else if (n.entregaKey) {
         router.push({ pathname: '/tarea/[key]', params: { key: n.entregaKey } });
       } else {
@@ -119,7 +118,7 @@ function NovedadRow({ novedad: n }: { novedad: Novedad }) {
         });
       }
     } catch (e) {
-      Alert.alert('No se pudo abrir', (e as Error).message);
+      avisar('No se pudo abrir', (e as Error).message);
     }
   }
 

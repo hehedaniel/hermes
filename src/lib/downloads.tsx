@@ -12,6 +12,7 @@ import {
 } from 'react';
 
 import type { Archivo } from './data';
+import { abrirArchivo } from './open-file';
 import { useMoodle } from './store';
 
 const REGISTRY_KEY = 'downloads_v2';
@@ -27,6 +28,10 @@ type Registro = {
 export type EstadoDescarga = 'no' | 'descargando' | 'si' | 'desactualizado';
 
 type Ctx = {
+  /** false en la versión web: allí los archivos se abren en el navegador y no se guardan. */
+  guardaArchivos: boolean;
+  /** Abre un archivo: con la copia del móvil si la hay, si no lo descarga antes. */
+  abrir: (a: Archivo) => Promise<void>;
   estado: (a: Archivo) => EstadoDescarga;
   archivoLocal: (a: Archivo) => File | undefined;
   descargar: (a: Archivo) => Promise<File>;
@@ -42,6 +47,7 @@ type Ctx = {
 const DownloadsContext = createContext<Ctx | null>(null);
 
 export const claveArchivo = (a: Archivo) => a.fileurl.split('?')[0];
+export type DownloadsCtx = Ctx;
 
 /** Nombre válido para el sistema de archivos del móvil. */
 const fileDe = (r: Registro) => new File(Paths.document, ...r.partes);
@@ -200,6 +206,14 @@ export function DownloadsProvider({ children }: { children: ReactNode }) {
     [guardar],
   );
 
+  const abrir = useCallback(
+    async (a: Archivo) => {
+      const local = estado(a) === 'si' ? archivoLocal(a) : undefined;
+      await abrirArchivo(a, local ?? (await descargar(a)));
+    },
+    [estado, archivoLocal, descargar],
+  );
+
   const borrarTodo = useCallback(async () => {
     const dir = new Directory(Paths.document, 'moodle');
     if (dir.exists) dir.delete();
@@ -217,6 +231,8 @@ export function DownloadsProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
+      guardaArchivos: true,
+      abrir,
       estado,
       archivoLocal,
       descargar,
@@ -225,7 +241,7 @@ export function DownloadsProvider({ children }: { children: ReactNode }) {
       borrarTodo,
       resumen,
     }),
-    [estado, archivoLocal, descargar, descargarVarios, borrar, borrarTodo, resumen],
+    [abrir, estado, archivoLocal, descargar, descargarVarios, borrar, borrarTodo, resumen],
   );
   return <DownloadsContext.Provider value={value}>{children}</DownloadsContext.Provider>;
 }

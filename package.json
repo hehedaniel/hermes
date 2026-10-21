@@ -50,7 +50,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "dev": "cross-env APP_VARIANT=development expo start --dev-client"
+    "dev": "cross-env APP_VARIANT=development expo start --dev-client",
+    "build:web": "expo export -p web && node scripts/web-pwa.mjs"
   },
   "private": true
 }

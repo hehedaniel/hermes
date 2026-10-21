@@ -2,7 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { GoogleCalSettings } from '@/components/google-cal-settings';
@@ -10,6 +10,7 @@ import { Screen, SectionTitle } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { confirmar } from '@/lib/dialogo';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
 import { haceCuanto } from '@/lib/format';
 import { launchUrl, MoodleError, normalizeUrl } from '@/lib/moodle';
@@ -19,11 +20,12 @@ import { onTokenPendiente, tomarTokenPendiente } from '@/lib/token-pendiente';
 // El login automático necesita recibir enlaces moodlemobile://: solo funciona en el APK (no en Expo Go ni en web)
 const loginMovil =
   Platform.OS !== 'web' && Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
+const esWeb = Platform.OS === 'web';
 
 export default function AjustesScreen() {
   const { client, snapshot, moodleUrl, connect, disconnect, refresh, syncing } = useMoodle();
   const theme = useTheme();
-  const { resumen, borrarTodo } = useDownloads();
+  const { guardaArchivos, resumen, borrarTodo } = useDownloads();
   const [url, setUrl] = useState(moodleUrl);
   const [token, setToken] = useState('');
   const [busy, setBusy] = useState(false);
@@ -83,22 +85,24 @@ export default function AjustesScreen() {
     if (text) setToken(text.trim());
   }
 
+  async function onCopiarLogin() {
+    await Clipboard.setStringAsync(launchUrl(normalizeUrl(url)));
+    setMsg({ ok: true, text: 'Enlace del login copiado.' });
+  }
+
   function onDisconnect() {
-    Alert.alert(
-      'Desconectar',
-      'Se borrará el token, los datos y los archivos descargados en el móvil.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Desconectar',
-          style: 'destructive',
-          onPress: async () => {
-            await borrarTodo();
-            await disconnect();
-          },
-        },
-      ],
-    );
+    confirmar({
+      titulo: 'Desconectar',
+      texto: guardaArchivos
+        ? 'Se borrará el token, los datos y los archivos descargados en el móvil.'
+        : 'Se borrará el token y los datos guardados en este navegador.',
+      boton: 'Desconectar',
+      destructivo: true,
+      onOk: async () => {
+        await borrarTodo();
+        await disconnect();
+      },
+    });
   }
 
   return (
@@ -119,31 +123,30 @@ export default function AjustesScreen() {
           <Button title="Sincronizar ahora" onPress={refresh} loading={syncing} />
           <Button title="Desconectar" variant="danger" onPress={onDisconnect} />
 
-          <SectionTitle>Archivos descargados</SectionTitle>
-          <ThemedText type="small" themeColor="textSecondary">
-            {resumen.archivos
-              ? `${resumen.archivos} archivos ocupan ${formatoTamano(resumen.bytes)} en el móvil.`
-              : 'Todavía no has descargado ningún archivo.'}
-          </ThemedText>
-          {resumen.archivos ? (
-            <Button
-              title="Borrar todas las descargas"
-              variant="secondary"
-              onPress={() =>
-                Alert.alert(
-                  'Borrar descargas',
-                  'Se borrarán del móvil (puedes volver a descargarlos).',
-                  [
-                    { text: 'Cancelar', style: 'cancel' },
-                    {
-                      text: 'Borrar',
-                      style: 'destructive',
-                      onPress: () => borrarTodo(),
-                    },
-                  ],
-                )
-              }
-            />
+          {guardaArchivos ? (
+            <>
+              <SectionTitle>Archivos descargados</SectionTitle>
+              <ThemedText type="small" themeColor="textSecondary">
+                {resumen.archivos
+                  ? `${resumen.archivos} archivos ocupan ${formatoTamano(resumen.bytes)} en el móvil.`
+                  : 'Todavía no has descargado ningún archivo.'}
+              </ThemedText>
+              {resumen.archivos ? (
+                <Button
+                  title="Borrar todas las descargas"
+                  variant="secondary"
+                  onPress={() =>
+                    confirmar({
+                      titulo: 'Borrar descargas',
+                      texto: 'Se borrarán del móvil (puedes volver a descargarlos).',
+                      boton: 'Borrar',
+                      destructivo: true,
+                      onOk: () => borrarTodo(),
+                    })
+                  }
+                />
+              ) : null}
+            </>
           ) : null}
         </>
       ) : null}
@@ -204,28 +207,71 @@ export default function AjustesScreen() {
 
       <GoogleCalSettings />
 
-      <SectionTitle>¿De dónde saco el token?</SectionTitle>
-      <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
-        <ThemedText type="small">
-          • Si ya usas el sincronizador del PC: abre{' '}
-          <ThemedText type="code">_moodle\.env</ThemedText> y copia el valor de{' '}
-          <ThemedText type="code">MOODLE_TOKEN</ThemedText>.
-        </ThemedText>
-        <ThemedText type="small">
-          • Si no: en el PC ejecuta <ThemedText type="code">login.bat</ThemedText> del
-          sincronizador, inicia sesión, pulsa F12 → Consola → F5 y copia el texto{' '}
-          <ThemedText type="code">moodlemobile://token=…</ThemedText>.
-        </ThemedText>
-        <ThemedText type="small">
-          • Pásatelo al móvil (por ejemplo, enviándotelo a ti mismo) y pégalo aquí. Se guarda
-          cifrado en el móvil.
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          No compartas el token: da acceso a tu Moodle.
-        </ThemedText>
-      </View>
+      {esWeb ? (
+        <>
+          <SectionTitle>¿Cómo consigo el token?</SectionTitle>
+          <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+            <ThemedText type="small">
+              Desde el navegador no se puede iniciar sesión directamente, así que la primera vez
+              hace falta un ordenador:
+            </ThemedText>
+            <ThemedText type="small">
+              1. En el ordenador, abre esta misma página:{' '}
+              <ThemedText type="code">{paginaActual()}</ThemedText>
+            </ThemedText>
+            <ThemedText type="small">
+              2. Abre una pestaña nueva en Chrome o Edge, pulsa{' '}
+              <ThemedText type="code">F12</ThemedText> y ve a la pestaña{' '}
+              <ThemedText type="smallBold">Consola</ThemedText>.
+            </ThemedText>
+            <ThemedText type="small">
+              3. Pulsa el botón de abajo para copiar el enlace del login, pégalo en esa pestaña y
+              entra con tu usuario de la Junta. Al terminar, la página no hace nada: es normal.
+            </ThemedText>
+            <ThemedText type="small">
+              4. En la Consola sale una línea roja con{' '}
+              <ThemedText type="code">moodlemobile://token=…</ThemedText>. Cópiala entera y pégala
+              arriba, en Token. Para usarlo en el iPhone, envíatela (por WhatsApp a ti mismo, por
+              ejemplo) y pégala allí.
+            </ThemedText>
+            <Button title="Copiar enlace del login" variant="secondary" onPress={onCopiarLogin} />
+            <ThemedText type="small" themeColor="textSecondary">
+              No compartas el token: da acceso a tu Moodle. Se guarda solo en este navegador.
+            </ThemedText>
+          </View>
+        </>
+      ) : (
+        <>
+          <SectionTitle>¿De dónde saco el token?</SectionTitle>
+          <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+            <ThemedText type="small">
+              • Si ya usas el sincronizador del PC: abre{' '}
+              <ThemedText type="code">_moodle\.env</ThemedText> y copia el valor de{' '}
+              <ThemedText type="code">MOODLE_TOKEN</ThemedText>.
+            </ThemedText>
+            <ThemedText type="small">
+              • Si no: en el PC ejecuta <ThemedText type="code">login.bat</ThemedText> del
+              sincronizador, inicia sesión, pulsa F12 → Consola → F5 y copia el texto{' '}
+              <ThemedText type="code">moodlemobile://token=…</ThemedText>.
+            </ThemedText>
+            <ThemedText type="small">
+              • Pásatelo al móvil (por ejemplo, enviándotelo a ti mismo) y pégalo aquí. Se guarda
+              cifrado en el móvil.
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              No compartas el token: da acceso a tu Moodle.
+            </ThemedText>
+          </View>
+        </>
+      )}
     </Screen>
   );
+}
+
+/** Dirección de la web sin la pantalla actual (p. ej. https://usuario.github.io/hermes). */
+function paginaActual() {
+  if (typeof window === 'undefined') return '';
+  return window.location.href.replace(/\/ajustes\/?$/, '').replace(/\/$/, '');
 }
 
 const styles = StyleSheet.create({

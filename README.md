@@ -11,6 +11,7 @@ Entregas, apuntes y horario del Moodle de la Junta de Andalucía en el bolsillo,
 ![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-APK-3DDC84?logo=android&logoColor=white)
+![iPhone](https://img.shields.io/badge/iPhone-web%20app-000000?logo=apple&logoColor=white)
 ![Google Apps Script](https://img.shields.io/badge/Google-Apps%20Script-4285F4?logo=google&logoColor=white)
 ![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green)
 
@@ -40,7 +41,7 @@ En la FP a distancia todo pasa por el aula virtual: cada módulo tiene sus unida
 
 ## Qué hace
 
-### 📱 La app (Android)
+### 📱 La app (Android y iPhone)
 
 - **Pendientes.** Todas las entregas de todos los módulos en una lista: vencidas, próximos 7 días, más adelante. Cada una con su estado (*pendiente, borrador, entregada, vencida*), la **nota** si ya está corregida y cuánto falta. Lo que vence en menos de 3 días se marca en naranja y sale en el globo de la pestaña.
 - **Novedades.** Lo que ha cambiado desde la última vez, en todas las asignaturas: **apuntes nuevos**, archivos que el profesor ha **actualizado**, **actividades** y **entregas nuevas**, **notas publicadas** y **cambios de fecha**. Con globo de no leídas; al tocar una, te lleva al archivo, la tarea o la asignatura.
@@ -92,7 +93,9 @@ flowchart LR
 
 ### 1. Instalar la app
 
-Descarga el APK de la última compilación e instálalo; Android te pedirá permitir "orígenes desconocidos". Abre **Hermes → Ajustes → Iniciar sesión en Moodle** y entra con tu usuario de la Junta. Si el móvil pregunta con qué app abrir el enlace, elige **Hermes**.
+**Android.** Descarga el APK de la [última versión](https://github.com/hehedaniel/hermes/releases/latest) e instálalo; Android te pedirá permitir "orígenes desconocidos". Abre **Hermes → Ajustes → Iniciar sesión en Moodle** y entra con tu usuario de la Junta. Si el móvil pregunta con qué app abrir el enlace, elige **Hermes**.
+
+**iPhone.** Abre **[hehedaniel.github.io/hermes](https://hehedaniel.github.io/hermes)** en Safari y pulsa **Compartir → Añadir a pantalla de inicio**: queda un icono como el de cualquier app. La primera vez hace falta un ordenador para sacar el token; los pasos salen en **Ajustes → ¿Cómo consigo el token?**. En la versión web los archivos se abren en el navegador en lugar de guardarse en el móvil; todo lo demás es igual.
 
 <details>
 <summary><b>Compilar el APK tú mismo</b></summary>
@@ -106,6 +109,22 @@ npx eas-cli@latest build -p android --profile preview
 ```
 
 Responde **Yes** a crear el proyecto y la *keystore*. A los 10-20 minutos tendrás un enlace y un QR para descargar el APK.
+</details>
+
+<details>
+<summary><b>Publicar una versión nueva</b></summary>
+
+Hay dos GitHub Actions:
+
+- **Web** (`.github/workflows/web.yml`): cada push a `main` publica la versión web en GitHub Pages. La primera vez: *Settings → Pages → Source: GitHub Actions*.
+- **Release APK** (`.github/workflows/release.yml`): al subir una etiqueta `vX.Y.Z`, compila el APK en EAS y crea la release con el APK adjunto. La primera vez, guarda un token de [expo.dev](https://expo.dev/settings/access-tokens) como secreto `EXPO_TOKEN` en *Settings → Secrets and variables → Actions*.
+
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+Para probar la web en local: `npm run web`. Para generarla como en GitHub Pages: `npm run build:web` (sale en `dist/`).
 </details>
 
 <details>
@@ -158,6 +177,8 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 │       ├── downloads.tsx     descargas al móvil (expo-file-system)
 │       ├── google-cal.tsx    eventos de Google Calendar (vía Apps Script)
 │       └── store.tsx         token, caché y sincronización
+├── public/ · scripts/        iconos y ajustes para instalar la web en el iPhone (PWA)
+├── .github/workflows/        publicar la web y las releases del APK
 ├── google-apps-script/       Moodle → Google Tasks + Calendar, y eventos para la app
 ├── sincronizador-pc/         descarga del material al PC (Python)
 └── docs/                     icono y capturas
@@ -185,11 +206,12 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Google Tasks y Google Calendar con Apps Script
 - [x] Google Calendar dentro de la app
 - [x] APK con login desde el móvil
+- [x] Releases automáticas del APK
 - [x] Novedades: apuntes nuevos o actualizados, entregas nuevas, notas y cambios de fecha
 - [x] Horario de clases con profesores, festivos y vacaciones (curso 2026-27)
 - [ ] Notificaciones en el móvil y sincronización en segundo plano
 - [ ] Notas personales y checklist por entrega
-- [ ] Versión web
+- [x] Versión web instalable en iPhone
 
 ## Créditos
 

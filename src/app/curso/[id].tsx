@@ -37,7 +37,7 @@ export default function CursoScreen() {
   }>();
   const cursoId = Number(id);
   const { contenido, cargando, error, recargar } = useCourseContents(cursoId);
-  const { estado, descargarVarios } = useDownloads();
+  const { guardaArchivos, estado, descargarVarios } = useDownloads();
   const theme = useTheme();
   const [progreso, setProgreso] = useState<{
     hechos: number;
@@ -72,7 +72,7 @@ export default function CursoScreen() {
           <ActivityIndicator color={theme.accent} style={{ marginTop: 40 }} />
         ) : null}
 
-        {contenido ? (
+        {contenido && guardaArchivos ? (
           <View style={[styles.descargas, { backgroundColor: theme.backgroundElement }]}>
             <ThemedText type="small" themeColor="textSecondary">
               {archivos.length} archivos ·{' '}

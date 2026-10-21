@@ -1,12 +1,13 @@
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
-import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { SectionTitle } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { confirmar } from '@/lib/dialogo';
 import { useGoogleCal } from '@/lib/google-cal';
 
 /** Sección de Ajustes para conectar tu Google Calendar (vía el Apps Script). */
@@ -43,10 +44,13 @@ export function GoogleCalSettings() {
             title="Desconectar Google Calendar"
             variant="secondary"
             onPress={() =>
-              Alert.alert('Google Calendar', '¿Dejar de mostrar tus eventos de Google?', [
-                { text: 'Cancelar', style: 'cancel' },
-                { text: 'Desconectar', style: 'destructive', onPress: () => quitar() },
-              ])
+              confirmar({
+                titulo: 'Google Calendar',
+                texto: '¿Dejar de mostrar tus eventos de Google?',
+                boton: 'Desconectar',
+                destructivo: true,
+                onOk: () => quitar(),
+              })
             }
           />
         </View>

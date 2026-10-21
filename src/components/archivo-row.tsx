@@ -6,8 +6,9 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { Archivo } from '@/lib/data';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
+import { avisar } from '@/lib/dialogo';
 import { claveArchivo } from '@/lib/novedades';
-import { abrirArchivo, abrirCon, extension, mimeDe } from '@/lib/open-file';
+import { abrirCon, extension, mimeDe } from '@/lib/open-file';
 import { useMoodle } from '@/lib/store';
 
 const ICONO: Record<string, keyof typeof MaterialIcons.glyphMap> = {
@@ -28,10 +29,20 @@ const ICONO: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   mp4: 'movie',
 };
 
-/** Fila de un archivo: tocar = abrir (descargándolo antes si hace falta); mantener = opciones. */
+/**
+ * Fila de un archivo: tocar = abrir (descargándolo antes si hace falta); mantener = opciones.
+ * En la web se abre en una pestaña nueva.
+ */
 export function ArchivoRow({ archivo }: { archivo: Archivo }) {
   const theme = useTheme();
-  const { estado, archivoLocal, descargar, borrar } = useDownloads();
+  const {
+    guardaArchivos,
+    abrir: abrirArchivo,
+    estado,
+    archivoLocal,
+    descargar,
+    borrar,
+  } = useDownloads();
   const { novedades } = useMoodle();
   const k = claveArchivo(archivo.fileurl);
   const esNuevo = novedades.some(
@@ -42,11 +53,9 @@ export function ArchivoRow({ archivo }: { archivo: Archivo }) {
 
   async function abrir() {
     try {
-      const local = st === 'si' ? archivoLocal(archivo) : undefined;
-      const file = local ?? (await descargar(archivo));
-      await abrirArchivo(archivo, file);
+      await abrirArchivo(archivo);
     } catch (e) {
-      Alert.alert('No se pudo abrir', (e as Error).message);
+      avisar('No se pudo abrir', (e as Error).message);
     }
   }
 
@@ -78,7 +87,7 @@ export function ArchivoRow({ archivo }: { archivo: Archivo }) {
   return (
     <Pressable
       onPress={abrir}
-      onLongPress={opciones}
+      onLongPress={guardaArchivos ? opciones : undefined}
       style={({ pressed }) => [styles.row, { opacity: pressed ? 0.6 : 1 }]}>
       <MaterialIcons
         name={ICONO[ext] ?? 'insert-drive-file'}
@@ -102,7 +111,9 @@ export function ArchivoRow({ archivo }: { archivo: Archivo }) {
           ) : null}
         </ThemedText>
       </View>
-      {st === 'descargando' ? (
+      {!guardaArchivos ? (
+        <MaterialIcons name="open-in-new" size={20} color={theme.accent} />
+      ) : st === 'descargando' ? (
         <ActivityIndicator size="small" color={theme.accent} />
       ) : st === 'si' ? (
         <MaterialIcons name="offline-pin" size={22} color={theme.entregada} />
