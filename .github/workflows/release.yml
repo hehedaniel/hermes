@@ -1,0 +1,63 @@
+# Al subir una etiqueta vX.Y.Z: compila el APK en EAS y lo publica como release del repo.
+#   git tag v1.1.0
+#   git push origin v1.1.0
+# Primera vez: crea un token en expo.dev (Account settings → Access tokens) y guárdalo en
+# Settings → Secrets and variables → Actions como EXPO_TOKEN.
+name: Release APK
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Etiqueta ya subida (p. ej. v1.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+
+      - name: Poner la versión de la etiqueta en la app
+        run: |
+          node -e "
+            const fs = require('fs');
+            const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            app.expo.version = process.env.TAG.replace(/^v/, '');
+            fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+          "
+
+      - name: Compilar el APK en EAS (espera a que termine)
+        run: eas build -p android --profile preview --non-interactive --wait --json > build.json
+
+      - name: Descargar el APK
+        run: |
+          URL=$(node -e "console.log(require('./build.json')[0].artifacts.buildUrl)")
+          curl -fsSL -o "Hermes-$TAG.apk" "$URL"
+
+      - name: Crear la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG" "Hermes-$TAG.apk" \
+            --title "Hermes $TAG" \
+            --generate-notes \
+            --notes "Descarga **Hermes-$TAG.apk** (abajo, en *Assets*) e instálalo. Si ya tenías Hermes, se actualiza sin perder la sesión."
