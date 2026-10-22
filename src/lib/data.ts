@@ -9,6 +9,7 @@ import {
   cursoIgnorado,
   MoodleClient,
   type SiteInfo,
+  type AssignPlugin,
   type SubmissionStatus,
 } from './moodle';
 
@@ -41,6 +42,24 @@ export type Entrega = {
   adjuntos?: Archivo[];
   apertura?: number; // desde cuándo se puede entregar
   corte?: number; // fecha de corte (después ya no deja entregar)
+  /** Lo que enviaste tú (solo tareas) */
+  envio?: Envio;
+  /** La corrección del profesor, si ya es visible para ti */
+  correccion?: Correccion;
+};
+
+export type Envio = {
+  fecha?: number; // última modificación de tu entrega
+  archivos: Archivo[];
+  texto?: string; // HTML del texto en línea, si la tarea lo pide
+  pendienteDeCorregir: boolean;
+};
+
+export type Correccion = {
+  nota?: string;
+  fecha?: number; // cuándo la corrigieron
+  comentario?: string; // HTML del comentario del profesor
+  archivos: Archivo[]; // retroalimentación: tu PDF anotado, una plantilla corregida…
 };
 
 export type Snapshot = {
@@ -49,6 +68,73 @@ export type Snapshot = {
   entregas: Entrega[];
   syncedAt: number; // ms
 };
+
+/** Archivos de los plugins de una entrega o corrección, como Archivo de Hermes. */
+function archivosDePlugins(
+  plugins: AssignPlugin[] | undefined,
+  cursoId: number,
+  cmid: number,
+): Archivo[] {
+  return (plugins ?? []).flatMap((pl) =>
+    (pl.fileareas ?? []).flatMap((fa) =>
+      (fa.files ?? [])
+        .filter((f) => f.fileurl)
+        .map((f) => ({
+          nombre: f.filename,
+          fileurl: f.fileurl,
+          size: f.filesize ?? 0,
+          timemodified: f.timemodified ?? 0,
+          mimetype: f.mimetype,
+          cursoId,
+          cmid,
+        })),
+    ),
+  );
+}
+
+const textoDePlugins = (plugins: AssignPlugin[] | undefined, tipo: string) =>
+  (plugins ?? [])
+    .filter((pl) => pl.type === tipo)
+    .flatMap((pl) => pl.editorfields ?? [])
+    .map((f) => f.text ?? '')
+    .filter((t) => t.replace(/<[^>]+>|&nbsp;|\s/g, ''))
+    .join('<br>') || undefined;
+
+/** Tu entrega y la corrección del profesor, a partir de mod_assign_get_submission_status. */
+export function detalleEntrega(
+  st: SubmissionStatus,
+  cursoId: number,
+  cmid: number,
+): { envio?: Envio; correccion?: Correccion } {
+  const sub = st.lastattempt?.submission ?? st.lastattempt?.teamsubmission;
+  const enviada = sub?.status === 'submitted' || sub?.status === 'draft';
+  const envio: Envio | undefined = enviada
+    ? {
+        fecha: sub?.timemodified || undefined,
+        archivos: archivosDePlugins(sub?.plugins, cursoId, cmid),
+        texto: textoDePlugins(sub?.plugins, 'onlinetext'),
+        pendienteDeCorregir:
+          sub?.status === 'submitted' &&
+          !st.feedback?.gradefordisplay &&
+          st.lastattempt?.gradingstatus !== 'graded',
+      }
+    : undefined;
+
+  const fb = st.feedback;
+  const nota = fb?.gradefordisplay ? strip(fb.gradefordisplay) : undefined;
+  const comentario = textoDePlugins(fb?.plugins, 'comments');
+  const archivos = archivosDePlugins(fb?.plugins, cursoId, cmid);
+  const correccion: Correccion | undefined =
+    nota || comentario || archivos.length
+      ? {
+          nota,
+          fecha: fb?.gradeddate || fb?.grade?.timemodified || undefined,
+          comentario,
+          archivos,
+        }
+      : undefined;
+  return { envio, correccion };
+}
 
 const strip = (s?: string) =>
   (s ?? '')
@@ -156,6 +242,7 @@ export async function fetchSnapshot(client: MoodleClient, nowMs = Date.now()): P
       })),
       apertura: a.allowsubmissionsfromdate || undefined,
       corte: a.cutoffdate || undefined,
+      ...detalleEntrega(st, a.course, a.cmid),
     });
   });
 

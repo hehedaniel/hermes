@@ -87,6 +87,73 @@ export default function TareaScreen() {
           </View>
         ) : null}
 
+        {e.correccion ? (
+          <>
+            <SectionTitle>Corrección</SectionTitle>
+            <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+              {e.correccion.nota ? (
+                <View style={styles.notaRow}>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Nota
+                  </ThemedText>
+                  <ThemedText style={[styles.nota, { color: theme.entregada }]}>
+                    {e.correccion.nota}
+                  </ThemedText>
+                </View>
+              ) : null}
+              {e.correccion.fecha ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Corregida el {fechaCorta(e.correccion.fecha)} ·{' '}
+                  {relativo(e.correccion.fecha, nowMs)}
+                </ThemedText>
+              ) : null}
+              {e.correccion.comentario ? (
+                <View style={[styles.comentario, { borderLeftColor: theme.accent }]}>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Comentario del profesor
+                  </ThemedText>
+                  <ThemedText type="small" style={styles.enunciado} selectable>
+                    {htmlATexto(e.correccion.comentario)}
+                  </ThemedText>
+                </View>
+              ) : null}
+              {e.correccion.archivos.map((a) => (
+                <ArchivoRow key={a.fileurl} archivo={a} />
+              ))}
+            </View>
+          </>
+        ) : null}
+
+        {e.envio ? (
+          <>
+            <SectionTitle>Tu entrega</SectionTitle>
+            <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+              <ThemedText type="small">
+                {e.estado === 'borrador' ? 'Borrador guardado' : 'Enviada'}
+                {e.envio.fecha ? ` el ${fechaCorta(e.envio.fecha)}` : ''}
+                {e.envio.fecha && e.fecha && e.envio.fecha > e.fecha ? (
+                  <ThemedText type="small" style={{ color: theme.vencida }}>
+                    {'  '}con retraso
+                  </ThemedText>
+                ) : null}
+              </ThemedText>
+              {e.envio.pendienteDeCorregir ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Pendiente de corregir. Te avisaremos cuando salga la nota.
+                </ThemedText>
+              ) : null}
+              {e.envio.texto ? (
+                <ThemedText type="small" style={styles.enunciado} selectable>
+                  {htmlATexto(e.envio.texto)}
+                </ThemedText>
+              ) : null}
+              {e.envio.archivos.map((a) => (
+                <ArchivoRow key={a.fileurl} archivo={a} />
+              ))}
+            </View>
+          </>
+        ) : null}
+
         {e.adjuntos?.length ? (
           <>
             <SectionTitle>Archivos de la tarea</SectionTitle>
@@ -177,4 +244,7 @@ const styles = StyleSheet.create({
   fechaRow: { gap: 0 },
   fechaValor: { fontSize: 15 },
   enunciado: { lineHeight: 22 },
+  notaRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  nota: { fontSize: 28, lineHeight: 34, fontWeight: 800 },
+  comentario: { borderLeftWidth: 3, paddingLeft: Spacing.two, gap: 2 },
 });

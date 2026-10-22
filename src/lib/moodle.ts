@@ -208,12 +208,26 @@ export type ActionEvent = {
   action?: { name?: string; url?: string; actionable?: boolean };
 };
 
+/** Archivos y textos que cuelgan de una entrega o de su corrección (plugins de mod_assign). */
+export type AssignPlugin = {
+  type: string; // file, onlinetext, comments, editpdf…
+  name?: string;
+  fileareas?: { area: string; files?: ModuleContent[] }[];
+  editorfields?: { name: string; text?: string }[];
+};
+
 export type SubmissionStatus = {
   lastattempt?: {
-    submission?: { status?: string };
-    teamsubmission?: { status?: string };
+    submission?: { status?: string; timemodified?: number; plugins?: AssignPlugin[] };
+    teamsubmission?: { status?: string; timemodified?: number; plugins?: AssignPlugin[] };
+    gradingstatus?: string; // graded, notgraded, released…
   };
-  feedback?: { gradefordisplay?: string };
+  feedback?: {
+    gradefordisplay?: string;
+    gradeddate?: number;
+    grade?: { timemodified?: number };
+    plugins?: AssignPlugin[];
+  };
 };
 
 export type ModuleContent = {

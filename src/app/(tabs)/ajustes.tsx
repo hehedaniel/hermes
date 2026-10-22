@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
+import { AvisosSettings } from '@/components/avisos-settings';
 import { Button } from '@/components/button';
 import { GoogleCalSettings } from '@/components/google-cal-settings';
 import { Screen, SectionTitle } from '@/components/screen';
@@ -205,6 +206,8 @@ export default function AjustesScreen() {
           {msg.text}
         </ThemedText>
       ) : null}
+
+      {client ? <AvisosSettings /> : null}
 
       <GoogleCalSettings />
 

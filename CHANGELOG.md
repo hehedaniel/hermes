@@ -6,6 +6,18 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [1.2.0] - 2026-10-22
+
+### Añadido
+- **Notificaciones**: nota publicada, apuntes nuevos o actualizados, entregas nuevas y cambios de fecha. Hermes mira Moodle en segundo plano cada media hora más o menos, aunque esté cerrada.
+- **Recordatorios** 1 día y 2 horas antes de cada entrega pendiente (avisando si solo tienes un borrador).
+- Al tocar una notificación se abre la entrega o las Novedades.
+- *Ajustes → Notificaciones*: activar o desactivar cada tipo de aviso y probar una notificación.
+- El detalle de cada entrega muestra la **corrección** (nota, fecha, comentario y archivos del profesor) y **tu envío** (fecha, archivos y si está pendiente de corregir).
+
+### Corregido
+- Al abrir una entrega desde el widget ya se puede volver atrás.
+
 ## [1.1.0] - 2026-10-22
 
 ### Añadido
@@ -38,7 +50,8 @@ Primera versión para compañeros.
 ### Corregido
 - La app ya no se queda "sincronizando" para siempre si Moodle no responde: cada petición se corta a los 25 s.
 
-[Sin publicar]: https://github.com/hehedaniel/hermes/compare/v1.1.0...HEAD
+[Sin publicar]: https://github.com/hehedaniel/hermes/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/hehedaniel/hermes/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/hehedaniel/hermes/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/hehedaniel/hermes/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/hehedaniel/hermes/releases/tag/v1.0.0

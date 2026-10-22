@@ -50,7 +50,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config.android,
     package: IS_DEV ? 'es.danihermoso.campus.dev' : config.android?.package,
   },
-  plugins: [...(config.plugins ?? []), ['react-native-android-widget', widgets]],
+  plugins: [
+    ...(config.plugins ?? []),
+    ['react-native-android-widget', widgets],
+    [
+      'expo-notifications',
+      {
+        icon: './assets/images/notification-icon.png',
+        color: '#1F6FEB',
+        defaultChannel: 'novedades',
+      },
+    ],
+    'expo-background-task',
+  ],
   experiments: {
     ...config.experiments,
     ...(BASE_URL ? { baseUrl: BASE_URL } : {}),

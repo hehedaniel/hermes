@@ -16,14 +16,12 @@ import { COURSE_PALETTE } from '@/constants/theme';
 
 import { actualizarWidgets } from '@/widgets/actualizar';
 
+import { avisarNovedades, prepararAvisos, programarRecordatorios } from './avisos';
+import { activarSegundoPlano, desactivarSegundoPlano } from './segundo-plano';
+import { guardarListaNovedades, leerNovedades, leerSnapshot, sincronizarNovedades } from './sync';
+
 import { fetchSnapshot, type Snapshot } from './data';
-import {
-  type BaseNovedades,
-  calcularNovedades,
-  fetchTodosLosContenidos,
-  fusionarNovedades,
-  type Novedad,
-} from './novedades';
+import type { Novedad } from './novedades';
 import {
   DEFAULT_MOODLE_URL,
   MoodleClient,
@@ -48,7 +46,6 @@ const URL_KEY = 'moodle_url';
 const CACHE_KEY = 'snapshot_v1';
 const NOVEDADES_KEY = 'novedades_v1';
 const BASE_KEY = 'novedades_base_v1';
-const contentsKey = (id: number) => `contents_v1_${id}`;
 const AUTO_REFRESH_MS = 15 * 60 * 1000; // al volver a la app, sincroniza si han pasado 15 min
 const SYNC_MAX_MS = 2 * 60 * 1000; // pase lo que pase, a los 2 minutos se deja de "sincronizar"
 
@@ -106,43 +103,29 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
   const guardarNovedades = useCallback((lista: Novedad[]) => {
     novedadesRef.current = lista;
     setNovedades(lista);
-    AsyncStorage.setItem(NOVEDADES_KEY, JSON.stringify(lista));
+    guardarListaNovedades(lista);
   }, []);
 
   // Novedades: contenido de todos los cursos comparado con la foto anterior. Va aparte de la
   // sincronización principal para que Pendientes no espere a que se descarguen todos los cursos.
   const novedadesEnCurso = useRef(false);
-  const actualizarNovedades = useCallback(
-    async (c: MoodleClient, snap: Snapshot) => {
-      if (novedadesEnCurso.current) return;
-      novedadesEnCurso.current = true;
-      try {
-        const contenidos = await fetchTodosLosContenidos(c, snap);
-        if (!contenidos.length) return; // sin conexión con ningún curso: no se toca la foto anterior
-        const rawBase = await leer(BASE_KEY);
-        let base: BaseNovedades | null = null;
-        try {
-          base = rawBase ? JSON.parse(rawBase) : null;
-        } catch {
-          // foto corrupta: se empieza de cero
-        }
-        const r = calcularNovedades(base, contenidos, snap);
-        if (r.novedades.length)
-          guardarNovedades(fusionarNovedades(novedadesRef.current, r.novedades));
-        await AsyncStorage.multiSet([
-          [BASE_KEY, JSON.stringify(r.base)],
-          ...contenidos.map(
-            (ct) => [contentsKey(ct.cursoId), JSON.stringify(ct)] as [string, string],
-          ),
-        ]);
-      } catch {
-        // Las novedades no son críticas: ya se calcularán en la próxima sincronización
-      } finally {
-        novedadesEnCurso.current = false;
+  const actualizarNovedades = useCallback(async (c: MoodleClient, snap: Snapshot) => {
+    if (novedadesEnCurso.current) return;
+    novedadesEnCurso.current = true;
+    try {
+      const r = await sincronizarNovedades(c, snap);
+      if (r) {
+        novedadesRef.current = r.lista;
+        setNovedades(r.lista);
+        // Con la app abierta solo se avisa de las notas (el resto ya se ve en Novedades)
+        avisarNovedades(r.nuevas.filter((n) => n.tipo === 'nota'));
       }
-    },
-    [guardarNovedades],
-  );
+    } catch {
+      // Las novedades no son críticas: ya se calcularán en la próxima sincronización
+    } finally {
+      novedadesEnCurso.current = false;
+    }
+  }, []);
 
   const sync = useCallback(
     async (c: MoodleClient) => {
@@ -155,6 +138,7 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
         setSnapshot(snap);
         AsyncStorage.setItem(CACHE_KEY, JSON.stringify(snap)).catch(() => {});
         actualizarWidgets(snap);
+        programarRecordatorios(snap);
         actualizarNovedades(c, snap);
       } catch (e) {
         const err = e as MoodleError;
@@ -208,22 +192,26 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
         setClient(c);
         setReady(true);
         sync(c);
+        prepararAvisos();
+        activarSegundoPlano();
       } else {
         setReady(true);
       }
     })();
   }, [sync]);
 
-  // Al volver a primer plano, sincroniza si la copia tiene más de 15 minutos
+  // Al volver a primer plano: recoge lo del segundo plano y sincroniza si la copia tiene más de 15 min
   useEffect(() => {
-    const sub = AppState.addEventListener('change', (state) => {
-      if (
-        state === 'active' &&
-        client &&
-        (!snapshot || Date.now() - snapshot.syncedAt > AUTO_REFRESH_MS)
-      ) {
-        sync(client);
-      }
+    const sub = AppState.addEventListener('change', async (state) => {
+      if (state !== 'active' || !client) return;
+      // Lo que haya encontrado el segundo plano mientras la app estaba cerrada
+      const [guardada, lista] = await Promise.all([leerSnapshot(), leerNovedades()]);
+      novedadesRef.current = lista;
+      setNovedades(lista);
+      const masReciente =
+        guardada && (!snapshot || guardada.syncedAt > snapshot.syncedAt) ? guardada : snapshot;
+      if (masReciente !== snapshot) setSnapshot(masReciente);
+      if (!masReciente || Date.now() - masReciente.syncedAt > AUTO_REFRESH_MS) sync(client);
     });
     return () => sub.remove();
   }, [client, snapshot, sync]);
@@ -243,12 +231,16 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
       setMoodleUrl(base);
       setClient(c);
       sync(c);
+      prepararAvisos();
+      activarSegundoPlano();
       return site;
     },
     [sync],
   );
 
   const disconnect = useCallback(async () => {
+    await desactivarSegundoPlano();
+    await programarRecordatorios(null); // quita los recordatorios pendientes
     await tokenStore.deleteItemAsync(TOKEN_KEY);
     await AsyncStorage.multiRemove([CACHE_KEY, NOVEDADES_KEY, BASE_KEY]);
     setClient(null);
