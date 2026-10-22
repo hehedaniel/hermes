@@ -21,20 +21,30 @@ import { sincronizarNovedades } from './sync';
 export const TAREA_SEGUNDO_PLANO = 'hermes-sincronizar';
 const INTERVALO_MIN = 30;
 
+/**
+ * Lo que hace cada pasada en segundo plano. Exportada para poder probarla desde
+ * Hermes Dev sin esperar a Android. Devuelve cuántas novedades ha encontrado (o null si
+ * no había sesión).
+ */
+export async function pasadaSegundoPlano(): Promise<number | null> {
+  const token = await SecureStore.getItemAsync(CLAVES.token);
+  if (!token) return null;
+  const url = (await AsyncStorage.getItem(CLAVES.url)) || DEFAULT_MOODLE_URL;
+  const client = new MoodleClient(url, token);
+
+  const snap = await fetchSnapshot(client);
+  await AsyncStorage.setItem(CLAVES.snapshot, JSON.stringify(snap));
+  actualizarWidgets(snap);
+  await programarRecordatorios(snap);
+
+  const r = await sincronizarNovedades(client, snap);
+  if (r) await avisarNovedades(r.nuevas);
+  return r?.nuevas.length ?? 0;
+}
+
 TaskManager.defineTask(TAREA_SEGUNDO_PLANO, async () => {
   try {
-    const token = await SecureStore.getItemAsync(CLAVES.token);
-    if (!token) return BackgroundTask.BackgroundTaskResult.Success;
-    const url = (await AsyncStorage.getItem(CLAVES.url)) || DEFAULT_MOODLE_URL;
-    const client = new MoodleClient(url, token);
-
-    const snap = await fetchSnapshot(client);
-    await AsyncStorage.setItem(CLAVES.snapshot, JSON.stringify(snap));
-    actualizarWidgets(snap);
-    await programarRecordatorios(snap);
-
-    const r = await sincronizarNovedades(client, snap);
-    if (r) await avisarNovedades(r.nuevas);
+    await pasadaSegundoPlano();
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch {
     return BackgroundTask.BackgroundTaskResult.Failed;

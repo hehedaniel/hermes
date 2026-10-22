@@ -2,6 +2,9 @@
 export async function simularNovedades() {
   return 'No disponible en la web.';
 }
-export async function ejecutarSegundoPlanoYa() {
+export async function comprobarComoSegundoPlano() {
+  return 'No disponible en la web.';
+}
+export function lanzarSegundoPlanoEn10s() {
   return 'No disponible en la web.';
 }

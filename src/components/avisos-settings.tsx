@@ -18,7 +18,11 @@ import {
   type PreferenciasAvisos,
   programarRecordatorios,
 } from '@/lib/avisos';
-import { ejecutarSegundoPlanoYa, simularNovedades } from '@/lib/pruebas-dev';
+import {
+  comprobarComoSegundoPlano,
+  lanzarSegundoPlanoEn10s,
+  simularNovedades,
+} from '@/lib/pruebas-dev';
 import { useMoodle } from '@/lib/store';
 
 const OPCIONES: { clave: keyof PreferenciasAvisos; titulo: string; texto: string }[] = [
@@ -117,8 +121,9 @@ export function AvisosSettings() {
         <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
           <ThemedText type="smallBold">Pruebas (solo Hermes Dev)</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            1. «Simular novedades». 2. Cierra la app. 3. Vuelve y pulsa «Ejecutar el segundo plano
-            ya», o tira para sincronizar.
+            Primero «Simular novedades». Luego, o bien «Comprobar ahora», que hace lo mismo que el
+            segundo plano al momento, o bien «Lanzar en 10 s» y sal de la app enseguida: Android no
+            lo ejecuta con Hermes delante.
           </ThemedText>
           <Button
             title="Simular novedades"
@@ -126,9 +131,17 @@ export function AvisosSettings() {
             onPress={async () => setMsg(await simularNovedades())}
           />
           <Button
-            title="Ejecutar el segundo plano ya"
+            title="Comprobar ahora (como en segundo plano)"
             variant="secondary"
-            onPress={async () => setMsg(await ejecutarSegundoPlanoYa())}
+            onPress={async () => {
+              setMsg('Comprobando Moodle…');
+              setMsg(await comprobarComoSegundoPlano());
+            }}
+          />
+          <Button
+            title="Lanzar el segundo plano en 10 s"
+            variant="secondary"
+            onPress={() => setMsg(lanzarSegundoPlanoEn10s())}
           />
           {msg ? (
             <ThemedText type="small" style={{ color: theme.accent }}>

@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as BackgroundTask from 'expo-background-task';
 
 import { CLAVES } from './claves';
+import { pasadaSegundoPlano } from './segundo-plano';
 import { simularEnBase } from './simular-novedades';
 
 /** Prepara la foto para que la siguiente sincronización encuentre novedades. */
@@ -23,14 +24,26 @@ export async function simularNovedades(): Promise<string> {
   return `Listo: la próxima sincronización encontrará ${r.hechos.join(' y ')}.`;
 }
 
-/** Lanza ya la sincronización en segundo plano (solo funciona en compilaciones de desarrollo). */
-export async function ejecutarSegundoPlanoYa(): Promise<string> {
+/** Ejecuta ahora mismo la misma pasada que el segundo plano, avisos incluidos. */
+export async function comprobarComoSegundoPlano(): Promise<string> {
   try {
-    const ok = await BackgroundTask.triggerTaskWorkerForTestingAsync();
-    return ok
-      ? 'Lanzada. Si había novedades, te llegarán los avisos en unos segundos.'
-      : 'Android no la ha lanzado. ¿Está activado el segundo plano? Abre la app con sesión iniciada.';
+    const n = await pasadaSegundoPlano();
+    if (n === null) return 'No hay sesión iniciada en Moodle.';
+    return n
+      ? `Hecho: ${n} ${n === 1 ? 'novedad' : 'novedades'}. Deberían llegarte los avisos ahora.`
+      : 'Hecho, pero no había nada nuevo. Pulsa antes «Simular novedades».';
   } catch (e) {
-    return `No se pudo lanzar: ${(e as Error).message}`;
+    return `Falló: ${(e as Error).message}`;
   }
+}
+
+/**
+ * Lanza la tarea de verdad, a través de Android, dentro de 10 s. Android no la ejecuta
+ * con la app delante, así que hay que salir de Hermes (botón de inicio) antes de que pase.
+ */
+export function lanzarSegundoPlanoEn10s(): string {
+  setTimeout(() => {
+    BackgroundTask.triggerTaskWorkerForTestingAsync().catch(() => {});
+  }, 10_000);
+  return 'Sal ya de la app con el botón de inicio. En 10 s Android lanzará el segundo plano y, si hay novedades, te llegarán los avisos.';
 }
