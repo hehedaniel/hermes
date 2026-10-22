@@ -133,10 +133,13 @@ test('simular novedades: quita un archivo de la foto y adelanta una fecha', () =
       { key: 'y', nombre: 'Y', estado: 'pendiente', fecha: 5000 },
     ],
   } as unknown as Snapshot;
-  const r = simularEnBase(base, snap);
+  const r = simularEnBase(base, snap, () => 0);
   assert.equal(Object.keys(r.base.cursos['11'].archivos).length, 1);
   assert.equal(r.base.entregas.y.fecha, 5000 - 86400);
   assert.equal(r.base.entregas.x.fecha, 2000);
   assert.equal(Object.keys(base.cursos['11'].archivos).length, 2); // no toca el original
   assert.equal(r.hechos.length, 2);
+  assert.deepEqual(r.olvidar, ['archivo:https://m/a.pdf:', 'fecha:y:']);
+  // Al azar: con otro número elige otro archivo
+  assert.ok(simularEnBase(base, snap, () => 0.9).base.cursos['11'].archivos['https://m/a.pdf']);
 });

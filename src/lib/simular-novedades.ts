@@ -3,10 +3,15 @@ import type { BaseNovedades } from './novedades';
 
 /**
  * Quita de la foto un archivo de una asignatura y adelanta un día la fecha de una entrega
- * pendiente. Así la próxima sincronización ve "Apuntes nuevos" y "Cambio de fecha".
- * Función pura, para poder probarla.
+ * pendiente, elegidos al azar. Así la próxima sincronización ve "Apuntes nuevos" y
+ * "Cambio de fecha". Devuelve también qué novedades hay que olvidar (si ya estaban en la
+ * lista de una prueba anterior, Hermes no avisaría otra vez). Función pura.
  */
-export function simularEnBase(base: BaseNovedades, snap: Snapshot | null) {
+export function simularEnBase(
+  base: BaseNovedades,
+  snap: Snapshot | null,
+  azar: () => number = Math.random,
+) {
   const nueva: BaseNovedades = {
     cursos: Object.fromEntries(
       Object.entries(base.cursos).map(([id, c]) => [id, { ...c, archivos: { ...c.archivos } }]),
@@ -14,23 +19,29 @@ export function simularEnBase(base: BaseNovedades, snap: Snapshot | null) {
     entregas: { ...base.entregas },
   };
   const hechos: string[] = [];
+  const olvidar: string[] = []; // prefijos de id de novedad
 
-  const conArchivos = Object.values(nueva.cursos).find((c) => Object.keys(c.archivos).length);
-  if (conArchivos) {
-    delete conArchivos.archivos[Object.keys(conArchivos.archivos)[0]];
-    hechos.push('un archivo nuevo');
+  const elegir = <T>(lista: T[]) => lista[Math.floor(azar() * lista.length)];
+
+  const archivos = Object.values(nueva.cursos).flatMap((c) =>
+    Object.keys(c.archivos).map((k) => ({ c, k })),
+  );
+  if (archivos.length) {
+    const { c, k } = elegir(archivos);
+    delete c.archivos[k];
+    olvidar.push(`archivo:${k}:`);
+    hechos.push(`un archivo nuevo (${decodeURIComponent(k.split('/').pop() ?? k)})`);
   }
 
-  const pendiente = snap?.entregas.find(
+  const pendientes = (snap?.entregas ?? []).filter(
     (e) =>
       (e.estado === 'pendiente' || e.estado === 'borrador') && e.fecha && nueva.entregas[e.key],
   );
-  if (pendiente) {
-    nueva.entregas[pendiente.key] = {
-      ...nueva.entregas[pendiente.key],
-      fecha: pendiente.fecha - 86400,
-    };
-    hechos.push(`un cambio de fecha en «${pendiente.nombre}»`);
+  if (pendientes.length) {
+    const e = elegir(pendientes);
+    nueva.entregas[e.key] = { ...nueva.entregas[e.key], fecha: e.fecha - 86400 };
+    olvidar.push(`fecha:${e.key}:`);
+    hechos.push(`un cambio de fecha en «${e.nombre}»`);
   }
-  return { base: nueva, hechos };
+  return { base: nueva, hechos, olvidar };
 }

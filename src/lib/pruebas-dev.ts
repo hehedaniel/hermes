@@ -9,6 +9,7 @@ import * as BackgroundTask from 'expo-background-task';
 import { CLAVES } from './claves';
 import { pasadaSegundoPlano } from './segundo-plano';
 import { simularEnBase } from './simular-novedades';
+import { guardarListaNovedades, leerNovedades } from './sync';
 
 /** Prepara la foto para que la siguiente sincronización encuentre novedades. */
 export async function simularNovedades(): Promise<string> {
@@ -21,6 +22,9 @@ export async function simularNovedades(): Promise<string> {
   const r = simularEnBase(JSON.parse(rawBase), rawSnap ? JSON.parse(rawSnap) : null);
   if (!r.hechos.length) return 'No he encontrado nada que simular.';
   await AsyncStorage.setItem(CLAVES.base, JSON.stringify(r.base));
+  // Si ya estaban en Novedades de una prueba anterior, se quitan para que vuelvan a avisar
+  const lista = await leerNovedades();
+  await guardarListaNovedades(lista.filter((n) => !r.olvidar.some((p) => n.id.startsWith(p))));
   return `Listo: la próxima sincronización encontrará ${r.hechos.join(' y ')}.`;
 }
 

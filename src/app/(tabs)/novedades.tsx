@@ -35,14 +35,17 @@ const ETIQUETA: Record<TipoNovedad, string> = {
 };
 
 export default function NovedadesScreen() {
-  const { novedades, client, snapshot, marcarLeidas } = useMoodle();
+  const { novedades, client, snapshot, marcarLeidas, recargarNovedades } = useMoodle();
   const ahora = useNow();
 
-  // Al salir de la pestaña, todo lo que has visto queda como leído
+  // Al entrar se recoge lo que haya encontrado el segundo plano; al salir, queda como leído
   useFocusEffect(
     useCallback(() => {
-      return () => marcarLeidas();
-    }, [marcarLeidas]),
+      recargarNovedades();
+      return () => {
+        marcarLeidas();
+      };
+    }, [marcarLeidas, recargarNovedades]),
   );
 
   const grupos = useMemo(() => {

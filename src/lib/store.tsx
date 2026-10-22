@@ -84,7 +84,9 @@ type Ctx = {
   disconnect: () => Promise<void>;
   novedades: Novedad[];
   noLeidas: number;
-  marcarLeidas: () => void;
+  marcarLeidas: () => Promise<void>;
+  /** Vuelve a leer las novedades guardadas (las que haya añadido el segundo plano). */
+  recargarNovedades: () => Promise<void>;
 };
 
 const MoodleContext = createContext<Ctx | null>(null);
@@ -250,9 +252,24 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
     setNovedades([]);
   }, []);
 
-  const marcarLeidas = useCallback(() => {
-    if (novedadesRef.current.some((n) => !n.leida)) {
-      guardarNovedades(novedadesRef.current.map((n) => (n.leida ? n : { ...n, leida: true })));
+  const recargarNovedades = useCallback(async () => {
+    const guardada = await leerNovedades();
+    if (guardada.length) {
+      novedadesRef.current = guardada;
+      setNovedades(guardada);
+    }
+  }, []);
+
+  // Se parte de la lista guardada: el segundo plano puede haber añadido novedades mientras
+  // la app estaba abierta, y no deben perderse al marcar como leídas
+  const marcarLeidas = useCallback(async () => {
+    const guardada = await leerNovedades();
+    const lista = guardada.length ? guardada : novedadesRef.current;
+    if (lista.some((n) => !n.leida)) {
+      guardarNovedades(lista.map((n) => (n.leida ? n : { ...n, leida: true })));
+    } else if (guardada.length) {
+      novedadesRef.current = guardada;
+      setNovedades(guardada);
     }
   }, [guardarNovedades]);
 
@@ -272,6 +289,7 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
       novedades,
       noLeidas,
       marcarLeidas,
+      recargarNovedades,
     }),
     [
       ready,
@@ -286,6 +304,7 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
       novedades,
       noLeidas,
       marcarLeidas,
+      recargarNovedades,
     ],
   );
   return <MoodleContext.Provider value={value}>{children}</MoodleContext.Provider>;
