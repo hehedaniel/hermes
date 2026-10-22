@@ -164,6 +164,72 @@ export async function mapLimit<T, R>(
   return out;
 }
 
+export type ActividadCalendario = {
+  key: string;
+  cursoId: number;
+  cmid?: number;
+  tipo: string; // scorm, quiz, lesson…
+  instancia?: number; // id del SCORM o del cuestionario
+};
+
+type ClienteMoodle = Pick<MoodleClient, 'call'>;
+
+/**
+ * Qué actividades del calendario (no tareas) ya has hecho. Tres pistas, por orden:
+ *  1. El estado de finalización de Moodle (el ✓ de "Completado"), si el profesor lo usa.
+ *  2. SCORM: algún intento.
+ *  3. Cuestionarios: algún intento terminado.
+ * Si una petición falla, esa pista no cuenta (la actividad sigue como pendiente).
+ */
+export async function actividadesHechas(
+  client: ClienteMoodle,
+  userid: number,
+  actividades: ActividadCalendario[],
+): Promise<Set<string>> {
+  const hechas = new Set<string>();
+  if (!actividades.length) return hechas;
+
+  // 1. Finalización, un curso cada vez
+  const cursos = [...new Set(actividades.map((a) => a.cursoId).filter(Boolean))];
+  const completadas = new Set<number>();
+  await mapLimit(cursos, 3, async (courseid) => {
+    const r = await client
+      .call<{ statuses?: { cmid: number; state: number }[] }>(
+        'core_completion_get_activities_completion_status',
+        { courseid, userid },
+      )
+      .catch(() => ({ statuses: [] }));
+    for (const st of r.statuses ?? []) {
+      if (st.state >= 1) completadas.add(st.cmid); // 1 completada, 2 aprobada, 3 suspensa
+    }
+  });
+  for (const a of actividades) if (a.cmid && completadas.has(a.cmid)) hechas.add(a.key);
+
+  // 2 y 3. Intentos, solo de lo que no se haya resuelto ya
+  const resto = actividades.filter((a) => !hechas.has(a.key) && a.instancia);
+  await mapLimit(resto, 4, async (a) => {
+    if (a.tipo === 'scorm') {
+      const r = await client
+        .call<{ attemptscount?: number }>('mod_scorm_get_scorm_attempt_count', {
+          scormid: a.instancia,
+          userid,
+        })
+        .catch(() => ({ attemptscount: 0 }));
+      if ((r.attemptscount ?? 0) > 0) hechas.add(a.key);
+    } else if (a.tipo === 'quiz') {
+      const r = await client
+        .call<{ attempts?: unknown[] }>('mod_quiz_get_user_attempts', {
+          quizid: a.instancia,
+          userid,
+          status: 'finished',
+        })
+        .catch(() => ({ attempts: [] }));
+      if ((r.attempts ?? []).length > 0) hechas.add(a.key);
+    }
+  });
+  return hechas;
+}
+
 function estadoDe(status: string | undefined, fecha: number, now: number): Estado {
   if (status === 'submitted') return 'entregada';
   if (fecha && fecha < now) return 'vencida';
@@ -248,12 +314,20 @@ export async function fetchSnapshot(client: MoodleClient, nowMs = Date.now()): P
 
   // Eventos "con acción pendiente" del calendario: si una tarea ya está en la lista, solo
   // completamos datos; si no (cuestionarios, SCORM, foros con fecha...), la añadimos.
+  const delCalendario: ActividadCalendario[] = [];
   for (const e of eventsRes.events ?? []) {
     if (e.action?.actionable === false) continue;
     if (cursoIgnorado(e.course?.fullname)) continue;
     const url = e.url || e.action?.url;
     const key = `${e.modulename}-${cmidFromUrl(url) ?? `i${e.instance}`}`;
     if (entregas.has(key)) continue;
+    delCalendario.push({
+      key,
+      cursoId: e.course?.id ?? 0,
+      cmid: Number(cmidFromUrl(url)) || undefined,
+      tipo: e.modulename ?? '',
+      instancia: e.instance,
+    });
     const fecha = e.timesort || e.timestart || 0;
     entregas.set(key, {
       key,
@@ -266,6 +340,13 @@ export async function fetchSnapshot(client: MoodleClient, nowMs = Date.now()): P
       estado: fecha < now ? 'vencida' : 'pendiente',
       cmid: Number(cmidFromUrl(url)) || undefined,
     });
+  }
+
+  // SCORM, cuestionarios…: no tienen "entrega"; se miran su finalización y sus intentos
+  const hechas = await actividadesHechas(client, site.userid, delCalendario);
+  for (const key of hechas) {
+    const e = entregas.get(key);
+    if (e) entregas.set(key, { ...e, estado: 'entregada' });
   }
 
   return {

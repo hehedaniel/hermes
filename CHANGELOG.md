@@ -17,6 +17,7 @@ Las notas de cada release del APK salen de aquí.
 
 ### Corregido
 - Al abrir una entrega desde el widget ya se puede volver atrás.
+- Las lecciones SCORM y los cuestionarios salen como hechos cuando los completas (antes siempre aparecían pendientes).
 
 ## [1.1.0] - 2026-10-22
 
