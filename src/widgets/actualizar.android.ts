@@ -9,7 +9,7 @@ export function actualizarWidgets(snapshot: Snapshot) {
   for (const nombre of Object.values(WIDGETS)) {
     requestWidgetUpdate({
       widgetName: nombre,
-      renderWidget: (info) => dibujar(nombre, snapshot, info.height),
+      renderWidget: (info) => dibujar(nombre, snapshot, { ancho: info.width, alto: info.height }),
     }).catch(() => {
       // Sin widgets puestos, o en Expo Go: no pasa nada
     });

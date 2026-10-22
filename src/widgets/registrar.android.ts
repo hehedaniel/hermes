@@ -6,7 +6,9 @@ import { dibujar, leerSnapshot } from './render';
 const handler: WidgetTaskHandler = async ({ widgetInfo, widgetAction, renderWidget }) => {
   if (widgetAction === 'WIDGET_DELETED') return;
   const snapshot = await leerSnapshot();
-  renderWidget(dibujar(widgetInfo.widgetName, snapshot, widgetInfo.height));
+  renderWidget(
+    dibujar(widgetInfo.widgetName, snapshot, { ancho: widgetInfo.width, alto: widgetInfo.height }),
+  );
 };
 
 export function registrarWidgets() {

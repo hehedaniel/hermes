@@ -102,9 +102,19 @@ export type FilaClase = {
   inicio: string;
   fin: string;
   color: string;
+  /** "1 h", "2 h", "1 h 30 min" */
+  duracion: string;
   ahora: boolean;
   acabada: boolean;
 };
+
+function duracion(inicio: string, fin: string) {
+  const m = minutos(fin) - minutos(inicio);
+  const h = Math.floor(m / 60);
+  const resto = m % 60;
+  if (!h) return `${resto} min`;
+  return resto ? `${h} h ${resto} min` : `${h} h`;
+}
 
 export type DatosClases = {
   /** "Hoy", "Mañana" o "Lunes 26" */
@@ -144,6 +154,7 @@ export function datosClases(snapshot: Snapshot | null, ahora = Date.now()): Dato
           profesor: MODULOS[c.modulo].profesor,
           inicio: c.inicio,
           fin: c.fin,
+          duracion: duracion(c.inicio, c.fin),
           color: colorModulo(c.modulo),
           ahora: minAhora >= minutos(c.inicio) && minAhora < minutos(c.fin),
           acabada: minAhora >= minutos(c.fin),
@@ -176,6 +187,7 @@ export function datosClases(snapshot: Snapshot | null, ahora = Date.now()): Dato
         profesor: MODULOS[c.modulo].profesor,
         inicio: c.inicio,
         fin: c.fin,
+        duracion: duracion(c.inicio, c.fin),
         color: colorModulo(c.modulo),
         ahora: false,
         acabada: false,

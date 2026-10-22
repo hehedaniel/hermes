@@ -21,8 +21,11 @@ export async function leerSnapshot(): Promise<Snapshot | null> {
   }
 }
 
+/** Tamaño del widget en dp (lo da Android al dibujarlo). */
+export type Tamano = { ancho: number; alto: number };
+
 /** Dibuja un widget por su nombre con los datos guardados. */
-export function dibujar(nombre: string, snapshot: Snapshot | null, alto: number) {
+export function dibujar(nombre: string, snapshot: Snapshot | null, { ancho, alto }: Tamano) {
   if (nombre === WIDGETS.clases) {
     return ClasesWidget({
       datos: datosClases(snapshot),
@@ -32,7 +35,7 @@ export function dibujar(nombre: string, snapshot: Snapshot | null, alto: number)
   }
   return EntregasWidget({
     datos: datosEntregas(snapshot),
-    alto,
+    ancho,
     enlace: (key) => Linking.createURL(`/tarea/${encodeURIComponent(key)}`),
   });
 }

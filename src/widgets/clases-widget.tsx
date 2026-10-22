@@ -105,21 +105,36 @@ function contenido({ datos, alto, p }: Props & { p: Paleta }) {
             style={{ fontSize: 11, color: p.secundario }}
           />
         </FlexWidget>
+        {/* A la derecha: AHORA en la que está en curso, ✓ en las acabadas y si no, cuánto dura */}
         {c.ahora ? (
           <FlexWidget
             style={{
               backgroundColor: p.acento,
               borderRadius: 10,
               paddingHorizontal: 8,
-              paddingVertical: 2,
-              marginLeft: 6,
+              paddingVertical: 3,
+              marginLeft: 8,
             }}>
             <TextWidget
               text="AHORA"
               style={{ fontSize: 10, fontWeight: '800', color: p.sobreAcento }}
             />
           </FlexWidget>
-        ) : null}
+        ) : (
+          <FlexWidget
+            style={{
+              backgroundColor: p.chip,
+              borderRadius: 10,
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              marginLeft: 8,
+            }}>
+            <TextWidget
+              text={c.acabada ? '✓ hecha' : c.duracion}
+              style={{ fontSize: 11, fontWeight: '600', color: p.secundario }}
+            />
+          </FlexWidget>
+        )}
       </FlexWidget>
     )),
   ];

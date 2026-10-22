@@ -5,13 +5,18 @@ import { FlexWidget, ListWidget, TextWidget } from 'react-native-android-widget'
 import { type DatosEntregas, haceTexto } from './datos';
 import { type Paleta, PALETAS, type Hex } from './paleta';
 
-type Props = { datos: DatosEntregas; alto: number; enlace: (key: string) => string };
+type Props = { datos: DatosEntregas; ancho: number; enlace: (key: string) => string };
+
+/** Relleno lateral de la tarjeta (dp). */
+const RELLENO = 16;
 
 /** Como mucho, las 20 más cercanas: la lista se desliza dentro del widget. */
 const MAX_FILAS = 20;
 
 /** Devuelve una lista de elementos: la librería no admite fragmentos <></>. */
-function contenido({ datos, enlace, p }: Props & { p: Paleta }) {
+function contenido({ datos, ancho, enlace, p }: Props & { p: Paleta }) {
+  // En una lista, Android no estira las filas: se les da el ancho exacto de la tarjeta
+  const anchoFila = Math.max(160, Math.floor(ancho - RELLENO * 2));
   const cabecera = (
     <FlexWidget
       key="cabecera"
@@ -60,52 +65,55 @@ function contenido({ datos, enlace, p }: Props & { p: Paleta }) {
   // Lista con scroll: aunque el widget sea pequeño se ven todas deslizando
   return [
     cabecera,
-    <ListWidget key="lista" style={{ width: 'match_parent', height: 'match_parent' }}>
-      {datos.filas.slice(0, MAX_FILAS).map((f) => (
-        <FlexWidget
-          key={f.key}
-          clickAction="OPEN_URI"
-          clickActionData={{ uri: enlace(f.key) }}
-          style={{
-            width: 'match_parent',
-            height: 44,
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}>
+    // El contenedor flexible hace que la lista ocupe solo el hueco bajo el título
+    <FlexWidget key="lista" style={{ flex: 1, width: 'match_parent' }}>
+      <ListWidget style={{ width: 'match_parent', height: 'match_parent' }}>
+        {datos.filas.slice(0, MAX_FILAS).map((f) => (
           <FlexWidget
+            key={f.key}
+            clickAction="OPEN_URI"
+            clickActionData={{ uri: enlace(f.key) }}
             style={{
-              width: 4,
-              height: 30,
-              borderRadius: 2,
-              backgroundColor: f.color as Hex,
-              marginRight: 10,
-            }}
-          />
-          <FlexWidget style={{ flex: 1, flexDirection: 'column' }}>
-            <TextWidget
-              text={f.nombre}
-              maxLines={1}
-              truncate="END"
-              style={{ fontSize: 13, fontWeight: '600', color: p.texto }}
+              width: anchoFila,
+              height: 44,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}>
+            <FlexWidget
+              style={{
+                width: 4,
+                height: 30,
+                borderRadius: 2,
+                backgroundColor: f.color as Hex,
+                marginRight: 10,
+              }}
             />
+            <FlexWidget style={{ flex: 1, flexDirection: 'column' }}>
+              <TextWidget
+                text={f.nombre}
+                maxLines={1}
+                truncate="END"
+                style={{ fontSize: 13, fontWeight: '600', color: p.texto }}
+              />
+              <TextWidget
+                text={`${f.siglas} · ${f.cuando}`}
+                maxLines={1}
+                style={{ fontSize: 11, color: p.secundario }}
+              />
+            </FlexWidget>
             <TextWidget
-              text={`${f.siglas} · ${f.cuando}`}
-              maxLines={1}
-              style={{ fontSize: 11, color: p.secundario }}
+              text={f.falta}
+              style={{
+                fontSize: 12,
+                fontWeight: f.urgente ? '700' : '500',
+                color: f.urgente ? p.urgente : p.secundario,
+                marginLeft: 8,
+              }}
             />
           </FlexWidget>
-          <TextWidget
-            text={f.falta}
-            style={{
-              fontSize: 12,
-              fontWeight: f.urgente ? '700' : '500',
-              color: f.urgente ? p.urgente : p.secundario,
-              marginLeft: 8,
-            }}
-          />
-        </FlexWidget>
-      ))}
-    </ListWidget>,
+        ))}
+      </ListWidget>
+    </FlexWidget>,
   ];
 }
 
@@ -119,7 +127,7 @@ function Tarjeta(props: Props & { p: Paleta }) {
         flexDirection: 'column',
         backgroundColor: props.p.fondo,
         borderRadius: 22,
-        paddingHorizontal: 16,
+        paddingHorizontal: RELLENO,
         paddingVertical: 12,
       }}>
       {contenido(props)}
