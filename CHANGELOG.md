@@ -6,8 +6,10 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [1.1.0] - 2026-10-22
+
 ### Añadido
-- Widgets para la pantalla de inicio (Android): **Próximas entregas**, con cuánto falta para cada una, y **Clases de hoy**, con la clase que toca ahora. Si las clases ya han acabado, enseñan las del siguiente día lectivo. Se actualizan solos cada 30 minutos y al sincronizar.
+- Widgets para la pantalla de inicio (Android): **Próximas entregas**, con cuánto falta para cada una, y **Clases de hoy**, con la clase que toca ahora, cuánto dura cada una y cuáles ya han acabado. Si las clases ya han acabado, enseñan las del siguiente día lectivo. Se actualizan solos cada 30 minutos y al sincronizar.
 - La versión de la app aparece al final de Ajustes, con un enlace a esta lista de cambios.
 
 ### Interno
@@ -36,6 +38,7 @@ Primera versión para compañeros.
 ### Corregido
 - La app ya no se queda "sincronizando" para siempre si Moodle no responde: cada petición se corta a los 25 s.
 
-[Sin publicar]: https://github.com/hehedaniel/hermes/compare/v1.0.1...HEAD
+[Sin publicar]: https://github.com/hehedaniel/hermes/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/hehedaniel/hermes/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/hehedaniel/hermes/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/hehedaniel/hermes/releases/tag/v1.0.0
