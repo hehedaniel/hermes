@@ -1,4 +1,5 @@
-# Publica la versión web (instalable en iPhone) en GitHub Pages en cada push a main.
+# Publica la versión web (instalable en iPhone) en GitHub Pages en cada push a main,
+# solo si pasan las comprobaciones (ci.yml).
 # Primera vez: Settings → Pages → Source: "GitHub Actions".
 name: Web (GitHub Pages)
 
@@ -9,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
   pages: write
   id-token: write
 
@@ -17,7 +19,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  comprobaciones:
+    uses: ./.github/workflows/ci.yml
+
   build:
+    needs: comprobaciones
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

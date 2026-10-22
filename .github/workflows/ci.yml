@@ -1,0 +1,43 @@
+# Comprobaciones: tipos, lint, pruebas y secretos filtrados.
+# Se ejecutan en cada pull request y, antes de publicar, desde web.yml y release.yml.
+name: Comprobaciones
+
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  codigo:
+    name: Tipos, lint y pruebas
+    runs-on: ubuntu-latest
+    env:
+      # El horario y las fechas de las pruebas son de España
+      TZ: Europe/Madrid
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tipos (TypeScript)
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Pruebas
+        run: npm test
+
+  secretos:
+    name: Secretos filtrados (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,4 +1,5 @@
-# Al subir una etiqueta vX.Y.Z: compila el APK en EAS y lo publica como release del repo.
+# Al subir una etiqueta vX.Y.Z: pasa las comprobaciones (ci.yml), compila el APK en EAS
+# y lo publica como release del repo, con las notas de esa versión del CHANGELOG.
 #   git tag v1.1.0
 #   git push origin v1.1.0
 # Primera vez: crea un token en expo.dev (Account settings → Access tokens) y guárdalo en
@@ -16,9 +17,14 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
+  comprobaciones:
+    uses: ./.github/workflows/ci.yml
+
   apk:
+    needs: comprobaciones
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
@@ -53,11 +59,26 @@ jobs:
           URL=$(node -e "console.log(require('./build.json')[0].artifacts.buildUrl)")
           curl -fsSL -o "Hermes-$TAG.apk" "$URL"
 
+      - name: Notas de la versión (del CHANGELOG)
+        run: |
+          # La sección "## [X.Y.Z]" del CHANGELOG, hasta la siguiente versión
+          awk -v v="${TAG#v}" '
+            $0 ~ "^## \\[" v "\\]" { dentro = 1; next }
+            dentro && /^## \[/ { exit }
+            dentro && /^\[[^]]+\]: / { exit }
+            dentro { print }
+          ' CHANGELOG.md > notas.md
+          {
+            echo "Descarga **Hermes-$TAG.apk** (abajo, en *Assets*) e instálalo. Si ya tenías Hermes, se actualiza sin perder la sesión."
+            echo
+            cat notas.md
+          } > release.md
+          cat release.md
+
       - name: Crear la release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$TAG" "Hermes-$TAG.apk" \
             --title "Hermes $TAG" \
-            --generate-notes \
-            --notes "Descarga **Hermes-$TAG.apk** (abajo, en *Assets*) e instálalo. Si ya tenías Hermes, se actualiza sin perder la sesión."
+            --notes-file release.md
