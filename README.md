@@ -216,9 +216,18 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Novedades: apuntes nuevos o actualizados, entregas nuevas, notas y cambios de fecha
 - [x] Horario de clases con profesores, festivos y vacaciones (curso 2026-27)
 - [x] Widgets de entregas y clases para la pantalla de inicio
-- [ ] Notificaciones en el móvil y sincronización en segundo plano
-- [ ] Notas personales y checklist por entrega
 - [x] Versión web instalable en iPhone
+- [x] Notificaciones y sincronización en segundo plano (Android)
+- [x] Detalle de la corrección: nota, fecha, comentario y archivos del profesor
+- [ ] Compilar el APK en GitHub Actions, sin la cola de EAS
+- [ ] Hacer tareas con IA (Gemini / OpenRouter) y entregarlas desde la app. Comprobado: el Moodle de la Junta deja subir archivos y entregar con el token de la app
+- [ ] Notificaciones en iPhone a través del script de Google (correo o ntfy), sin servidor propio
+- [ ] Visor de PDF sin conexión (pdf.js dentro de la app)
+- [ ] Menos datos en segundo plano: solo lo que puede cambiar; los temas cada pocas horas
+- [ ] Buscador en todas las asignaturas
+- [ ] Calculadora de nota por asignatura
+- [ ] Notas personales y checklist por entrega
+- [ ] Copia de seguridad de los datos
 
 ## Créditos
 
