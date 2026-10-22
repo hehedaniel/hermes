@@ -42,14 +42,37 @@ export async function pasadaSegundoPlano(): Promise<number | null> {
   return r?.nuevas.length ?? 0;
 }
 
+/** Registro de la última pasada real en segundo plano (para el diagnóstico de Hermes Dev). */
+export type UltimaPasada = { fecha: number; ok: boolean; novedades?: number; error?: string };
+const CLAVE_ULTIMA = 'segundo_plano_ultima';
+
 TaskManager.defineTask(TAREA_SEGUNDO_PLANO, async () => {
   try {
-    await pasadaSegundoPlano();
+    const n = await pasadaSegundoPlano();
+    await guardarUltima({ fecha: Date.now(), ok: true, novedades: n ?? 0 });
     return BackgroundTask.BackgroundTaskResult.Success;
-  } catch {
+  } catch (e) {
+    await guardarUltima({ fecha: Date.now(), ok: false, error: (e as Error).message });
     return BackgroundTask.BackgroundTaskResult.Failed;
   }
 });
+
+const guardarUltima = (u: UltimaPasada) =>
+  AsyncStorage.setItem(CLAVE_ULTIMA, JSON.stringify(u)).catch(() => {});
+
+/** ¿Está la tarea registrada en Android y cuándo fue la última pasada real? */
+export async function estadoSegundoPlano() {
+  const [estado, registrada, raw] = await Promise.all([
+    BackgroundTask.getStatusAsync().catch(() => null),
+    TaskManager.isTaskRegisteredAsync(TAREA_SEGUNDO_PLANO).catch(() => false),
+    AsyncStorage.getItem(CLAVE_ULTIMA).catch(() => null),
+  ]);
+  return {
+    disponible: estado === BackgroundTask.BackgroundTaskStatus.Available,
+    registrada,
+    ultima: raw ? (JSON.parse(raw) as UltimaPasada) : null,
+  };
+}
 
 /** Deja programada la tarea (si ya lo estaba, no pasa nada). */
 export async function activarSegundoPlano() {

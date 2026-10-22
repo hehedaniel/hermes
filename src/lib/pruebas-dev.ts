@@ -5,9 +5,10 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as BackgroundTask from 'expo-background-task';
+import { AppState } from 'react-native';
 
 import { CLAVES } from './claves';
-import { pasadaSegundoPlano } from './segundo-plano';
+import { estadoSegundoPlano, pasadaSegundoPlano } from './segundo-plano';
 import { simularEnBase } from './simular-novedades';
 import { guardarListaNovedades, leerNovedades } from './sync';
 
@@ -41,13 +42,47 @@ export async function comprobarComoSegundoPlano(): Promise<string> {
   }
 }
 
+let armado = false;
+
 /**
- * Lanza la tarea de verdad, a través de Android, dentro de 10 s. Android no la ejecuta
- * con la app delante, así que hay que salir de Hermes (botón de inicio) antes de que pase.
+ * Lanza la tarea de verdad, a través de Android, en cuanto la app pase a segundo plano.
+ * (Android no la ejecuta con Hermes delante, y con la app en segundo plano los temporizadores
+ * de JavaScript se pausan, así que se engancha al momento exacto de salir.)
  */
-export function lanzarSegundoPlanoEn10s(): string {
-  setTimeout(() => {
-    BackgroundTask.triggerTaskWorkerForTestingAsync().catch(() => {});
-  }, 10_000);
-  return 'Sal ya de la app con el botón de inicio. En 10 s Android lanzará el segundo plano y, si hay novedades, te llegarán los avisos.';
+export function lanzarAlSalir(): string {
+  if (!armado) {
+    armado = true;
+    const sub = AppState.addEventListener('change', (estado) => {
+      if (estado !== 'background') return;
+      sub.remove();
+      armado = false;
+      BackgroundTask.triggerTaskWorkerForTestingAsync().catch(() => {});
+    });
+  }
+  return 'Preparado. Sal ahora de la app con el botón de inicio (sin cerrarla) y espera unos segundos: deberían llegarte los avisos.';
+}
+
+/** Texto del diagnóstico: si la tarea está registrada y cuándo fue la última pasada real. */
+export async function diagnosticoSegundoPlano(): Promise<string> {
+  const e = await estadoSegundoPlano();
+  const partes = [
+    e.disponible ? 'Segundo plano disponible' : 'Segundo plano NO disponible en este móvil',
+    e.registrada ? 'tarea registrada ✓' : 'tarea NO registrada',
+  ];
+  if (!e.ultima) partes.push('todavía no ha habido ninguna pasada real');
+  else {
+    const min = Math.round((Date.now() - e.ultima.fecha) / 60000);
+    const cuando =
+      min < 1
+        ? 'hace menos de 1 min'
+        : min < 60
+          ? `hace ${min} min`
+          : `hace ${Math.round(min / 60)} h`;
+    partes.push(
+      e.ultima.ok
+        ? `última pasada real ${cuando} (${e.ultima.novedades ?? 0} novedades)`
+        : `última pasada real ${cuando}, con error: ${e.ultima.error}`,
+    );
+  }
+  return partes.join(' · ');
 }

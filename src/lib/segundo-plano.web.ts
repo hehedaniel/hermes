@@ -5,3 +5,7 @@ export async function desactivarSegundoPlano() {}
 export async function pasadaSegundoPlano(): Promise<number | null> {
   return null;
 }
+export type UltimaPasada = { fecha: number; ok: boolean; novedades?: number; error?: string };
+export async function estadoSegundoPlano() {
+  return { disponible: false, registrada: false, ultima: null as UltimaPasada | null };
+}

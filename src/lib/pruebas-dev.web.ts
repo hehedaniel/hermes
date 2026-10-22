@@ -5,6 +5,9 @@ export async function simularNovedades() {
 export async function comprobarComoSegundoPlano() {
   return 'No disponible en la web.';
 }
-export function lanzarSegundoPlanoEn10s() {
+export function lanzarAlSalir() {
+  return 'No disponible en la web.';
+}
+export async function diagnosticoSegundoPlano() {
   return 'No disponible en la web.';
 }

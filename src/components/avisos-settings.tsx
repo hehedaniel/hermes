@@ -20,7 +20,8 @@ import {
 } from '@/lib/avisos';
 import {
   comprobarComoSegundoPlano,
-  lanzarSegundoPlanoEn10s,
+  diagnosticoSegundoPlano,
+  lanzarAlSalir,
   simularNovedades,
 } from '@/lib/pruebas-dev';
 import { useMoodle } from '@/lib/store';
@@ -46,10 +47,12 @@ export function AvisosSettings() {
   const [prefs, setPrefs] = useState<PreferenciasAvisos>(AVISOS_POR_DEFECTO);
   const [permiso, setPermiso] = useState<boolean | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [diagnostico, setDiagnostico] = useState<string | null>(null);
 
   useEffect(() => {
     leerPreferencias().then(setPrefs);
     permisoConcedido().then(setPermiso);
+    if (__DEV__) diagnosticoSegundoPlano().then(setDiagnostico);
   }, []);
 
   if (!AVISOS_DISPONIBLES) return null;
@@ -121,10 +124,14 @@ export function AvisosSettings() {
         <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
           <ThemedText type="smallBold">Pruebas (solo Hermes Dev)</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            Primero «Simular novedades». Luego, o bien «Comprobar ahora», que hace lo mismo que el
-            segundo plano al momento, o bien «Lanzar en 10 s» y sal de la app enseguida: Android no
-            lo ejecuta con Hermes delante.
+            Primero «Simular novedades». Luego «Comprobar ahora» (lo mismo que hace el segundo
+            plano, al momento) o «Lanzar al salir» y sal de la app con el botón de inicio.
           </ThemedText>
+          {diagnostico ? (
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>
+              {diagnostico}
+            </ThemedText>
+          ) : null}
           <Button
             title="Simular novedades"
             variant="secondary"
@@ -139,9 +146,14 @@ export function AvisosSettings() {
             }}
           />
           <Button
-            title="Lanzar el segundo plano en 10 s"
+            title="Lanzar el segundo plano al salir de la app"
             variant="secondary"
-            onPress={() => setMsg(lanzarSegundoPlanoEn10s())}
+            onPress={() => setMsg(lanzarAlSalir())}
+          />
+          <Button
+            title="Actualizar diagnóstico"
+            variant="secondary"
+            onPress={async () => setDiagnostico(await diagnosticoSegundoPlano())}
           />
           {msg ? (
             <ThemedText type="small" style={{ color: theme.accent }}>
