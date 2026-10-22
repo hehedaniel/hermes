@@ -37,23 +37,39 @@ test('SCORM completado según Moodle (✓ de finalización)', async () => {
     1,
     [scorm],
   );
-  assert.deepEqual([...hechas], ['scorm-148755']);
+  assert.deepEqual([...hechas.hechas], ['scorm-148755']);
 });
 
-test('sin seguimiento de finalización: cuenta un intento del SCORM o un cuestionario terminado', async () => {
-  const hechas = await actividadesHechas(
-    moodle({
-      core_completion_get_activities_completion_status: () => ({ statuses: [] }),
-      mod_scorm_get_scorm_attempt_count: (p) => ({ attemptscount: p.scormid === 77 ? 1 : 0 }),
-      mod_quiz_get_user_attempts: () => ({ attempts: [] }),
-    }),
-    1,
-    [scorm, quiz],
-  );
-  assert.deepEqual([...hechas], ['scorm-148755']);
+const intentos = (estado: string) =>
+  moodle({
+    core_completion_get_activities_completion_status: () => ({ statuses: [] }),
+    mod_scorm_get_scorm_attempt_count: () => ({ attemptscount: 2 }),
+    mod_scorm_get_scorm_user_data: (p) => {
+      assert.equal(p.attempt, 2); // se mira el último intento
+      return { data: [{ userdata: [{ element: 'cmi.core.lesson_status', value: estado }] }] };
+    },
+    mod_quiz_get_user_attempts: (p) => {
+      assert.equal(p.status, 'finished'); // solo los intentos enviados
+      return { attempts: [] };
+    },
+  });
+
+test('SCORM sin finalización: hecho si el último intento quedó terminado', async () => {
+  for (const estado of ['completed', 'passed', 'failed']) {
+    const r = await actividadesHechas(intentos(estado), 1, [scorm]);
+    assert.deepEqual([...r.hechas], ['scorm-148755'], estado);
+  }
+});
+
+test('SCORM empezado y abandonado: no está hecho, sale como empezado', async () => {
+  for (const estado of ['incomplete', 'browsed', 'not attempted']) {
+    const r = await actividadesHechas(intentos(estado), 1, [scorm, quiz]);
+    assert.equal(r.hechas.size, 0, estado);
+    assert.deepEqual([...r.empezadas], ['scorm-148755'], estado);
+  }
 });
 
 test('si Moodle falla, se queda como pendiente (no inventa)', async () => {
-  const hechas = await actividadesHechas(moodle({}), 1, [scorm, quiz]);
-  assert.equal(hechas.size, 0);
+  const r = await actividadesHechas(moodle({}), 1, [scorm, quiz]);
+  assert.equal(r.hechas.size + r.empezadas.size, 0);
 });

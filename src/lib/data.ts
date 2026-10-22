@@ -177,17 +177,19 @@ type ClienteMoodle = Pick<MoodleClient, 'call'>;
 /**
  * Qué actividades del calendario (no tareas) ya has hecho. Tres pistas, por orden:
  *  1. El estado de finalización de Moodle (el ✓ de "Completado"), si el profesor lo usa.
- *  2. SCORM: algún intento.
- *  3. Cuestionarios: algún intento terminado.
+ *  2. SCORM: que el último intento quedase terminado (completed, passed o failed). Si está
+ *     empezado pero no terminado, cuenta como "empezada" (sale como borrador, a medias).
+ *  3. Cuestionarios: algún intento enviado (los empezados sin enviar no cuentan).
  * Si una petición falla, esa pista no cuenta (la actividad sigue como pendiente).
  */
 export async function actividadesHechas(
   client: ClienteMoodle,
   userid: number,
   actividades: ActividadCalendario[],
-): Promise<Set<string>> {
+): Promise<{ hechas: Set<string>; empezadas: Set<string> }> {
   const hechas = new Set<string>();
-  if (!actividades.length) return hechas;
+  const empezadas = new Set<string>();
+  if (!actividades.length) return { hechas, empezadas };
 
   // 1. Finalización, un curso cada vez
   const cursos = [...new Set(actividades.map((a) => a.cursoId).filter(Boolean))];
@@ -209,13 +211,24 @@ export async function actividadesHechas(
   const resto = actividades.filter((a) => !hechas.has(a.key) && a.instancia);
   await mapLimit(resto, 4, async (a) => {
     if (a.tipo === 'scorm') {
+      // Empezar un intento y salirse también cuenta como intento: se mira cómo quedó el último
       const r = await client
         .call<{ attemptscount?: number }>('mod_scorm_get_scorm_attempt_count', {
           scormid: a.instancia,
           userid,
         })
         .catch(() => ({ attemptscount: 0 }));
-      if ((r.attemptscount ?? 0) > 0) hechas.add(a.key);
+      const intento = r.attemptscount ?? 0;
+      if (intento > 0) {
+        const datos = await client
+          .call<ScormUserData>('mod_scorm_get_scorm_user_data', {
+            scormid: a.instancia,
+            attempt: intento,
+          })
+          .catch(() => ({ data: [] }) as ScormUserData);
+        if (scormTerminado(datos)) hechas.add(a.key);
+        else empezadas.add(a.key);
+      }
     } else if (a.tipo === 'quiz') {
       const r = await client
         .call<{ attempts?: unknown[] }>('mod_quiz_get_user_attempts', {
@@ -227,7 +240,25 @@ export async function actividadesHechas(
       if ((r.attempts ?? []).length > 0) hechas.add(a.key);
     }
   });
-  return hechas;
+  return { hechas, empezadas };
+}
+
+type ScormUserData = {
+  data?: { userdata?: { element: string; value: string }[] }[];
+};
+
+/** Estados de SCORM 1.2 (lesson_status) y 2004 (completion/success_status) que cuentan como terminado. */
+const TERMINADO = new Set(['completed', 'passed', 'failed']);
+
+/** ¿Quedó terminado el intento? Basta con que lo esté alguna de sus partes (SCO). */
+export function scormTerminado(datos: ScormUserData) {
+  return (datos.data ?? []).some((sco) =>
+    (sco.userdata ?? []).some(
+      (d) =>
+        /lesson_status|completion_status|success_status/.test(d.element) &&
+        TERMINADO.has(String(d.value).toLowerCase()),
+    ),
+  );
 }
 
 function estadoDe(status: string | undefined, fecha: number, now: number): Estado {
@@ -343,10 +374,11 @@ export async function fetchSnapshot(client: MoodleClient, nowMs = Date.now()): P
   }
 
   // SCORM, cuestionarios…: no tienen "entrega"; se miran su finalización y sus intentos
-  const hechas = await actividadesHechas(client, site.userid, delCalendario);
-  for (const key of hechas) {
-    const e = entregas.get(key);
-    if (e) entregas.set(key, { ...e, estado: 'entregada' });
+  const { hechas, empezadas } = await actividadesHechas(client, site.userid, delCalendario);
+  for (const [key, e] of entregas) {
+    if (hechas.has(key)) entregas.set(key, { ...e, estado: 'entregada' });
+    else if (empezadas.has(key) && e.estado === 'pendiente')
+      entregas.set(key, { ...e, estado: 'borrador' });
   }
 
   return {
