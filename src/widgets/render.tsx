@@ -25,7 +25,7 @@ export async function leerSnapshot(): Promise<Snapshot | null> {
 export type Tamano = { ancho: number; alto: number };
 
 /** Dibuja un widget por su nombre con los datos guardados. */
-export function dibujar(nombre: string, snapshot: Snapshot | null, { ancho, alto }: Tamano) {
+export function dibujar(nombre: string, snapshot: Snapshot | null, { alto }: Tamano) {
   if (nombre === WIDGETS.clases) {
     return ClasesWidget({
       datos: datosClases(snapshot),
@@ -35,7 +35,7 @@ export function dibujar(nombre: string, snapshot: Snapshot | null, { ancho, alto
   }
   return EntregasWidget({
     datos: datosEntregas(snapshot),
-    ancho,
+    alto,
     enlace: (key) => Linking.createURL(`/tarea/${encodeURIComponent(key)}`),
   });
 }
