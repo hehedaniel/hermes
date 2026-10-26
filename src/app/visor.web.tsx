@@ -11,6 +11,8 @@ export default function VisorWeb() {
       <Stack.Screen options={{ title: nombre ?? 'Visor' }} />
       <Screen refreshable={false}>
         <Vacio
+          icono="smartphone"
+          tono="neutro"
           titulo="Solo en el móvil"
           texto="El visor de documentos funciona en la app de Android."
         />

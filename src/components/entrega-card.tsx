@@ -1,117 +1,113 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { EstadoChip, FilaRail } from '@/components/anden';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
-import type { Entrega, Estado } from '@/lib/data';
-import { fechaCorta, relativo } from '@/lib/format';
-import { useCourseColors } from '@/lib/store';
 import { useTheme } from '@/hooks/use-theme';
+import type { Entrega } from '@/lib/data';
+import { cuandoVence, diaMes, diaMesHora, haceCuanto, quedan, relativo } from '@/lib/format';
+import { useAsignaturas } from '@/lib/store';
 
-const ETIQUETA: Record<Estado, string> = {
-  entregada: 'Entregada',
-  borrador: 'Borrador',
-  pendiente: 'Pendiente',
-  vencida: 'Vencida',
-};
-
-const TIPO: Record<string, string> = {
-  assign: 'Tarea',
-  quiz: 'Cuestionario',
-  scorm: 'Lección SCORM',
-  forum: 'Foro',
-  lesson: 'Lección',
-  workshop: 'Taller',
-};
+export { EstadoChip } from '@/components/anden';
 
 export const URGENTE_SEGUNDOS = 3 * 86400;
 
-export function EstadoChip({ estado }: { estado: Estado }) {
-  const theme = useTheme();
-  const color = theme[estado];
-  return (
-    <View style={[styles.chip, { borderColor: color }]}>
-      <View style={[styles.dot, { backgroundColor: color }]} />
-      <ThemedText style={[styles.chipText, { color }]}>{ETIQUETA[estado]}</ThemedText>
-    </View>
-  );
+export const esUrgente = (e: Entrega, nowMs: number) =>
+  (e.estado === 'pendiente' || e.estado === 'borrador') &&
+  e.fecha > 0 &&
+  e.fecha - nowMs / 1000 < URGENTE_SEGUNDOS;
+
+/** Lo que se ve a la derecha de la fila: cuándo vence o cuándo se entregó. */
+export function cuandoDe(e: Entrega, nowMs: number) {
+  if (e.estado === 'entregada') {
+    const f = e.envio?.fecha ?? e.fecha;
+    return f ? `entregada el ${diaMes(f)}` : 'entregada';
+  }
+  if (!e.fecha) return 'sin fecha';
+  if (e.estado === 'vencida') return `venció ${relativo(e.fecha, nowMs)}`;
+  return cuandoVence(e.fecha, nowMs);
 }
 
-export function EntregaCard({ entrega, nowMs }: { entrega: Entrega; nowMs: number }) {
+/** La línea pequeña junto al chip de estado. */
+function detalleDe(e: Entrega, nowMs: number) {
+  if (e.estado === 'entregada') {
+    if (e.nota) return null; // la nota va aparte, en verde
+    return e.envio?.pendienteDeCorregir ? 'Pendiente de corregir' : null;
+  }
+  if (e.estado === 'borrador')
+    return e.envio?.fecha ? `Borrador guardado ${haceCuanto(e.envio.fecha * 1000, nowMs)}` : null;
+  if (e.estado === 'vencida') return e.fecha ? diaMesHora(e.fecha) : null;
+  return e.fecha ? quedan(e.fecha, nowMs) : null;
+}
+
+/**
+ * Una entrega en el tablón: raíl con el color de la asignatura, siglas, cuándo vence,
+ * nombre y estado. Si no se pasa onPress, abre el detalle.
+ */
+export function EntregaCard({
+  entrega: e,
+  nowMs,
+  onPress,
+  seleccionada,
+}: {
+  entrega: Entrega;
+  nowMs: number;
+  onPress?: () => void;
+  seleccionada?: boolean;
+}) {
   const theme = useTheme();
-  const colorOf = useCourseColors();
-  const abierta = entrega.estado === 'pendiente' || entrega.estado === 'borrador';
-  const urgente = abierta && entrega.fecha > 0 && entrega.fecha - nowMs / 1000 < URGENTE_SEGUNDOS;
+  const info = useAsignaturas()(e.cursoId, e.curso);
+  const urgente = esUrgente(e, nowMs);
+  const cerrada = e.estado === 'entregada';
+  const detalle = detalleDe(e, nowMs);
+  const colorCuando =
+    urgente || e.estado === 'vencida' ? theme.urgent : cerrada ? theme.ink2 : theme.ink2;
 
   return (
-    <Pressable
-      onPress={() => router.push({ pathname: '/tarea/[key]', params: { key: entrega.key } })}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.backgroundElement,
-          opacity: pressed ? 0.7 : 1,
-        },
-      ]}>
-      <View style={[styles.bar, { backgroundColor: colorOf(entrega.cursoId) }]} />
-      <View style={styles.body}>
-        <ThemedText type="smallBold" numberOfLines={3}>
-          {entrega.nombre}
+    <FilaRail
+      color={info.color}
+      apagada={cerrada}
+      seleccionada={seleccionada}
+      onPress={
+        onPress ?? (() => router.push({ pathname: '/tarea/[key]', params: { key: e.key } }))
+      }>
+      <View style={styles.linea}>
+        <ThemedText type="label" style={{ color: info.color, letterSpacing: 1 }}>
+          {info.siglas}
         </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-          {entrega.curso} · {TIPO[entrega.tipo] ?? entrega.tipo}
+        <ThemedText
+          type="small"
+          style={{ color: colorCuando, fontWeight: urgente ? 600 : 500 }}
+          numberOfLines={1}>
+          {cuandoDe(e, nowMs)}
         </ThemedText>
-        <View style={styles.row}>
-          <ThemedText
-            type="small"
-            style={urgente ? { color: theme.urgente, fontWeight: 700 } : undefined}
-            themeColor={urgente ? undefined : 'textSecondary'}>
-            {entrega.fecha
-              ? `${fechaCorta(entrega.fecha)} · ${relativo(entrega.fecha, nowMs)}`
-              : 'Sin fecha límite'}
+      </View>
+      <ThemedText
+        style={[styles.nombre, cerrada && { fontWeight: 400, color: theme.ink2 }]}
+        numberOfLines={3}>
+        {e.nombre}
+      </ThemedText>
+      <View style={styles.linea2}>
+        <EstadoChip estado={e.estado} />
+        {e.nota ? (
+          <ThemedText type="small" style={{ color: theme.stDone, fontWeight: 700 }}>
+            Nota {e.nota}
           </ThemedText>
-          <EstadoChip estado={entrega.estado} />
-        </View>
-        {entrega.nota ? (
-          <ThemedText type="small">
-            Nota: <ThemedText type="smallBold">{entrega.nota}</ThemedText>
+        ) : detalle ? (
+          <ThemedText type="meta" themeColor="ink3" numberOfLines={1} style={styles.flex}>
+            {detalle}
           </ThemedText>
         ) : null}
       </View>
-    </Pressable>
+    </FilaRail>
   );
 }
 
+export { EntregaCard as EntregaFila };
+
 const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  bar: { width: 5 },
-  body: {
-    flex: 1,
-    paddingVertical: Spacing.three - 4,
-    paddingHorizontal: Spacing.three,
-    gap: 2,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-    marginTop: Spacing.one,
-    flexWrap: 'wrap',
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 1,
-  },
-  dot: { width: 6, height: 6, borderRadius: 3 },
-  chipText: { fontSize: 12, lineHeight: 18, fontWeight: 600 },
+  flex: { flex: 1 },
+  linea: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  nombre: { fontSize: 15.5, lineHeight: 21, fontWeight: 500 },
+  linea2: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 },
 });

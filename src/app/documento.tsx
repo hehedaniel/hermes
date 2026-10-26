@@ -1,8 +1,8 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Feather from '@expo/vector-icons/Feather';
 import * as Clipboard from 'expo-clipboard';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -29,22 +29,20 @@ export default function DocumentoScreen() {
                     await Clipboard.setStringAsync(doc.contenido);
                     setCopiado(true);
                   }}>
-                  <MaterialIcons
-                    name={copiado ? 'check' : 'content-copy'}
-                    size={21}
-                    color={theme.text}
-                  />
+                  <Feather name={copiado ? 'check' : 'copy'} size={18} color={theme.ink} />
                 </Pressable>
               )
             : undefined,
         }}
       />
-      <ScrollView contentContainerStyle={styles.contenido}>
-        <ScrollView horizontal>
-          <ThemedText style={styles.mono} selectable>
-            {doc?.contenido ?? 'No hay ningún documento que mostrar.'}
-          </ThemedText>
-        </ScrollView>
+      <ScrollView contentContainerStyle={styles.fuera}>
+        <View style={[styles.contenido, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+          <ScrollView horizontal>
+            <ThemedText style={styles.mono} selectable>
+              {doc?.contenido ?? 'No hay ningún documento que mostrar.'}
+            </ThemedText>
+          </ScrollView>
+        </View>
       </ScrollView>
     </ThemedView>
   );
@@ -52,6 +50,14 @@ export default function DocumentoScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  contenido: { padding: Spacing.three },
+  fuera: { padding: Spacing.three },
+  contenido: {
+    padding: Spacing.three,
+    borderWidth: 1,
+    borderRadius: 12,
+    width: '100%',
+    maxWidth: 900,
+    alignSelf: 'center',
+  },
   mono: { fontFamily: Fonts.mono, fontSize: 12.5, lineHeight: 18 },
 });

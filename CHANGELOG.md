@@ -6,6 +6,14 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+### Cambiado
+- **Rediseño completo («Andén»)**: papel cálido, tinta casi negra y un verde de señal para la acción importante de cada pantalla; tipografía Space Grotesk; cada asignatura es una «línea» con su color en toda la app; estados con color, icono y palabra. Modo oscuro dibujado aparte.
+- Pantallas pensadas para cada tamaño: en el móvil, barra de pestañas abajo; en tableta, raíl de iconos; en escritorio, barra lateral con contadores. Pendientes muestra la lista y la tarea elegida a la vez; el calendario, el mes entero con el día al lado; la asignatura y el chat de IA, un panel de contexto.
+- Pendientes: resumen de cifras (entregas, vencidas, urgentes, cerradas), secciones numeradas y bienvenida nueva sin cuenta. El detalle de la tarea, con tira de fechas, corrección con la nota en grande y tu entrega.
+- Novedades, Calendario/Horario, Asignaturas, Ajustes y el chat de IA con el nuevo diseño. *Ajustes → Inteligencia artificial* pasa a su propia pantalla.
+- Las tablas de las respuestas de la IA se ven como tablas.
+- Icono, pantalla de carga y widgets con el nuevo estilo.
+
 ## [1.3.0] - 2026-10-26
 
 ### Añadido

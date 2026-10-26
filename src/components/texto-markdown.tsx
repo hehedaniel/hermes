@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Fonts, Spacing } from '@/constants/theme';
@@ -7,7 +7,7 @@ import { useTheme } from '@/hooks/use-theme';
 
 /**
  * Muestra el Markdown de las respuestas de la IA sin librerías: títulos, listas, código,
- * negritas, cursivas y `código`. Las tablas se ven en monoespaciado para que cuadren.
+ * negritas, cursivas, `código` y tablas.
  */
 export function TextoMarkdown({ texto }: { texto: string }) {
   const theme = useTheme();
@@ -15,9 +15,14 @@ export function TextoMarkdown({ texto }: { texto: string }) {
   return (
     <View style={styles.col}>
       {bloques.map((b, i) => {
-        if (b.tipo === 'codigo' || b.tipo === 'tabla') {
+        if (b.tipo === 'tabla') {
+          return <Tabla key={i} filas={b.filas} />;
+        }
+        if (b.tipo === 'codigo') {
           return (
-            <View key={i} style={[styles.codigo, { backgroundColor: theme.backgroundSelected }]}>
+            <View
+              key={i}
+              style={[styles.codigo, { backgroundColor: theme.paper2, borderColor: theme.line }]}>
               <ThemedText style={styles.mono} selectable>
                 {b.texto}
               </ThemedText>
@@ -53,8 +58,46 @@ export function TextoMarkdown({ texto }: { texto: string }) {
   );
 }
 
+/** Tabla de verdad: cabecera en versalitas, filas separadas por reglas y cifras alineadas. */
+function Tabla({ filas }: { filas: string[][] }) {
+  const theme = useTheme();
+  const [cabecera, ...cuerpo] = filas;
+  if (!cabecera) return null;
+  const columnas = cabecera.length;
+  const tabla = (
+    <View style={[styles.tabla, columnas > 3 && { minWidth: columnas * 120 }]}>
+      <View style={[styles.filaTabla, { borderBottomColor: theme.line2 }]}>
+        {cabecera.map((c, j) => (
+          <ThemedText key={j} type="label" themeColor="ink3" style={styles.celda}>
+            {c}
+          </ThemedText>
+        ))}
+      </View>
+      {cuerpo.map((f, i) => (
+        <View
+          key={i}
+          style={[styles.filaTabla, i < cuerpo.length - 1 && { borderBottomColor: theme.line }]}>
+          {cabecera.map((_, j) => (
+            <ThemedText key={j} type="small" style={styles.celda} selectable>
+              {enLinea(f[j] ?? '')}
+            </ThemedText>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+  return columnas > 3 ? (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      {tabla}
+    </ScrollView>
+  ) : (
+    tabla
+  );
+}
+
 type Bloque =
-  | { tipo: 'parrafo' | 'codigo' | 'tabla'; texto: string }
+  | { tipo: 'parrafo' | 'codigo'; texto: string }
+  | { tipo: 'tabla'; filas: string[][] }
   | { tipo: 'titulo'; texto: string; nivel: number }
   | { tipo: 'lista'; texto: string; nivel: number; marca: string };
 
@@ -82,7 +125,7 @@ function trocear(md: string): Bloque[] {
         if (!/^\s*\|[\s:|-]+\|\s*$/.test(lineas[i])) filas.push(lineas[i].trim());
       }
       i--;
-      out.push({ tipo: 'tabla', texto: alinearTabla(filas) });
+      out.push({ tipo: 'tabla', filas: celdasDe(filas) });
       continue;
     }
     const titulo = l.match(/^(#{1,6})\s+(.*)$/);
@@ -106,16 +149,13 @@ function trocear(md: string): Bloque[] {
   return out;
 }
 
-function alinearTabla(filas: string[]) {
-  const celdas = filas.map((f) =>
+function celdasDe(filas: string[]) {
+  return filas.map((f) =>
     f
       .replace(/^\||\|$/g, '')
       .split('|')
-      .map((c) => c.trim().replace(/\*\*/g, '')),
+      .map((c) => c.trim()),
   );
-  const anchos =
-    celdas[0]?.map((_, j) => Math.max(...celdas.map((c) => (c[j] ?? '').length))) ?? [];
-  return celdas.map((c) => c.map((x, j) => x.padEnd(anchos[j] ?? 0)).join(' │ ')).join('\n');
 }
 
 /** **negrita**, *cursiva* / _cursiva_ y `código` dentro de una línea. */
@@ -161,6 +201,9 @@ const styles = StyleSheet.create({
   item: { flexDirection: 'row', gap: 6 },
   vineta: { minWidth: 14 },
   cursiva: { fontStyle: 'italic' },
-  codigo: { borderRadius: 8, padding: Spacing.two },
+  codigo: { borderRadius: 8, borderWidth: 1, padding: 10 },
+  tabla: { alignSelf: 'stretch' },
+  filaTabla: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: 'transparent' },
+  celda: { flex: 1, paddingVertical: 6, paddingRight: 10, fontVariant: ['tabular-nums'] },
   mono: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 17 },
 });

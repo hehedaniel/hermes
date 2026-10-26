@@ -1,6 +1,6 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Feather from '@expo/vector-icons/Feather';
 import * as Clipboard from 'expo-clipboard';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useMemo, useRef, useState } from 'react';
 import {
@@ -9,34 +9,46 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Campo } from '@/components/ajustes-ui';
+import { EstadoChip, IconoIA, Marca, Seccion } from '@/components/anden';
+import { Button } from '@/components/button';
 import { DocumentoCard } from '@/components/documento-card';
+import { esUrgente } from '@/components/entrega-card';
 import { IASettings } from '@/components/ia-settings';
 import { TextoMarkdown } from '@/components/texto-markdown';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Vacio } from '@/components/vacio';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { MARGEN, Radii, Spacing } from '@/constants/theme';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import type { Archivo, Entrega } from '@/lib/data';
 import { avisar, confirmar } from '@/lib/dialogo';
+import { formatoTamano } from '@/lib/downloads';
+import { diaMesHora, quedan } from '@/lib/format';
 import { verDocumento } from '@/lib/ia/archivos-ia';
 import type { MensajeChat } from '@/lib/ia/chats';
 import { type DocumentoIA, extraerDocumentos } from '@/lib/ia/documentos';
 import { adjuntoCompatible, PROVEEDORES } from '@/lib/ia/proveedores';
 import { useChatIA } from '@/lib/ia/use-chat';
 import { useEntregar } from '@/lib/ia/use-entregar';
-import { useMoodle } from '@/lib/store';
+import { useAsignaturas, useMoodle } from '@/lib/store';
 
 const SUGERENCIAS = [
   'Explícame qué piden y cómo lo enfoco',
   'Hazme la tarea completa en un PDF listo para entregar',
   'Hazme un esquema de los puntos que tengo que tratar',
 ];
+
+/** A partir de este ancho, el contexto de la tarea va en un panel a la derecha. */
+const ANCHO_PANEL = 900;
+/** Ancho de lectura de la conversación */
+const ANCHO_CHAT = 760;
 
 /** Conversación con la IA sobre una tarea: preguntar, adjuntar sus archivos, ver y entregar lo que genera. */
 export default function ChatIAScreen() {
@@ -46,9 +58,14 @@ export default function ChatIAScreen() {
 
   if (!e) {
     return (
-      <ThemedView style={[styles.flex, { padding: Spacing.three }]}>
+      <ThemedView style={[styles.flex, { padding: MARGEN }]}>
         <Stack.Screen options={{ title: 'IA' }} />
-        <Vacio titulo="No encontrada" texto="Esta tarea ya no aparece en Moodle." />
+        <Vacio
+          icono="search"
+          tono="neutro"
+          titulo="No encontrada"
+          texto="Esta tarea ya no aparece en Moodle."
+        />
       </ThemedView>
     );
   }
@@ -57,6 +74,9 @@ export default function ChatIAScreen() {
 
 function Chat({ e }: { e: Entrega }) {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const info = useAsignaturas()(e.cursoId, e.curso);
+  const nowMs = useNow();
   const chat = useChatIA(e);
   const { entregar, entregando, puede } = useEntregar(e);
   const headerHeight = useHeaderHeight();
@@ -120,166 +140,269 @@ function Chat({ e }: { e: Entrega }) {
     );
 
   const ultimo = chat.mensajes.at(-1);
+  const modelo = chat.ajustes?.modelo ?? '';
+  const conPanel = width >= ANCHO_PANEL;
+  const vacio = !chat.mensajes.length && chat.cargado;
+  const puedeEnviar = !sinClave && (!!texto.trim() || !!seleccion.length);
+
+  const cabecera = () => (
+    <View style={[styles.cabecera, { maxWidth: Math.min(560, width - (conPanel ? 420 : 170)) }]}>
+      <ThemedText style={styles.cabeceraTitulo} numberOfLines={1}>
+        {e.nombre}
+      </ThemedText>
+      <ThemedText type="meta" themeColor="ink3" numberOfLines={1}>
+        {proveedor ? `IA · ${proveedor}${modelo ? ` · ${modelo}` : ''}` : 'IA'}
+      </ThemedText>
+    </View>
+  );
 
   return (
     <ThemedView style={styles.flex}>
       <Stack.Screen
         options={{
-          title: proveedor ? `IA · ${proveedor}` : 'IA',
-          headerRight: chat.mensajes.length
-            ? () => (
-                <Pressable hitSlop={12} onPress={onBorrar} accessibilityLabel="Borrar conversación">
-                  <MaterialIcons name="delete-outline" size={23} color={theme.text} />
+          headerTitle: cabecera,
+          headerTitleAlign: 'left',
+          headerRight: () => (
+            <View style={styles.cabeceraDerecha}>
+              <View style={[styles.marcaIA, { backgroundColor: theme.paper2 }]}>
+                <IconoIA size={11} color={theme.ink2} />
+                <ThemedText type="label" themeColor="ink2" style={styles.marcaTexto}>
+                  {info.siglas}
+                </ThemedText>
+              </View>
+              {chat.mensajes.length ? (
+                <Pressable
+                  hitSlop={12}
+                  onPress={onBorrar}
+                  accessibilityRole="button"
+                  accessibilityLabel="Borrar conversación">
+                  <Feather name="trash-2" size={18} color={theme.ink2} />
                 </Pressable>
-              )
-            : undefined,
+              ) : null}
+            </View>
+          ),
         }}
       />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior="padding"
-        keyboardVerticalOffset={headerHeight}>
-        <ScrollView
-          ref={scrollRef}
+      <View style={[styles.flex, styles.fila]}>
+        <KeyboardAvoidingView
           style={styles.flex}
-          contentContainerStyle={styles.contenido}
-          keyboardShouldPersistTaps="handled"
-          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}>
-          <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
-            {e.curso} · {e.nombre}
-          </ThemedText>
-
-          {sinClave ? (
-            <IASettings onCambio={chat.recargarAjustes} />
-          ) : !chat.mensajes.length && chat.cargado ? (
-            <View style={[styles.intro, { backgroundColor: theme.backgroundElement }]}>
-              <ThemedText type="smallBold">¿En qué te ayudo con esta tarea?</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                La IA ya conoce el enunciado y la fecha. Marca abajo los archivos de la tarea que
-                quieras pasarle. Si le pides el trabajo, te lo da como documento para verlo y
-                {puede ? ' entregarlo desde aquí.' : ' descargarlo.'}
-              </ThemedText>
-              {SUGERENCIAS.map((s) => (
-                <Pressable
-                  key={s}
-                  onPress={() => setTexto(s)}
-                  style={({ pressed }) => [
-                    styles.sugerencia,
-                    { borderColor: theme.border, opacity: pressed ? 0.6 : 1 },
-                  ]}>
-                  <ThemedText type="small">{s}</ThemedText>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-
-          {chat.mensajes.map((m) => (
-            <Mensaje
-              key={m.id}
-              m={m}
-              esUltimo={m === ultimo}
-              onReintentar={chat.reintentar}
-              onVer={onVer}
-              onEntregar={puede ? entregar : undefined}
-              viendo={viendo}
-              entregando={entregando}
-            />
-          ))}
-
-          {chat.pensando ? (
-            <View style={styles.pensando}>
-              <ActivityIndicator color={theme.accent} />
-              <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
-                {chat.pensando}
-              </ThemedText>
-            </View>
-          ) : null}
-        </ScrollView>
-
-        <View
-          style={[
-            styles.barra,
-            {
-              borderTopColor: theme.border,
-              backgroundColor: theme.background,
-              paddingBottom: Math.max(bottom, Spacing.two),
-            },
-          ]}>
-          {adjuntables.length ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chips}
-              keyboardShouldPersistTaps="handled">
-              {adjuntables.map((a) => {
-                const on = seleccion.includes(a.fileurl);
-                return (
+          behavior="padding"
+          keyboardVerticalOffset={headerHeight}>
+          <ScrollView
+            ref={scrollRef}
+            style={styles.flex}
+            contentContainerStyle={[styles.contenido, vacio && !sinClave && styles.contenidoVacio]}
+            keyboardShouldPersistTaps="handled"
+            onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}>
+            {sinClave ? (
+              <>
+                <Vacio
+                  icono="ia"
+                  titulo="Elige tu IA"
+                  texto="Para hablar con la IA sobre esta tarea, elige un proveedor y pega tu clave. Solo hay que hacerlo una vez."
+                />
+                <IASettings onCambio={chat.recargarAjustes} />
+              </>
+            ) : vacio ? (
+              <View style={styles.intro}>
+                <Vacio
+                  icono="ia"
+                  titulo="Pregúntale lo que quieras"
+                  texto={`La IA ya conoce el enunciado y la fecha. Marca abajo los archivos que quieras pasarle. Si le pides el trabajo, te lo da como documento para verlo y ${puede ? 'entregarlo desde aquí' : 'descargarlo'}.`}
+                />
+                {SUGERENCIAS.map((s) => (
                   <Pressable
-                    key={a.fileurl}
-                    onPress={() => alternar(a)}
-                    style={[
-                      styles.chip,
+                    key={s}
+                    onPress={() => setTexto(s)}
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                      styles.sugerencia,
                       {
-                        backgroundColor: on ? theme.accent : theme.backgroundElement,
+                        borderColor: theme.line2,
+                        backgroundColor: pressed ? theme.paper2 : theme.surface,
                       },
                     ]}>
-                    <MaterialIcons
-                      name={on ? 'check' : 'attach-file'}
-                      size={15}
-                      color={on ? theme.onAccent : theme.textSecondary}
-                    />
-                    <ThemedText
-                      type="small"
-                      numberOfLines={1}
-                      style={[styles.chipTexto, { color: on ? theme.onAccent : theme.text }]}>
-                      {a.nombre}
+                    <IconoIA size={15} color={theme.brand} />
+                    <ThemedText type="small" style={[styles.flex, { fontWeight: 500 }]}>
+                      {s}
                     </ThemedText>
                   </Pressable>
-                );
-              })}
-            </ScrollView>
-          ) : null}
-          <View style={styles.entrada}>
-            <TextInput
-              value={texto}
-              onChangeText={setTexto}
-              placeholder={sinClave ? 'Configura la IA arriba' : 'Escribe a la IA…'}
-              placeholderTextColor={theme.textSecondary}
-              editable={!sinClave}
-              multiline
-              style={[
-                styles.input,
-                { color: theme.text, backgroundColor: theme.backgroundElement },
-              ]}
-            />
+                ))}
+                <ThemedText type="meta" themeColor="ink3" style={styles.nota}>
+                  Cada mensaje gasta cuota del proveedor que elijas en Ajustes.
+                </ThemedText>
+              </View>
+            ) : null}
+
+            {chat.mensajes.map((m) => (
+              <Mensaje
+                key={m.id}
+                m={m}
+                esUltimo={m === ultimo}
+                onReintentar={chat.reintentar}
+                onVer={onVer}
+                onEntregar={puede ? entregar : undefined}
+                viendo={viendo}
+                entregando={entregando}
+              />
+            ))}
+
             {chat.pensando ? (
-              <Pressable
-                accessibilityLabel="Detener"
-                onPress={chat.detener}
-                hitSlop={8}
-                style={[styles.enviar, { backgroundColor: theme.backgroundElement }]}>
-                <MaterialIcons name="stop" size={22} color={theme.text} />
-              </Pressable>
-            ) : (
-              <Pressable
-                accessibilityLabel="Enviar"
-                onPress={onEnviar}
-                hitSlop={8}
-                disabled={sinClave || (!texto.trim() && !seleccion.length)}
-                style={[
-                  styles.enviar,
-                  {
-                    backgroundColor: theme.accent,
-                    opacity: sinClave || (!texto.trim() && !seleccion.length) ? 0.4 : 1,
-                  },
-                ]}>
-                <MaterialIcons name="send" size={20} color={theme.onAccent} />
-              </Pressable>
-            )}
+              <View style={styles.pensando}>
+                <ActivityIndicator size="small" color={theme.brand} />
+                <ThemedText type="meta" themeColor="ink2" style={styles.flex}>
+                  {chat.pensando}
+                </ThemedText>
+              </View>
+            ) : null}
+          </ScrollView>
+
+          <View
+            style={[
+              styles.barra,
+              {
+                borderTopColor: theme.line,
+                backgroundColor: theme.paper,
+                paddingBottom: Math.max(bottom, Spacing.two + 2),
+              },
+            ]}>
+            <View style={styles.barraDentro}>
+              {adjuntables.length ? (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.chips}
+                  keyboardShouldPersistTaps="handled">
+                  {adjuntables.map((a) => {
+                    const on = seleccion.includes(a.fileurl);
+                    return (
+                      <Pressable
+                        key={a.fileurl}
+                        onPress={() => alternar(a)}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: on }}
+                        style={[
+                          styles.chip,
+                          {
+                            backgroundColor: on ? theme.brandWash : theme.surface,
+                            borderColor: on ? theme.brand : theme.line2,
+                          },
+                        ]}>
+                        <Feather
+                          name={on ? 'check' : 'paperclip'}
+                          size={12}
+                          color={on ? theme.brand : theme.ink2}
+                        />
+                        <ThemedText
+                          numberOfLines={1}
+                          style={[styles.chipTexto, { color: on ? theme.brand : theme.ink }]}>
+                          {a.nombre}
+                        </ThemedText>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              ) : null}
+              <View style={styles.entrada}>
+                <Campo
+                  value={texto}
+                  onChangeText={setTexto}
+                  placeholder={sinClave ? 'Configura la IA arriba' : 'Pregunta o pide el trabajo…'}
+                  editable={!sinClave}
+                  multiline
+                  style={styles.input}
+                />
+                {chat.pensando ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Detener"
+                    onPress={chat.detener}
+                    hitSlop={6}
+                    style={[
+                      styles.enviar,
+                      { backgroundColor: theme.surface, borderColor: theme.line2, borderWidth: 1 },
+                    ]}>
+                    <Feather name="square" size={16} color={theme.ink} />
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Enviar"
+                    onPress={onEnviar}
+                    hitSlop={6}
+                    disabled={!puedeEnviar}
+                    style={[
+                      styles.enviar,
+                      { backgroundColor: theme.brand, opacity: puedeEnviar ? 1 : 0.4 },
+                    ]}>
+                    <Feather name="send" size={18} color={theme.brandInk} />
+                  </Pressable>
+                )}
+              </View>
+            </View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+
+        {conPanel ? (
+          <View style={[styles.panel, { borderLeftColor: theme.line, backgroundColor: theme.surface2 }]}>
+            <ScrollView contentContainerStyle={styles.panelContenido}>
+              <View style={styles.panelBloque}>
+                <Seccion titulo="Tarea" sinRegla />
+                <ThemedText type="smallBold" style={styles.panelTitulo}>
+                  {e.nombre}
+                </ThemedText>
+                <View style={styles.filaChips}>
+                  <EstadoChip estado={e.estado} />
+                  {esUrgente(e, nowMs) ? (
+                    <Marca texto={quedan(e.fecha, nowMs).replace('Quedan ', '')} color={theme.urgent} fondo={theme.urgentWash} />
+                  ) : null}
+                </View>
+              </View>
+              {e.fecha ? (
+                <View style={styles.panelBloque}>
+                  <Seccion titulo="Entrega" sinRegla />
+                  <ThemedText
+                    type="cifra"
+                    style={{ color: esUrgente(e, nowMs) || e.estado === 'vencida' ? theme.urgent : theme.ink }}>
+                    {diaMesHora(e.fecha)}
+                  </ThemedText>
+                </View>
+              ) : null}
+              <View style={styles.panelBloque}>
+                <Seccion titulo="Contexto para la IA" sinRegla />
+                <ContextoFila texto="Enunciado y fechas" />
+                {adjuntables.map((a) => (
+                  <ContextoFila
+                    key={a.fileurl}
+                    texto={`${a.nombre} · ${formatoTamano(a.size)}`}
+                    apagado={!seleccion.includes(a.fileurl)}
+                  />
+                ))}
+              </View>
+              <Button
+                title="Ver la tarea completa"
+                variant="secondary"
+                icono="arrow-right"
+                compacto
+                onPress={() => router.push({ pathname: '/tarea/[key]', params: { key: e.key } })}
+              />
+            </ScrollView>
+          </View>
+        ) : null}
+      </View>
     </ThemedView>
+  );
+}
+
+function ContextoFila({ texto, apagado }: { texto: string; apagado?: boolean }) {
+  const theme = useTheme();
+  return (
+    <View style={[styles.contexto, apagado && { opacity: 0.45 }]}>
+      <Feather name={apagado ? 'circle' : 'check'} size={12} color={apagado ? theme.ink3 : theme.stDone} />
+      <ThemedText type="meta" themeColor="ink2" numberOfLines={1} style={styles.flex}>
+        {texto}
+      </ThemedText>
+    </View>
   );
 }
 
@@ -304,20 +427,22 @@ function Mensaje({
 
   if (m.rol === 'usuario') {
     return (
-      <View style={[styles.burbuja, styles.mia, { backgroundColor: theme.accent }]}>
+      <View style={[styles.burbuja, styles.mia, { backgroundColor: theme.brand }]}>
         {m.texto ? (
-          <ThemedText type="small" style={{ color: theme.onAccent }} selectable>
+          <ThemedText style={[styles.textoMio, { color: theme.brandInk }]} selectable>
             {m.texto}
           </ThemedText>
         ) : null}
         {m.adjuntos?.map((a) => (
-          <ThemedText
-            key={a.fileurl}
-            type="small"
-            numberOfLines={1}
-            style={{ color: theme.onAccent, opacity: 0.85 }}>
-            📎 {a.nombre}
-          </ThemedText>
+          <View key={a.fileurl} style={styles.adjunto}>
+            <Feather name="paperclip" size={11} color={theme.brandInk} />
+            <ThemedText
+              type="meta"
+              numberOfLines={1}
+              style={[styles.flexShrink, { color: theme.brandInk, opacity: 0.9 }]}>
+              {a.nombre}
+            </ThemedText>
+          </View>
         ))}
       </View>
     );
@@ -325,14 +450,19 @@ function Mensaje({
 
   if (m.rol === 'error') {
     return (
-      <View style={[styles.burbuja, styles.suya, { borderColor: theme.vencida, borderWidth: 1 }]}>
-        <ThemedText type="small" style={{ color: theme.vencida }}>
+      <View
+        style={[
+          styles.burbuja,
+          styles.suya,
+          { backgroundColor: theme.urgentWash, borderColor: theme.urgent, borderWidth: 1 },
+        ]}>
+        <ThemedText type="small" style={{ color: theme.urgent }}>
           {m.texto}
         </ThemedText>
         {esUltimo ? (
-          <ThemedText type="smallBold" style={{ color: theme.accent }} onPress={onReintentar}>
-            Reintentar
-          </ThemedText>
+          <View style={styles.reintentar}>
+            <Button title="Reintentar" variant="secondary" icono="refresh-cw" compacto onPress={onReintentar} />
+          </View>
         ) : null}
       </View>
     );
@@ -340,7 +470,12 @@ function Mensaje({
 
   const partes = extraerDocumentos(m.texto);
   return (
-    <View style={[styles.burbuja, styles.suya, { backgroundColor: theme.backgroundElement }]}>
+    <View
+      style={[
+        styles.burbuja,
+        styles.suya,
+        { backgroundColor: theme.surface, borderColor: theme.line, borderWidth: 1 },
+      ]}>
       {partes.map((p, i) =>
         p.tipo === 'texto' ? (
           <TextoMarkdown key={i} texto={p.texto} />
@@ -355,16 +490,18 @@ function Mensaje({
           />
         ),
       )}
-      <View style={styles.pie}>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.modelo} numberOfLines={1}>
+      <View style={[styles.pie, { borderTopColor: theme.line }]}>
+        <ThemedText type="meta" themeColor="ink3" style={styles.flex} numberOfLines={1}>
           {m.modelo}
         </ThemedText>
         <Pressable
           hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Copiar respuesta"
           onPress={async () => {
             await Clipboard.setStringAsync(m.texto);
           }}>
-          <MaterialIcons name="content-copy" size={16} color={theme.textSecondary} />
+          <Feather name="copy" size={14} color={theme.ink3} />
         </Pressable>
       </View>
     </View>
@@ -373,53 +510,80 @@ function Mensaje({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  contenido: {
-    padding: Spacing.three,
-    gap: Spacing.three,
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-  },
-  intro: { borderRadius: 14, padding: Spacing.three, gap: Spacing.two },
-  sugerencia: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  burbuja: { borderRadius: 16, padding: Spacing.three - 4, gap: Spacing.two },
-  mia: { alignSelf: 'flex-end', maxWidth: '85%', borderBottomRightRadius: 4 },
-  suya: { alignSelf: 'stretch', borderBottomLeftRadius: 4 },
-  pie: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  modelo: { flex: 1, fontSize: 11, lineHeight: 14 },
-  pensando: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  barra: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    gap: Spacing.two,
-  },
-  chips: { gap: Spacing.two },
-  chip: {
+  flexShrink: { flexShrink: 1 },
+  fila: { flexDirection: 'row' },
+  cabecera: {},
+  cabeceraTitulo: { fontSize: 14.5, lineHeight: 19, fontWeight: 600 },
+  cabeceraDerecha: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingRight: 4 },
+  marcaIA: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: Radii.chip,
+  },
+  marcaTexto: { fontSize: 9.5 },
+  contenido: {
+    padding: MARGEN,
+    gap: Spacing.three,
+    width: '100%',
+    maxWidth: ANCHO_CHAT,
+    alignSelf: 'center',
+  },
+  contenidoVacio: { flexGrow: 1, justifyContent: 'center' },
+  intro: { gap: 10, maxWidth: 440, width: '100%', alignSelf: 'center' },
+  sugerencia: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: Radii.control,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  nota: { textAlign: 'center', marginTop: 4 },
+  burbuja: { borderRadius: Radii.superficie, paddingHorizontal: 13, paddingVertical: 11, gap: 8 },
+  mia: { alignSelf: 'flex-end', maxWidth: '86%', borderBottomRightRadius: 4 },
+  suya: { alignSelf: 'flex-start', maxWidth: '94%', borderBottomLeftRadius: 4 },
+  textoMio: { fontSize: 14.5, lineHeight: 21 },
+  adjunto: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  reintentar: { alignSelf: 'flex-start' },
+  pie: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    borderTopWidth: 1,
+    paddingTop: 7,
+  },
+  pensando: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  barra: { borderTopWidth: 1, paddingTop: 10, paddingHorizontal: MARGEN },
+  barraDentro: { gap: 8, width: '100%', maxWidth: ANCHO_CHAT, alignSelf: 'center' },
+  chips: { gap: 6 },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: Radii.pastilla,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    maxWidth: 240,
+    maxWidth: 220,
   },
-  chipTexto: { fontSize: 13, lineHeight: 18, flexShrink: 1 },
-  entrada: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.two },
-  input: {
-    flex: 1,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 10,
-    fontSize: 15,
-    maxHeight: 140,
-  },
+  chipTexto: { fontSize: 12, lineHeight: 16, fontWeight: 500, flexShrink: 1 },
+  entrada: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  input: { flex: 1, maxHeight: 140, minHeight: 46 },
   enviar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 46,
+    height: 46,
+    borderRadius: Radii.control,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  panel: { width: 300, borderLeftWidth: 1 },
+  panelContenido: { padding: 22, gap: Spacing.four },
+  panelBloque: { gap: 6 },
+  panelTitulo: { fontSize: 15, lineHeight: 20 },
+  filaChips: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  contexto: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 2 },
 });

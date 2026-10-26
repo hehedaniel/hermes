@@ -1,9 +1,11 @@
+import Feather from '@expo/vector-icons/Feather';
 import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { FilaAjuste, Interruptor } from '@/components/ajustes-ui';
+import { Caja, Seccion } from '@/components/anden';
 import { Button } from '@/components/button';
-import { SectionTitle } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -78,42 +80,38 @@ export function AvisosSettings() {
   }
 
   return (
-    <>
-      <SectionTitle>Notificaciones</SectionTitle>
+    <View>
+      <Seccion titulo="Notificaciones" sinRegla />
       {permiso === false ? (
-        <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
-          <ThemedText type="small">
-            Las notificaciones están desactivadas para Hermes. Actívalas para que te avise de notas,
-            novedades y entregas.
-          </ThemedText>
-          <Button title="Activar notificaciones" onPress={activar} />
+        <View style={[styles.aviso, { backgroundColor: theme.urgentWash }]}>
+          <Feather name="bell-off" size={15} color={theme.urgent} style={styles.icono} />
+          <View style={styles.flex}>
+            <ThemedText type="small" style={{ color: theme.urgent }}>
+              Las notificaciones están desactivadas para Hermes. Actívalas para que te avise de
+              notas, novedades y entregas.
+            </ThemedText>
+            <View style={styles.boton}>
+              <Button title="Activar notificaciones" compacto onPress={activar} />
+            </View>
+          </View>
         </View>
       ) : null}
-      <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
-        {OPCIONES.map((o) => (
-          <View key={o.clave} style={styles.opcion}>
-            <View style={styles.flex}>
-              <ThemedText type="smallBold">{o.titulo}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {o.texto}
-              </ThemedText>
-            </View>
-            <Switch
-              value={prefs[o.clave]}
-              onValueChange={(v) => cambiar(o.clave, v)}
-              trackColor={{ true: theme.accent, false: theme.backgroundSelected }}
-              thumbColor="#ffffff"
-            />
-          </View>
-        ))}
-      </View>
-      <Button title="Probar una notificación" variant="secondary" onPress={probar} />
-      {msg ? (
-        <ThemedText type="small" style={{ color: theme.accent }}>
-          {msg}
-        </ThemedText>
-      ) : null}
-      <ThemedText type="small" themeColor="textSecondary">
+      {OPCIONES.map((o) => (
+        <FilaAjuste
+          key={o.clave}
+          titulo={o.titulo}
+          texto={o.texto}
+          derecha={<Interruptor value={prefs[o.clave]} onValueChange={(v) => cambiar(o.clave, v)} />}
+        />
+      ))}
+      <FilaAjuste
+        icono="send"
+        titulo="Probar una notificación"
+        texto={msg ?? undefined}
+        onPress={probar}
+        chevron
+      />
+      <ThemedText type="meta" themeColor="ink3" style={styles.nota}>
         Hermes mira Moodle cada media hora más o menos, aunque la app esté cerrada. En Xiaomi, para
         que no se lo corte el ahorro de batería: Ajustes del móvil → Apps → Hermes → Ahorro de
         batería → Sin restricciones, y activa Inicio automático.
@@ -121,25 +119,27 @@ export function AvisosSettings() {
 
       {/* Solo en Hermes Dev (cargando el código desde el PC): herramientas para probar los avisos */}
       {__DEV__ ? (
-        <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+        <Caja style={styles.pruebas}>
           <ThemedText type="smallBold">Pruebas (solo Hermes Dev)</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText type="meta" themeColor="ink2">
             Primero «Simular novedades». Luego «Comprobar ahora» (lo mismo que hace el segundo
             plano, al momento) o «Lanzar al salir» y sal de la app con el botón de inicio.
           </ThemedText>
           {diagnostico ? (
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
+            <ThemedText type="meta" themeColor="ink2">
               {diagnostico}
             </ThemedText>
           ) : null}
           <Button
             title="Simular novedades"
             variant="secondary"
+            compacto
             onPress={async () => setMsg(await simularNovedades())}
           />
           <Button
             title="Comprobar ahora (como en segundo plano)"
             variant="secondary"
+            compacto
             onPress={async () => {
               setMsg('Comprobando Moodle…');
               setMsg(await comprobarComoSegundoPlano());
@@ -148,26 +148,31 @@ export function AvisosSettings() {
           <Button
             title="Lanzar el segundo plano al salir de la app"
             variant="secondary"
+            compacto
             onPress={() => setMsg(lanzarAlSalir())}
           />
           <Button
             title="Actualizar diagnóstico"
             variant="secondary"
+            compacto
             onPress={async () => setDiagnostico(await diagnosticoSegundoPlano())}
           />
           {msg ? (
-            <ThemedText type="small" style={{ color: theme.accent }}>
+            <ThemedText type="small" style={{ color: theme.brand }}>
               {msg}
             </ThemedText>
           ) : null}
-        </View>
+        </Caja>
       ) : null}
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 14, padding: Spacing.three, gap: Spacing.three },
-  opcion: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
-  flex: { flex: 1, gap: 2 },
+  flex: { flex: 1, gap: 8 },
+  aviso: { flexDirection: 'row', gap: 10, borderRadius: 8, padding: 12, marginVertical: 6 },
+  icono: { marginTop: 2 },
+  boton: { alignSelf: 'flex-start' },
+  nota: { paddingTop: 10 },
+  pruebas: { marginTop: Spacing.three, gap: 8 },
 });

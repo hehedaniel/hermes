@@ -1,35 +1,25 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { FilaRail, Marca, Seccion } from '@/components/anden';
 import { Button } from '@/components/button';
-import { Screen, SectionTitle } from '@/components/screen';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Vacio } from '@/components/vacio';
-import { Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { avisar } from '@/lib/dialogo';
 import { useDownloads } from '@/lib/downloads';
-import { dayKey, fechaLarga, hora } from '@/lib/format';
+import { dayKey, fechaLarga, haceCuanto, hora } from '@/lib/format';
 import type { Novedad, TipoNovedad } from '@/lib/novedades';
-import { useCourseColors, useMoodle } from '@/lib/store';
-
-const ICONO: Record<TipoNovedad, keyof typeof MaterialIcons.glyphMap> = {
-  archivo: 'note-add',
-  'archivo-actualizado': 'sync',
-  actividad: 'widgets',
-  tarea: 'assignment',
-  nota: 'grade',
-  fecha: 'event',
-};
+import { useAsignaturas, useMoodle } from '@/lib/store';
 
 const ETIQUETA: Record<TipoNovedad, string> = {
-  archivo: 'Archivo nuevo',
+  archivo: 'Apunte nuevo',
   'archivo-actualizado': 'Archivo actualizado',
   actividad: 'Actividad nueva',
-  tarea: 'Entrega nueva',
+  tarea: 'Tarea nueva',
   nota: 'Nota publicada',
   fecha: 'Cambio de fecha',
 };
@@ -37,6 +27,7 @@ const ETIQUETA: Record<TipoNovedad, string> = {
 export default function NovedadesScreen() {
   const { novedades, client, snapshot, marcarLeidas, recargarNovedades } = useMoodle();
   const ahora = useNow();
+  const theme = useTheme();
 
   // Al entrar se recoge lo que haya encontrado el segundo plano; al salir, queda como leído
   useFocusEffect(
@@ -67,45 +58,83 @@ export default function NovedadesScreen() {
     return (
       <Screen title="Novedades" refreshable={false}>
         <Vacio
+          icono="bell"
+          tono="neutro"
           titulo="Conecta tu Moodle"
-          texto="Pega tu token en Ajustes para ver lo que va cambiando."
+          texto="Inicia sesión en Ajustes para ver lo que va cambiando en tus asignaturas."
+          accion={
+            <Button
+              title="Ir a Ajustes"
+              variant="secondary"
+              compacto
+              icono="arrow-right"
+              onPress={() => router.navigate('/ajustes')}
+            />
+          }
         />
       </Screen>
     );
   }
 
-  const hayNoLeidas = novedades.some((n) => !n.leida);
+  const sinLeer = novedades.filter((n) => !n.leida).length;
 
   return (
-    <Screen title="Novedades">
+    <Screen
+      title="Novedades"
+      etiqueta={`Todo el curso · ${snapshot?.courses.length ?? 0} asignaturas`}
+      derecha={sinLeer ? `${sinLeer} sin leer` : 'al día'}
+      derechaColor={sinLeer ? theme.brand : undefined}>
       {novedades.length === 0 ? (
         <Vacio
+          icono="bell"
           titulo="Todo al día"
           texto={
             snapshot
-              ? 'Aquí aparecerá lo que cambie en tus asignaturas a partir de ahora: apuntes nuevos, entregas, notas y cambios de fecha.'
+              ? 'Aquí aparecerá lo que cambie en tus asignaturas: apuntes nuevos, entregas, notas y cambios de fecha.'
               : 'Sincronizando por primera vez…'
           }
         />
       ) : null}
-      {hayNoLeidas ? (
-        <Button title="Marcar todo como leído" variant="secondary" onPress={marcarLeidas} />
-      ) : null}
-      {grupos.map((g) => (
-        <View key={g.titulo} style={styles.group}>
-          <SectionTitle>{g.titulo}</SectionTitle>
+      {grupos.map((g, i) => (
+        <View key={g.titulo}>
+          <Seccion
+            numero={i + 1}
+            titulo={g.titulo}
+            derecha={String(g.items.length)}
+          />
           {g.items.map((n) => (
-            <NovedadRow key={n.id} novedad={n} />
+            <NovedadRow key={n.id} novedad={n} ahora={ahora} />
           ))}
         </View>
       ))}
+      {sinLeer ? (
+        <View style={styles.leidas}>
+          <Button
+            title="Marcar todo como leído"
+            variant="ghost"
+            compacto
+            icono="check"
+            onPress={marcarLeidas}
+          />
+        </View>
+      ) : null}
     </Screen>
   );
 }
 
-function NovedadRow({ novedad: n }: { novedad: Novedad }) {
+/** «hace 12 min», «ayer · 18:40», «hoy 09:14»… */
+function cuando(ms: number, ahora: number) {
+  const k = dayKey(new Date(ms));
+  if (k === dayKey(new Date(ahora))) {
+    return ahora - ms < 6 * 3600000 ? haceCuanto(ms, ahora) : `hoy ${hora(new Date(ms))}`;
+  }
+  if (k === dayKey(new Date(ahora - 86400000))) return `ayer · ${hora(new Date(ms))}`;
+  return hora(new Date(ms));
+}
+
+function NovedadRow({ novedad: n, ahora }: { novedad: Novedad; ahora: number }) {
   const theme = useTheme();
-  const colorOf = useCourseColors();
+  const info = useAsignaturas()(n.cursoId, n.curso);
   const { abrir: abrirArchivo } = useDownloads();
 
   async function abrir() {
@@ -126,56 +155,47 @@ function NovedadRow({ novedad: n }: { novedad: Novedad }) {
   }
 
   return (
-    <Pressable
-      onPress={abrir}
-      style={({ pressed }) => [
-        styles.row,
-        { backgroundColor: theme.backgroundElement, opacity: pressed ? 0.7 : 1 },
-      ]}>
-      <View style={[styles.icono, { backgroundColor: colorOf(n.cursoId) }]}>
-        <MaterialIcons name={ICONO[n.tipo]} size={20} color="#fff" />
+    <FilaRail color={info.color} apagada={n.leida} onPress={abrir}>
+      <View style={styles.linea}>
+        <View style={styles.siglas}>
+          {!n.leida ? <View style={[styles.punto, { backgroundColor: theme.brand }]} /> : null}
+          <ThemedText type="label" style={{ color: info.color, letterSpacing: 1 }}>
+            {info.siglas}
+          </ThemedText>
+        </View>
+        <ThemedText type="small" themeColor="ink2">
+          {cuando(n.fecha, ahora)}
+        </ThemedText>
       </View>
-      <View style={styles.body}>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.meta} numberOfLines={1}>
-          {ETIQUETA[n.tipo]} · {n.curso}
-        </ThemedText>
-        <ThemedText type="small" numberOfLines={2} style={{ fontWeight: n.leida ? 500 : 700 }}>
-          {n.titulo}
-        </ThemedText>
+      <ThemedText
+        style={[styles.titulo, n.leida ? { fontWeight: 400, color: theme.ink2 } : null]}
+        numberOfLines={3}>
+        {n.titulo}
+      </ThemedText>
+      <View style={styles.linea2}>
+        <Marca
+          texto={ETIQUETA[n.tipo]}
+          borde={n.tipo !== 'nota'}
+          color={n.tipo === 'nota' ? theme.stDone : undefined}
+          fondo={n.tipo === 'nota' ? theme.stDoneW : undefined}
+        />
         {n.detalle ? (
-          <ThemedText type="small" themeColor="textSecondary" numberOfLines={2} style={styles.meta}>
+          <ThemedText type="meta" themeColor="ink3" numberOfLines={2} style={styles.flex}>
             {n.detalle}
           </ThemedText>
         ) : null}
       </View>
-      <View style={styles.right}>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.meta}>
-          {hora(new Date(n.fecha))}
-        </ThemedText>
-        {!n.leida ? <View style={[styles.dot, { backgroundColor: theme.accent }]} /> : null}
-      </View>
-    </Pressable>
+    </FilaRail>
   );
 }
 
 const styles = StyleSheet.create({
-  group: { gap: Spacing.two },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three - 4,
-    borderRadius: 14,
-    padding: Spacing.three - 4,
-  },
-  icono: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  body: { flex: 1, gap: 1 },
-  meta: { fontSize: 12, lineHeight: 16 },
-  right: { alignItems: 'flex-end', gap: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
+  flex: { flex: 1 },
+  linea: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  siglas: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  punto: { width: 6, height: 6, borderRadius: 3 },
+  titulo: { fontSize: 15.5, lineHeight: 21, fontWeight: 600 },
+  linea2: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 2 },
+  leidas: { alignItems: 'center', paddingTop: 8 },
 });
+

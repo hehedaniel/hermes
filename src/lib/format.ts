@@ -56,3 +56,47 @@ export function haceCuanto(ms: number, nowMs = Date.now()) {
 /** Clave "YYYY-MM-DD" en hora local. */
 export const dayKey = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+const mesCorto = (d: Date) => MESES[d.getMonth()].slice(0, 3);
+
+/** "27 oct" */
+export const diaMes = (ts: number) => {
+  const d = new Date(ts * 1000);
+  return `${d.getDate()} ${mesCorto(d)}`;
+};
+
+/** "27 oct · 23:59" */
+export const diaMesHora = (ts: number) => `${diaMes(ts)} · ${hora(new Date(ts * 1000))}`;
+
+/**
+ * Cuándo se entrega, para el lado derecho de cada fila:
+ * "mañana 23:59", "hoy 14:00", "en 5 días · 31 oct", "12 nov".
+ */
+export function cuandoVence(ts: number, nowMs = Date.now()) {
+  const d = new Date(ts * 1000);
+  const hoy = new Date(nowMs);
+  const manana = new Date(nowMs + 86400000);
+  if (dayKey(d) === dayKey(hoy)) return `hoy ${hora(d)}`;
+  if (dayKey(d) === dayKey(manana)) return `mañana ${hora(d)}`;
+  // Días de calendario (no horas / 24): el jueves es «en 2 días» aunque falten 36 h
+  const medianoche = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const dias = Math.round((medianoche(d) - medianoche(hoy)) / 86400000);
+  if (dias > 0 && dias < 7) return `en ${dias} días · ${diaMes(ts)}`;
+  return diaMes(ts);
+}
+
+/** "Quedan 1 día y 12 h", "Quedan 5 h", "Quedan 40 min" */
+export function quedan(ts: number, nowMs = Date.now()) {
+  const min = Math.max(0, Math.round((ts * 1000 - nowMs) / 60000));
+  const d = Math.floor(min / 1440);
+  const h = Math.floor((min % 1440) / 60);
+  if (d) return `Quedan ${d} ${d === 1 ? 'día' : 'días'}${h ? ` y ${h} h` : ''}`;
+  if (h) return `Quedan ${h} h`;
+  return `Quedan ${min} min`;
+}
+
+/** "Lunes, 26 de octubre" */
+export function fechaTitulo(d: Date) {
+  const t = fechaLarga(d).replace(' ', ', ').replace(/^\w/, (c) => c.toUpperCase());
+  return t.replace(/(\d+) de/, '$1 de');
+}

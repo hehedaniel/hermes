@@ -60,6 +60,8 @@ export type FilaEntrega = {
   key: string;
   nombre: string;
   siglas: string;
+  /** Módulo del curso (para usar el color de su «línea» según el tema) */
+  modulo: ModuloId | null;
   color: string;
   cuando: string; // "jue 23 · 23:59"
   falta: string; // "en 5 h"
@@ -87,6 +89,7 @@ export function datosEntregas(snapshot: Snapshot | null, ahora = Date.now()): Da
       key: e.key,
       nombre: e.nombre,
       siglas: siglas(e.curso),
+      modulo: moduloDe(e.curso),
       color: color(e.cursoId),
       cuando: cuandoCorto(e.fecha, ahora),
       falta: relativo(e.fecha, ahora),

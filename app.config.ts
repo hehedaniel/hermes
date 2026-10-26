@@ -12,7 +12,12 @@ const IS_DEV = process.env.APP_VARIANT === 'development';
 const BASE_URL = process.env.EXPO_BASE_URL;
 
 /** Widgets de la pantalla de inicio (Android). Se dibujan en src/widgets. */
+const fuente = (peso: string) =>
+  `./node_modules/@expo-google-fonts/space-grotesk/${peso}/SpaceGrotesk_${peso}.ttf` as const;
+
 const widgets: WithAndroidWidgetsParams = {
+  // La fuente de la app, también en los widgets (src/widgets/paleta.ts → FUENTE)
+  fonts: [fuente('400Regular'), fuente('500Medium'), fuente('700Bold')],
   widgets: [
     {
       name: 'Entregas',
@@ -57,7 +62,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'expo-notifications',
       {
         icon: './assets/images/notification-icon.png',
-        color: '#1F6FEB',
+        color: '#0B6B5B',
         defaultChannel: 'novedades',
       },
     ],

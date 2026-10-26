@@ -50,7 +50,7 @@ export async function configurarCanales() {
       Notifications.setNotificationChannelAsync(id, {
         name: CANALES[id].nombre,
         importance: CANALES[id].importancia,
-        lightColor: '#1F6FEB',
+        lightColor: '#0B6B5B',
       }),
     ),
   );

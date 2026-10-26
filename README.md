@@ -223,6 +223,7 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [ ] Rediseño de la app (versión 2.0)
 - [ ] Compilar el APK en GitHub Actions, sin la cola de EAS
 - [x] Hacer tareas con IA (Gemini / OpenRouter) y entregarlas desde la app
+- [ ] Plantillas para las entregas con IA: elegir en Ajustes una plantilla (portada, estructura, estilo) que la IA use al generar el documento
 - [ ] Notificaciones en iPhone a través del script de Google (correo o ntfy), sin servidor propio
 - [ ] Visor de PDF sin conexión (pdf.js dentro de la app)
 - [ ] Menos datos en segundo plano: solo lo que puede cambiar; los temas cada pocas horas

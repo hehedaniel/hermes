@@ -13,10 +13,12 @@ import {
 import { AppState, Platform } from 'react-native';
 
 import { COURSE_PALETTE } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 import { actualizarWidgets } from '@/widgets/actualizar';
 
 import { CLAVES } from './claves';
+import { MODULOS, moduloDe } from './horario';
 import { conTareaDePrueba } from './tarea-prueba';
 import { avisarNovedades, prepararAvisos, programarRecordatorios } from './avisos';
 import { activarSegundoPlano, desactivarSegundoPlano } from './segundo-plano';
@@ -326,12 +328,59 @@ export function useMoodle() {
   return ctx;
 }
 
-/** Color de cada asignatura: estable mientras no cambien tus cursos. */
-export function useCourseColors() {
+/** "Sistemas de Big Data" -> "SBD"; "S A A (Sistemas de...)" -> "SAA" */
+export function iniciales(nombre: string) {
+  const limpio = nombre.replace(/\(.*?\)/g, '').replace(/[-–].*$/, '');
+  const palabras = limpio.split(/\s+/).filter((p) => p && !/^(de|del|la|el|y|a|en)$/i.test(p));
+  return palabras
+    .slice(0, 3)
+    .map((p) => p[0].toUpperCase())
+    .join('');
+}
+
+export type InfoAsignatura = {
+  siglas: string;
+  color: string;
+  nombre: string;
+  corto: string;
+  profesor?: string;
+};
+
+/**
+ * Cada asignatura es una «línea» con su color, sus siglas y su profesor. Las cinco del curso
+ * se reconocen por el nombre; cualquier otro curso toma un color por orden.
+ */
+export function useAsignaturas() {
   const { snapshot } = useMoodle();
+  const theme = useTheme();
   return useMemo(() => {
-    const ids = [...(snapshot?.courses ?? [])].map((c) => c.id).sort((a, b) => a - b);
-    const map = new Map(ids.map((id, i) => [id, COURSE_PALETTE[i % COURSE_PALETTE.length]]));
-    return (id: number) => map.get(id) ?? COURSE_PALETTE[COURSE_PALETTE.length - 1];
-  }, [snapshot?.courses]);
+    const cursos = snapshot?.courses ?? [];
+    const ids = [...cursos].map((c) => c.id).sort((a, b) => a - b);
+    return (cursoId: number, nombre?: string): InfoAsignatura => {
+      const nombreCurso = cursos.find((c) => c.id === cursoId)?.fullname ?? nombre ?? '';
+      const m = moduloDe(nombreCurso);
+      if (m) {
+        return {
+          siglas: m,
+          color: theme[m],
+          nombre: MODULOS[m].nombre,
+          corto: MODULOS[m].corto,
+          profesor: MODULOS[m].profesor,
+        };
+      }
+      const i = Math.max(0, ids.indexOf(cursoId));
+      return {
+        siglas: iniciales(nombreCurso) || '·',
+        color: COURSE_PALETTE[i % COURSE_PALETTE.length],
+        nombre: nombreCurso,
+        corto: nombreCurso,
+      };
+    };
+  }, [snapshot?.courses, theme]);
+}
+
+/** Color de cada asignatura (su «línea»). */
+export function useCourseColors() {
+  const info = useAsignaturas();
+  return useCallback((id: number) => info(id).color, [info]);
 }

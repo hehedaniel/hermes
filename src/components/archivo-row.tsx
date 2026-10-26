@@ -1,39 +1,22 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Feather from '@expo/vector-icons/Feather';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 
+import { Marca, TipoArchivo } from '@/components/anden';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { Archivo } from '@/lib/data';
-import { formatoTamano, useDownloads } from '@/lib/downloads';
 import { avisar } from '@/lib/dialogo';
+import { formatoTamano, useDownloads } from '@/lib/downloads';
 import { claveArchivo } from '@/lib/novedades';
 import { abrirCon, extension, mimeDe } from '@/lib/open-file';
 import { useMoodle } from '@/lib/store';
 
-const ICONO: Record<string, keyof typeof MaterialIcons.glyphMap> = {
-  pdf: 'picture-as-pdf',
-  doc: 'description',
-  docx: 'description',
-  ppt: 'slideshow',
-  pptx: 'slideshow',
-  xls: 'table-chart',
-  xlsx: 'table-chart',
-  csv: 'table-chart',
-  zip: 'folder-zip',
-  png: 'image',
-  jpg: 'image',
-  jpeg: 'image',
-  ipynb: 'code',
-  py: 'code',
-  mp4: 'movie',
-};
-
 /**
- * Fila de un archivo: tocar = abrir (descargándolo antes si hace falta); mantener = opciones.
- * En la web se abre en una pestaña nueva.
+ * Fila de un archivo: tipo, nombre, tamaño y su estado en el móvil (descargado, descargando,
+ * versión nueva o por descargar). Tocar = abrir (descargándolo antes si hace falta);
+ * mantener = opciones. En la web se abre en una pestaña nueva.
  */
-export function ArchivoRow({ archivo }: { archivo: Archivo }) {
+export function ArchivoRow({ archivo, sinRegla }: { archivo: Archivo; sinRegla?: boolean }) {
   const theme = useTheme();
   const {
     guardaArchivos,
@@ -59,80 +42,102 @@ export function ArchivoRow({ archivo }: { archivo: Archivo }) {
     }
   }
 
+  async function bajar() {
+    try {
+      await descargar(archivo);
+    } catch (e) {
+      avisar('No se pudo descargar', (e as Error).message);
+    }
+  }
+
   function opciones() {
     const file = archivoLocal(archivo);
     Alert.alert(archivo.nombre, formatoTamano(archivo.size), [
       ...(file
         ? [
-            {
-              text: 'Abrir con otra app',
-              onPress: () => abrirCon(file, mimeDe(archivo)),
-            },
+            { text: 'Abrir con otra app', onPress: () => abrirCon(file, mimeDe(archivo)) },
             {
               text: 'Borrar del móvil',
               style: 'destructive' as const,
               onPress: () => borrar(archivo),
             },
           ]
-        : [
-            {
-              text: 'Descargar',
-              onPress: () => descargar(archivo).catch((e) => Alert.alert('Error', e.message)),
-            },
-          ]),
+        : [{ text: 'Descargar', onPress: bajar }]),
       { text: 'Cerrar', style: 'cancel' as const },
     ]);
   }
+
+  const estadoDerecha = !guardaArchivos ? (
+    <View style={styles.estado}>
+      <Feather name="external-link" size={12} color={theme.ink2} />
+      <ThemedText type="label" themeColor="ink2" style={styles.estadoTexto}>
+        Abrir
+      </ThemedText>
+    </View>
+  ) : st === 'descargando' ? (
+    <View style={styles.estado}>
+      <ActivityIndicator size="small" color={theme.brand} />
+    </View>
+  ) : st === 'si' ? (
+    <View style={styles.estado}>
+      <Feather name="check" size={12} color={theme.stDone} />
+      <ThemedText type="label" style={[styles.estadoTexto, { color: theme.stDone }]}>
+        Descargado
+      </ThemedText>
+    </View>
+  ) : st === 'desactualizado' ? (
+    <Pressable onPress={bajar} hitSlop={8} style={styles.estadoCol} accessibilityRole="button">
+      <View style={styles.estado}>
+        <Feather name="alert-triangle" size={12} color={theme.urgent} />
+        <ThemedText type="label" style={[styles.estadoTexto, { color: theme.urgent }]}>
+          Versión nueva
+        </ThemedText>
+      </View>
+      <Feather name="download" size={15} color={theme.ink2} />
+    </Pressable>
+  ) : (
+    <Pressable onPress={bajar} hitSlop={8} style={styles.estado} accessibilityRole="button">
+      <Feather name="download" size={12} color={theme.ink2} />
+      <ThemedText type="label" themeColor="ink2" style={styles.estadoTexto}>
+        Descargar
+      </ThemedText>
+    </Pressable>
+  );
 
   return (
     <Pressable
       onPress={abrir}
       onLongPress={guardaArchivos ? opciones : undefined}
-      style={({ pressed }) => [styles.row, { opacity: pressed ? 0.6 : 1 }]}>
-      <MaterialIcons
-        name={ICONO[ext] ?? 'insert-drive-file'}
-        size={22}
-        color={theme.textSecondary}
-      />
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        styles.row,
+        !sinRegla && { borderBottomWidth: 1, borderBottomColor: theme.line },
+        { opacity: pressed ? 0.6 : 1 },
+      ]}>
+      <TipoArchivo ext={ext} />
       <View style={styles.text}>
-        <ThemedText type="small" numberOfLines={2}>
+        <ThemedText style={styles.nombre} numberOfLines={2}>
           {archivo.ruta ? `${archivo.ruta}/` : ''}
           {archivo.nombre}
         </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.meta}>
-          {ext.toUpperCase() || 'ARCHIVO'} · {formatoTamano(archivo.size)}
-          {st === 'desactualizado' ? ' · hay versión nueva' : ''}
-          {esNuevo ? (
-            <ThemedText
-              type="small"
-              style={[styles.meta, { color: theme.accent, fontWeight: 700 }]}>
-              {'  '}NUEVO
-            </ThemedText>
-          ) : null}
-        </ThemedText>
+        <View style={styles.meta}>
+          <ThemedText type="meta" themeColor="ink3">
+            {formatoTamano(archivo.size)}
+          </ThemedText>
+          {esNuevo ? <Marca texto="Nuevo" color={theme.brand} fondo={theme.brandWash} /> : null}
+        </View>
       </View>
-      {!guardaArchivos ? (
-        <MaterialIcons name="open-in-new" size={20} color={theme.accent} />
-      ) : st === 'descargando' ? (
-        <ActivityIndicator size="small" color={theme.accent} />
-      ) : st === 'si' ? (
-        <MaterialIcons name="offline-pin" size={22} color={theme.entregada} />
-      ) : st === 'desactualizado' ? (
-        <MaterialIcons name="sync" size={22} color={theme.borrador} />
-      ) : (
-        <MaterialIcons name="file-download" size={22} color={theme.accent} />
-      )}
+      {estadoDerecha}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three - 4,
-    paddingVertical: 10,
-  },
-  text: { flex: 1, gap: 1 },
-  meta: { fontSize: 12, lineHeight: 16 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  text: { flex: 1, gap: 2 },
+  nombre: { fontSize: 14.5, lineHeight: 19, fontWeight: 500 },
+  meta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  estado: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 24 },
+  estadoCol: { alignItems: 'flex-end', gap: 4 },
+  estadoTexto: { fontSize: 9.5, letterSpacing: 0.8 },
 });

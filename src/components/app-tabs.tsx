@@ -1,53 +1,314 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useColorScheme } from 'react-native';
+import Feather from '@expo/vector-icons/Feather';
+import { Tabs } from 'expo-router';
+import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme';
+import type { IconoFeather } from '@/components/anden';
+import { ThemedText } from '@/components/themed-text';
+import { ANCHO_ESCRITORIO, ANCHO_TABLETA, Radii } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
+import { useTheme } from '@/hooks/use-theme';
+import { haceCuanto } from '@/lib/format';
 import { useMoodle } from '@/lib/store';
 
+type Pestana = { name: string; titulo: string; icono: IconoFeather };
+
+const PESTANAS: Pestana[] = [
+  { name: 'index', titulo: 'Pendientes', icono: 'clipboard' },
+  { name: 'novedades', titulo: 'Novedades', icono: 'bell' },
+  { name: 'calendario', titulo: 'Calendario', icono: 'calendar' },
+  { name: 'cursos', titulo: 'Asignaturas', icono: 'book-open' },
+  { name: 'ajustes', titulo: 'Ajustes', icono: 'settings' },
+];
+
+/**
+ * Navegación principal. La misma en móvil, tableta y web:
+ *  - estrecho: barra inferior de 5 pestañas
+ *  - tableta (≥ 768): rail de iconos a la izquierda
+ *  - escritorio (≥ 1100): barra lateral con contadores y tu cuenta
+ */
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
-  const { snapshot, noLeidas } = useMoodle();
-
-  // Globo en la pestaña con las entregas abiertas que vencen en menos de 3 días
-  const now = useNow() / 1000;
-  const urgentes = (snapshot?.entregas ?? []).filter(
-    (e) =>
-      (e.estado === 'pendiente' || e.estado === 'borrador') && e.fecha && e.fecha - now < 3 * 86400,
-  ).length;
-
+  const { width } = useWindowDimensions();
+  const lateral = width >= ANCHO_TABLETA;
   return (
-    <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.backgroundSelected}
-      labelStyle={{ selected: { color: colors.text } }}>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Pendientes</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="checklist" md="checklist" />
-        {urgentes ? <NativeTabs.Trigger.Badge>{String(urgentes)}</NativeTabs.Trigger.Badge> : null}
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="novedades">
-        <NativeTabs.Trigger.Label>Novedades</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="bell" md="notifications" />
-        {noLeidas ? <NativeTabs.Trigger.Badge>{String(noLeidas)}</NativeTabs.Trigger.Badge> : null}
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="calendario">
-        <NativeTabs.Trigger.Label>Calendario</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="cursos">
-        <NativeTabs.Trigger.Label>Asignaturas</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="books.vertical" md="school" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="ajustes">
-        <NativeTabs.Trigger.Label>Ajustes</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="gearshape" md="settings" />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <Tabs
+      tabBar={(props) => <BarraNavegacion {...props} />}
+      screenOptions={{ headerShown: false, tabBarPosition: lateral ? 'left' : 'bottom' }}>
+      {PESTANAS.map((p) => (
+        <Tabs.Screen key={p.name} name={p.name} options={{ title: p.titulo }} />
+      ))}
+    </Tabs>
   );
 }
+
+function useContadores() {
+  const { snapshot, noLeidas } = useMoodle();
+  const now = useNow() / 1000;
+  const abiertas = (snapshot?.entregas ?? []).filter(
+    (e) => e.estado === 'pendiente' || e.estado === 'borrador' || e.estado === 'vencida',
+  );
+  return {
+    index: abiertas.filter(
+      (e) => e.estado === 'vencida' ? e.fecha > now - 30 * 86400 : !e.fecha || e.fecha - now < 7 * 86400,
+    ).length,
+    urgentes: abiertas.filter(
+      (e) => e.estado !== 'vencida' && e.fecha && e.fecha - now < 3 * 86400,
+    ).length,
+    novedades: noLeidas,
+  };
+}
+
+function BarraNavegacion({ state, navigation }: BottomTabBarProps) {
+  const { width } = useWindowDimensions();
+  const ir = (name: string, key: string, activa: boolean) => {
+    const ev = navigation.emit({ type: 'tabPress', target: key, canPreventDefault: true });
+    if (!activa && !ev.defaultPrevented) navigation.navigate(name);
+  };
+  const rutas = state.routes.map((r, i) => ({
+    ...r,
+    activa: state.index === i,
+    info: PESTANAS.find((p) => p.name === r.name) ?? PESTANAS[0],
+  }));
+  if (width >= ANCHO_ESCRITORIO) return <Lateral rutas={rutas} ir={ir} />;
+  if (width >= ANCHO_TABLETA) return <Rail rutas={rutas} ir={ir} />;
+  return <Inferior rutas={rutas} ir={ir} />;
+}
+
+type Rutas = { key: string; name: string; activa: boolean; info: Pestana }[];
+type Ir = (name: string, key: string, activa: boolean) => void;
+
+function Inferior({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
+  const theme = useTheme();
+  const { bottom } = useSafeAreaInsets();
+  const cont = useContadores();
+  return (
+    <View
+      style={[
+        styles.inferior,
+        { backgroundColor: theme.paper, borderTopColor: theme.line, paddingBottom: 6 + bottom },
+      ]}>
+      {rutas.map((r) => {
+        const color = r.activa ? theme.ink : theme.ink3;
+        const globo =
+          r.name === 'index' ? cont.urgentes : r.name === 'novedades' ? cont.novedades : 0;
+        return (
+          <Pressable
+            key={r.key}
+            onPress={() => ir(r.name, r.key, r.activa)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: r.activa }}
+            accessibilityLabel={r.info.titulo}
+            style={styles.inferiorItem}>
+            <View style={[styles.indicador, { backgroundColor: r.activa ? theme.brand : 'transparent' }]} />
+            <View>
+              <Feather name={r.info.icono} size={21} color={color} />
+              {globo ? (
+                <View
+                  style={[
+                    styles.globo,
+                    { backgroundColor: r.name === 'index' ? theme.urgent : theme.brand, borderColor: theme.paper },
+                  ]}>
+                  <ThemedText style={[styles.globoTexto, { color: r.name === 'index' ? theme.surface : theme.brandInk }]}>
+                    {globo > 9 ? '9+' : globo}
+                  </ThemedText>
+                </View>
+              ) : null}
+            </View>
+            <ThemedText
+              style={[styles.inferiorTexto, { color, fontWeight: r.activa ? 600 : 500 }]}
+              numberOfLines={1}>
+              {r.info.titulo}
+            </ThemedText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function Logo({ grande }: { grande?: boolean }) {
+  const theme = useTheme();
+  return (
+    <View style={[styles.logo, grande && styles.logoGrande, { backgroundColor: theme.ink }]}>
+      <ThemedText style={[styles.logoTexto, { color: theme.paper }]}>H</ThemedText>
+    </View>
+  );
+}
+
+function Rail({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
+  const theme = useTheme();
+  const { top } = useSafeAreaInsets();
+  const principales = rutas.filter((r) => r.name !== 'ajustes');
+  const ajustes = rutas.find((r) => r.name === 'ajustes');
+  const boton = (r: Rutas[number]) => (
+    <Pressable
+      key={r.key}
+      onPress={() => ir(r.name, r.key, r.activa)}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: r.activa }}
+      accessibilityLabel={r.info.titulo}
+      style={[
+        styles.railItem,
+        r.activa && [styles.sombra1, { backgroundColor: theme.surface }],
+      ]}>
+      <Feather name={r.info.icono} size={20} color={r.activa ? theme.ink : theme.ink3} />
+    </Pressable>
+  );
+  return (
+    <View style={[styles.rail, { backgroundColor: theme.paper2, borderRightColor: theme.line, paddingTop: 16 + top }]}>
+      <Logo />
+      <View style={styles.railGrupo}>{principales.map(boton)}</View>
+      <View style={styles.flex} />
+      {ajustes ? boton(ajustes) : null}
+    </View>
+  );
+}
+
+function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
+  const theme = useTheme();
+  const { snapshot } = useMoodle();
+  const cont = useContadores();
+  const principales = rutas.filter((r) => r.name !== 'ajustes');
+  const ajustes = rutas.find((r) => r.name === 'ajustes');
+  const nombre = snapshot?.site.fullname ?? 'Sin cuenta';
+  const iniciales = nombre
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join('')
+    .toUpperCase();
+
+  const item = (r: Rutas[number]) => {
+    const n = r.name === 'index' ? cont.index : r.name === 'novedades' ? cont.novedades : 0;
+    return (
+      <Pressable
+        key={r.key}
+        onPress={() => ir(r.name, r.key, r.activa)}
+        accessibilityRole="tab"
+        accessibilityState={{ selected: r.activa }}
+        style={({ hovered }: { hovered?: boolean }) => [
+          styles.lateralItem,
+          r.activa && [styles.sombra1, { backgroundColor: theme.surface }],
+          !r.activa && hovered && { backgroundColor: theme.paper },
+        ]}>
+        <Feather name={r.info.icono} size={16} color={r.activa ? theme.ink : theme.ink2} />
+        <ThemedText
+          type="small"
+          style={[styles.flex, { fontWeight: r.activa ? 600 : 500, fontSize: 14 }]}
+          themeColor={r.activa ? 'ink' : 'ink2'}>
+          {r.info.titulo}
+        </ThemedText>
+        {n ? (
+          <ThemedText type="cifra" style={{ color: r.name === 'index' ? theme.urgent : theme.ink2 }}>
+            {n}
+          </ThemedText>
+        ) : null}
+      </Pressable>
+    );
+  };
+
+  return (
+    <View style={[styles.lateral, { backgroundColor: theme.paper2, borderRightColor: theme.line }]}>
+      <View style={styles.marca}>
+        <Logo grande />
+        <View>
+          <ThemedText type="heading" style={{ fontSize: 15 }}>
+            Hermes
+          </ThemedText>
+          <ThemedText type="label" themeColor="ink3" style={{ fontSize: 9 }}>
+            FP IA y Big Data
+          </ThemedText>
+        </View>
+      </View>
+      <View style={styles.lateralGrupo}>{principales.map(item)}</View>
+      <ThemedText type="label" themeColor="ink3" style={styles.lateralEtiqueta}>
+        Preferencias
+      </ThemedText>
+      <View style={styles.lateralGrupo}>{ajustes ? item(ajustes) : null}</View>
+      <View style={styles.flex} />
+      <View style={[styles.usuario, { borderTopColor: theme.line }]}>
+        <View style={[styles.avatar, { backgroundColor: theme.brandWash }]}>
+          <ThemedText type="smallBold" style={{ color: theme.brand, fontSize: 12 }}>
+            {iniciales || 'H'}
+          </ThemedText>
+        </View>
+        <View style={styles.flex}>
+          <ThemedText type="smallBold" numberOfLines={1}>
+            {nombre}
+          </ThemedText>
+          <ThemedText type="meta" themeColor="ink3">
+            {snapshot ? `Sincronizado ${haceCuanto(snapshot.syncedAt)}` : 'Conecta tu Moodle'}
+          </ThemedText>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  sombra1: {
+    shadowColor: '#15181A',
+    shadowOpacity: 0.07,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  inferior: { flexDirection: 'row', borderTopWidth: 1, paddingTop: 0 },
+  inferiorItem: { flex: 1, alignItems: 'center', gap: 3, paddingTop: 0, minHeight: 52 },
+  indicador: { width: 18, height: 2.5, borderRadius: 2, marginBottom: 6 },
+  inferiorTexto: { fontSize: 10.5, lineHeight: 13 },
+  globo: {
+    position: 'absolute',
+    top: -5,
+    right: -9,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    paddingHorizontal: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  globoTexto: { fontSize: 9, lineHeight: 11, fontWeight: 700 },
+  logo: { width: 28, height: 28, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
+  logoGrande: { width: 30, height: 30 },
+  logoTexto: { fontSize: 14, lineHeight: 18, fontWeight: 700 },
+  rail: {
+    width: 72,
+    alignItems: 'center',
+    gap: 20,
+    paddingBottom: 20,
+    borderRightWidth: 1,
+  },
+  railGrupo: { gap: 8, alignItems: 'center' },
+  railItem: {
+    width: 44,
+    height: 44,
+    borderRadius: Radii.superficie,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lateral: { width: 240, paddingHorizontal: 12, paddingTop: 20, borderRightWidth: 1 },
+  marca: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 8, marginBottom: 20 },
+  lateralGrupo: { gap: 2 },
+  lateralItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 40,
+    paddingHorizontal: 10,
+    borderRadius: Radii.control,
+  },
+  lateralEtiqueta: { fontSize: 9, paddingHorizontal: 10, marginTop: 22, marginBottom: 8 },
+  usuario: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderTopWidth: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+  },
+  avatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+});

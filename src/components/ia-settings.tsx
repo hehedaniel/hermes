@@ -1,12 +1,14 @@
+import Feather from '@expo/vector-icons/Feather';
 import * as Clipboard from 'expo-clipboard';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Campo, Etiqueta } from '@/components/ajustes-ui';
+import { Caja, Marca } from '@/components/anden';
 import { Button } from '@/components/button';
-import { SectionTitle } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   CONFIG_IA_POR_DEFECTO,
@@ -55,10 +57,6 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
   const [conClave, setConClave] = useState<Set<Proveedor>>(new Set());
 
   const info = PROVEEDORES[config.proveedor];
-  const inputStyle = [
-    styles.input,
-    { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.border },
-  ];
 
   useEffect(() => {
     leerConfigIA().then((c) => {
@@ -181,67 +179,77 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
   }, [modelos, filtro]);
 
   const mostrarCampoClave = !claveGuardada || editandoClave;
+  const siglas = (n: string) => n.slice(0, 2).toUpperCase();
+  const tono = (p: Proveedor) =>
+    !PROVEEDORES[p].gratis
+      ? { color: theme.urgent, fondo: theme.urgentWash }
+      : /l[ií]mite/i.test(PROVEEDORES[p].etiqueta)
+        ? { color: theme.stPend, fondo: theme.stPendW }
+        : { color: theme.stDone, fondo: theme.stDoneW };
 
   return (
-    <>
-      <SectionTitle>Inteligencia artificial</SectionTitle>
-      <ThemedText type="small" themeColor="textSecondary">
+    <View style={styles.todo}>
+      <ThemedText type="small" themeColor="ink2">
         Elige qué IA usar en tus tareas. Cada una con tu propia clave: las conversaciones van
-        directamente de tu móvil a esa empresa, sin pasar por ningún otro sitio.
+        directamente de tu dispositivo a esa empresa, sin pasar por ningún otro sitio.
       </ThemedText>
-      <View style={[styles.proveedores, { backgroundColor: theme.backgroundElement }]}>
-        {LISTA_PROVEEDORES.map((p, i) => {
+
+      <View>
+        {LISTA_PROVEEDORES.map((p) => {
           const sel = p === config.proveedor;
           const pi = PROVEEDORES[p];
+          const t = tono(p);
           return (
             <Pressable
               key={p}
               onPress={() => cambiarProveedor(p)}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: sel }}
               style={({ pressed }) => [
                 styles.proveedor,
-                i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border },
-                sel && { backgroundColor: theme.backgroundSelected },
+                { borderBottomColor: theme.line },
                 { opacity: pressed ? 0.7 : 1 },
               ]}>
               <View
-                style={[styles.radio, { borderColor: sel ? theme.accent : theme.textSecondary }]}>
-                {sel ? (
-                  <View style={[styles.radioDentro, { backgroundColor: theme.accent }]} />
-                ) : null}
+                style={[
+                  styles.siglas,
+                  {
+                    borderColor: sel ? theme.brand : theme.line2,
+                    backgroundColor: sel ? theme.brandWash : theme.surface,
+                  },
+                ]}>
+                <ThemedText style={[styles.siglasTexto, { color: sel ? theme.brand : theme.ink2 }]}>
+                  {siglas(pi.nombre)}
+                </ThemedText>
               </View>
               <View style={styles.flex}>
                 <View style={styles.filaNombre}>
-                  <ThemedText type="smallBold">{pi.nombre}</ThemedText>
-                  <ThemedText
-                    type="small"
-                    style={[
-                      styles.etiqueta,
-                      { color: pi.gratis ? theme.entregada : theme.textSecondary },
-                    ]}>
-                    {pi.etiqueta}
-                  </ThemedText>
+                  <ThemedText style={styles.nombre}>{pi.nombre}</ThemedText>
+                  <Marca texto={pi.etiqueta} color={t.color} fondo={t.fondo} />
                   {conClave.has(p) ? (
-                    <ThemedText type="small" style={[styles.etiqueta, { color: theme.accent }]}>
-                      · clave puesta
-                    </ThemedText>
+                    <Feather name="key" size={11} color={theme.brand} />
                   ) : null}
                 </View>
-                <ThemedText type="small" themeColor="textSecondary">
+                <ThemedText type="meta" themeColor="ink2" numberOfLines={2}>
                   {pi.resumen}
                 </ThemedText>
+              </View>
+              <View style={[styles.radio, { borderColor: sel ? theme.brand : theme.line2 }]}>
+                {sel ? <View style={[styles.radioDentro, { backgroundColor: theme.brand }]} /> : null}
               </View>
             </Pressable>
           );
         })}
       </View>
 
-      <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
-        <ThemedText type="smallBold">Con {info.nombre}</ThemedText>
+      <Caja style={styles.detalle}>
+        <View style={styles.filaNombre}>
+          <ThemedText type="smallBold">{info.nombre} · lo que puede</ThemedText>
+          <Marca texto={info.etiqueta} color={tono(config.proveedor).color} fondo={tono(config.proveedor).fondo} />
+        </View>
         {info.puede.map((t) => (
           <View key={t} style={styles.punto}>
-            <ThemedText type="smallBold" style={{ color: theme.entregada }}>
-              ✓
-            </ThemedText>
+            <Feather name="check" size={14} color={theme.stDone} style={styles.puntoIcono} />
             <ThemedText type="small" style={styles.flex}>
               {t}
             </ThemedText>
@@ -249,50 +257,50 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
         ))}
         {info.noPuede.map((t) => (
           <View key={t} style={styles.punto}>
-            <ThemedText type="smallBold" style={{ color: theme.urgente }}>
-              ✗
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
+            <Feather name="x" size={14} color={theme.urgent} style={styles.puntoIcono} />
+            <ThemedText type="small" themeColor="ink2" style={styles.flex}>
               {t}
             </ThemedText>
           </View>
         ))}
-      </View>
 
-      <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+        <Etiqueta
+          derecha={
+            <Pressable onPress={() => WebBrowser.openBrowserAsync(info.urlClave)} hitSlop={8}>
+              <ThemedText type="label" style={{ color: theme.brand }}>
+                Conseguir clave ↗
+              </ThemedText>
+            </Pressable>
+          }>
+          Clave de API
+        </Etiqueta>
         {mostrarCampoClave ? (
           <>
-            <ThemedText type="smallBold">Clave de {info.nombre}</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {info.ayudaClave}{' '}
-              <ThemedText
-                type="smallBold"
-                style={{ color: theme.accent }}
-                onPress={() => WebBrowser.openBrowserAsync(info.urlClave)}>
-                Conseguir clave
-              </ThemedText>
+            <ThemedText type="meta" themeColor="ink2">
+              {info.ayudaClave}
             </ThemedText>
-            <TextInput
+            <Campo
               value={clave}
               onChangeText={setClave}
               placeholder={info.placeholderClave}
-              placeholderTextColor={theme.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
               secureTextEntry
-              style={[inputStyle, { backgroundColor: theme.background }]}
             />
             <View style={styles.row}>
               <View style={styles.flex}>
                 <Button
                   title="Pegar"
                   variant="secondary"
+                  icono="clipboard"
+                  compacto
                   onPress={async () => setClave((await Clipboard.getStringAsync()).trim())}
                 />
               </View>
               <View style={styles.flex}>
                 <Button
                   title="Guardar"
+                  compacto
                   onPress={onGuardarClave}
                   loading={ocupado === 'clave'}
                   disabled={!clave.trim()}
@@ -301,170 +309,185 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
             </View>
           </>
         ) : (
-          <>
-            <View style={styles.fila}>
-              <View style={styles.flex}>
-                <ThemedText type="smallBold">Clave de {info.nombre}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Guardada ({oculta(claveGuardada!)})
-                </ThemedText>
-              </View>
-              <ThemedText
-                type="smallBold"
-                style={{ color: theme.accent }}
-                onPress={() => setEditandoClave(true)}>
-                Cambiar
+          <View style={[styles.campoFijo, { borderColor: theme.line2, backgroundColor: theme.surface }]}>
+            <Feather name="key" size={14} color={theme.ink3} />
+            <ThemedText type="cifra" style={styles.flex} numberOfLines={1}>
+              {oculta(claveGuardada!)}
+            </ThemedText>
+            <Pressable onPress={() => setEditandoClave(true)} hitSlop={8}>
+              <ThemedText type="label" style={{ color: theme.brand }}>
+                Editar
               </ThemedText>
-              <ThemedText type="smallBold" style={{ color: theme.vencida }} onPress={onBorrarClave}>
+            </Pressable>
+            <Pressable onPress={onBorrarClave} hitSlop={8}>
+              <ThemedText type="label" style={{ color: theme.urgent }}>
                 Quitar
               </ThemedText>
-            </View>
-            <View style={[styles.separador, { backgroundColor: theme.border }]} />
-            <View style={styles.fila}>
-              <View style={styles.flex}>
-                <ThemedText type="smallBold">Modelo</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-                  {modeloDe(config)}
-                </ThemedText>
-              </View>
-              <ThemedText type="smallBold" style={{ color: theme.accent }} onPress={onVerModelos}>
-                {ocupado === 'modelos' ? 'Cargando…' : modelos ? 'Cerrar' : 'Cambiar'}
+            </Pressable>
+          </View>
+        )}
+
+        {!mostrarCampoClave ? (
+          <>
+            <Etiqueta>Modelo</Etiqueta>
+            <Pressable
+              onPress={onVerModelos}
+              accessibilityRole="button"
+              style={[styles.campoFijo, { borderColor: theme.line2, backgroundColor: theme.surface }]}>
+              <ThemedText style={styles.flex} numberOfLines={1}>
+                {modeloDe(config)}
               </ThemedText>
-            </View>
+              {ocupado === 'modelos' ? (
+                <ThemedText type="meta" themeColor="ink3">
+                  Cargando…
+                </ThemedText>
+              ) : (
+                <Feather name={modelos ? 'chevron-up' : 'chevron-down'} size={16} color={theme.ink2} />
+              )}
+            </Pressable>
             {modelos ? (
               <View style={styles.lista}>
                 {modelos.length > 12 ? (
-                  <TextInput
+                  <Campo
                     value={filtro}
                     onChangeText={setFiltro}
                     placeholder="Buscar modelo (flash, free, claude…)"
-                    placeholderTextColor={theme.textSecondary}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    style={[inputStyle, { backgroundColor: theme.background }]}
                   />
                 ) : null}
-                {visibles.map((m) => {
-                  const actual = m.id === modeloDe(config);
-                  return (
-                    <Pressable
-                      key={m.id}
-                      onPress={() => elegirModelo(m.id)}
-                      style={({ pressed }) => [
-                        styles.modelo,
-                        {
-                          backgroundColor: actual ? theme.backgroundSelected : theme.background,
-                          opacity: pressed ? 0.7 : 1,
-                        },
-                      ]}>
-                      <View style={styles.flex}>
-                        <ThemedText type="small" numberOfLines={1}>
-                          {m.nombre}
-                        </ThemedText>
-                        <ThemedText
-                          type="small"
-                          themeColor="textSecondary"
-                          numberOfLines={1}
-                          style={styles.id}>
-                          {m.id}
-                        </ThemedText>
-                      </View>
-                      {m.gratis ? (
-                        <ThemedText type="smallBold" style={{ color: theme.entregada }}>
-                          Gratis
-                        </ThemedText>
-                      ) : null}
-                      {actual ? (
-                        <ThemedText type="smallBold" style={{ color: theme.accent }}>
-                          ✓
-                        </ThemedText>
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
+                <View style={[styles.modelos, { borderColor: theme.line, backgroundColor: theme.surface }]}>
+                  {visibles.map((m, i) => {
+                    const actual = m.id === modeloDe(config);
+                    return (
+                      <Pressable
+                        key={m.id}
+                        onPress={() => elegirModelo(m.id)}
+                        style={({ pressed }) => [
+                          styles.modelo,
+                          i > 0 && { borderTopWidth: 1, borderTopColor: theme.line },
+                          actual && { backgroundColor: theme.brandWash },
+                          pressed && { backgroundColor: theme.paper2 },
+                        ]}>
+                        <View style={styles.flex}>
+                          <ThemedText type="small" numberOfLines={1} style={{ fontWeight: 500 }}>
+                            {m.nombre}
+                          </ThemedText>
+                          <ThemedText type="meta" themeColor="ink3" numberOfLines={1}>
+                            {m.id}
+                          </ThemedText>
+                        </View>
+                        {m.gratis ? <Marca texto="Gratis" color={theme.stDone} fondo={theme.stDoneW} /> : null}
+                        {actual ? <Feather name="check" size={15} color={theme.brand} /> : null}
+                      </Pressable>
+                    );
+                  })}
+                </View>
                 {CONSEJO_MODELO[config.proveedor] ? (
-                  <ThemedText type="small" themeColor="textSecondary">
+                  <ThemedText type="meta" themeColor="ink2">
                     {CONSEJO_MODELO[config.proveedor]}
                   </ThemedText>
                 ) : null}
               </View>
             ) : null}
             <Button
-              title="Probar"
+              title="Probar la conexión"
               variant="secondary"
+              icono="zap"
+              compacto
               onPress={onProbar}
               loading={ocupado === 'probar'}
             />
           </>
-        )}
-        {msg ? (
-          <ThemedText type="small" style={{ color: msg.ok ? theme.entregada : theme.vencida }}>
-            {msg.texto}
-          </ThemedText>
         ) : null}
-      </View>
+        {msg ? (
+          <View
+            style={[
+              styles.msg,
+              { backgroundColor: msg.ok ? theme.stDoneW : theme.urgentWash },
+            ]}>
+            <Feather
+              name={msg.ok ? 'check-circle' : 'alert-circle'}
+              size={14}
+              color={msg.ok ? theme.stDone : theme.urgent}
+              style={styles.puntoIcono}
+            />
+            <ThemedText type="small" style={[styles.flex, { color: msg.ok ? theme.stDone : theme.urgent }]}>
+              {msg.texto}
+            </ThemedText>
+          </View>
+        ) : null}
+      </Caja>
 
-      <ThemedText type="small" themeColor="textSecondary">
-        Indicaciones para todas las tareas (opcional)
-      </ThemedText>
-      <TextInput
-        value={instrucciones}
-        onChangeText={setInstrucciones}
-        onEndEditing={() => guardar({ ...config, instrucciones })}
-        onBlur={() => guardar({ ...config, instrucciones })}
-        placeholder="Ej.: escribe como un alumno de FP, con frases sencillas y sin palabras rebuscadas."
-        placeholderTextColor={theme.textSecondary}
-        multiline
-        style={[inputStyle, styles.multi]}
-      />
-    </>
+      <View style={styles.bloque}>
+        <Etiqueta>Indicaciones para todas las tareas</Etiqueta>
+        <Campo
+          value={instrucciones}
+          onChangeText={setInstrucciones}
+          onEndEditing={() => guardar({ ...config, instrucciones })}
+          onBlur={() => guardar({ ...config, instrucciones })}
+          placeholder="Opcional. Ej.: escribe como un alumno de FP, con frases sencillas y sin palabras rebuscadas."
+          multiline
+        />
+      </View>
+    </View>
   );
 }
 
-const oculta = (k: string) => (k.length > 10 ? `${k.slice(0, 4)}…${k.slice(-4)}` : '••••');
+const oculta = (k: string) => (k.length > 10 ? `${'•'.repeat(12)}${k.slice(-4)}` : '••••');
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 14, padding: Spacing.three, gap: Spacing.two },
-  proveedores: { borderRadius: 14, overflow: 'hidden' },
+  todo: { gap: Spacing.three },
+  flex: { flex: 1 },
   proveedor: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three - 4,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 10,
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
   },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
+  siglas: {
+    width: 32,
+    height: 32,
+    borderRadius: Radii.chip,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  radioDentro: { width: 10, height: 10, borderRadius: 5 },
-  filaNombre: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' },
-  etiqueta: { fontSize: 12, lineHeight: 16 },
-  punto: { flexDirection: 'row', gap: Spacing.two },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
+  siglasTexto: { fontSize: 10.5, lineHeight: 13, fontWeight: 700, letterSpacing: 0.5 },
+  nombre: { fontSize: 15, lineHeight: 20, fontWeight: 600 },
+  filaNombre: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  multi: { minHeight: 80, textAlignVertical: 'top' },
+  radioDentro: { width: 8, height: 8, borderRadius: 4 },
+  detalle: { padding: 14, gap: 8 },
+  punto: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  puntoIcono: { marginTop: 2 },
   row: { flexDirection: 'row', gap: Spacing.two },
-  fila: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
-  flex: { flex: 1 },
-  separador: { height: StyleSheet.hairlineWidth },
-  lista: { gap: 6 },
+  campoFijo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: Radii.control,
+    paddingHorizontal: 12,
+    minHeight: 46,
+  },
+  lista: { gap: 8 },
+  modelos: { borderWidth: 1, borderRadius: Radii.control, overflow: 'hidden' },
   modelo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  id: { fontSize: 12, lineHeight: 16 },
+  msg: { flexDirection: 'row', gap: 8, borderRadius: Radii.control, padding: 10 },
+  bloque: { gap: 6 },
 });

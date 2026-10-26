@@ -3,7 +3,7 @@
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
 import { type DatosEntregas, type FilaEntrega, haceTexto } from './datos';
-import { type Paleta, PALETAS, type Hex } from './paleta';
+import { FUENTE, type Hex, type Paleta, PALETAS } from './paleta';
 
 type Props = { datos: DatosEntregas; alto: number; enlace: (key: string) => string };
 
@@ -12,10 +12,12 @@ type Props = { datos: DatosEntregas; alto: number; enlace: (key: string) => stri
  * aunque el widget esté al tamaño mínimo.
  */
 const ALTO_COMPACTO = 160;
-const FILA_COMPACTA = 22;
-const FILA_NORMAL = 42;
-/** Cabecera + relleno de la tarjeta (dp) */
-const CABECERA = 42;
+const FILA_COMPACTA = 24;
+const FILA_NORMAL = 40;
+/** Cabecera + regla + relleno de la tarjeta (dp) */
+const CABECERA = 46;
+
+const colorDe = (f: FilaEntrega, p: Paleta) => (f.modulo ? p.modulo[f.modulo] : (f.color as Hex));
 
 /** Devuelve una lista de elementos: la librería no admite fragmentos <></>. */
 function contenido({ datos, alto, enlace, p }: Props & { p: Paleta }) {
@@ -28,37 +30,49 @@ function contenido({ datos, alto, enlace, p }: Props & { p: Paleta }) {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
+        paddingBottom: 7,
       }}>
       <TextWidget
-        text={
-          datos.tipo === 'ok' && datos.total
-            ? `Próximas entregas · ${datos.total}`
-            : 'Próximas entregas'
-        }
-        style={{ fontSize: 15, fontWeight: '700', color: p.texto }}
+        text="PRÓXIMAS ENTREGAS"
+        style={{
+          fontSize: 10.5,
+          fontFamily: FUENTE[700],
+          letterSpacing: 1.1,
+          color: p.secundario,
+        }}
       />
       <TextWidget
-        text={datos.tipo === 'ok' ? haceTexto(datos.actualizado) : ''}
-        style={{ fontSize: 11, color: p.secundario }}
+        text={
+          datos.tipo === 'ok'
+            ? datos.total
+              ? String(datos.total)
+              : haceTexto(datos.actualizado)
+            : ''
+        }
+        style={{ fontSize: 11, fontFamily: FUENTE[500], color: p.terciario }}
       />
     </FlexWidget>
+  );
+  const regla = (
+    <FlexWidget
+      key="regla"
+      style={{ width: 'match_parent', height: 1, backgroundColor: p.linea, marginBottom: 4 }}
+    />
   );
 
   if (datos.tipo === 'sin-datos' || !datos.filas.length) {
     return [
       cabecera,
+      regla,
       <FlexWidget
         key="vacio"
         clickAction="OPEN_APP"
         style={{ flex: 1, width: 'match_parent', justifyContent: 'center', alignItems: 'center' }}>
         <TextWidget
           text={
-            datos.tipo === 'sin-datos'
-              ? 'Abre Hermes para cargar tus entregas'
-              : 'Nada pendiente 🎉'
+            datos.tipo === 'sin-datos' ? 'Abre Hermes para cargar tus entregas' : 'Nada pendiente'
           }
-          style={{ fontSize: 14, color: p.secundario, textAlign: 'center' }}
+          style={{ fontSize: 13, fontFamily: FUENTE[500], color: p.secundario, textAlign: 'center' }}
         />
       </FlexWidget>,
     ];
@@ -66,10 +80,11 @@ function contenido({ datos, alto, enlace, p }: Props & { p: Paleta }) {
 
   const compacto = alto < ALTO_COMPACTO;
   const fila = compacto ? FILA_COMPACTA : FILA_NORMAL;
-  // Las que quepan; cuántas hay en total ya lo dice el título
+  // Las que quepan; cuántas hay en total ya lo dice la cabecera
   const n = Math.max(1, Math.floor((alto - CABECERA) / fila));
   return [
     cabecera,
+    regla,
     ...datos.filas
       .slice(0, n)
       .map((f) => (compacto ? filaCompacta(f, enlace, p) : filaNormal(f, enlace, p))),
@@ -80,21 +95,21 @@ const textoFalta = (f: FilaEntrega, p: Paleta) => (
   <TextWidget
     text={f.falta}
     style={{
-      fontSize: 12,
-      fontWeight: f.urgente ? '700' : '500',
+      fontSize: 11.5,
+      fontFamily: FUENTE[f.urgente ? 700 : 500],
       color: f.urgente ? p.urgente : p.secundario,
       marginLeft: 8,
     }}
   />
 );
 
-const barra = (f: FilaEntrega, alto: number) => (
+const rail = (f: FilaEntrega, alto: number, p: Paleta) => (
   <FlexWidget
     style={{
-      width: 4,
+      width: 3,
       height: alto,
       borderRadius: 2,
-      backgroundColor: f.color as Hex,
+      backgroundColor: colorDe(f, p),
       marginRight: 10,
     }}
   />
@@ -113,13 +128,13 @@ function filaCompacta(f: FilaEntrega, enlace: Props['enlace'], p: Paleta) {
         flexDirection: 'row',
         alignItems: 'center',
       }}>
-      {barra(f, 16)}
+      {rail(f, 16, p)}
       <FlexWidget style={{ flex: 1 }}>
         <TextWidget
           text={f.nombre}
           maxLines={1}
           truncate="END"
-          style={{ fontSize: 13, fontWeight: '600', color: p.texto }}
+          style={{ fontSize: 13, fontFamily: FUENTE[500], color: p.texto }}
         />
       </FlexWidget>
       {textoFalta(f, p)}
@@ -140,18 +155,18 @@ function filaNormal(f: FilaEntrega, enlace: Props['enlace'], p: Paleta) {
         flexDirection: 'row',
         alignItems: 'center',
       }}>
-      {barra(f, 30)}
+      {rail(f, 28, p)}
       <FlexWidget style={{ flex: 1, flexDirection: 'column' }}>
         <TextWidget
           text={f.nombre}
           maxLines={1}
           truncate="END"
-          style={{ fontSize: 13, fontWeight: '600', color: p.texto }}
+          style={{ fontSize: 13, fontFamily: FUENTE[500], color: p.texto }}
         />
         <TextWidget
           text={`${f.siglas} · ${f.cuando}`}
           maxLines={1}
-          style={{ fontSize: 11, color: p.secundario }}
+          style={{ fontSize: 11, fontFamily: FUENTE[400], color: p.terciario }}
         />
       </FlexWidget>
       {textoFalta(f, p)}
@@ -168,9 +183,10 @@ function Tarjeta(props: Props & { p: Paleta }) {
         height: 'match_parent',
         flexDirection: 'column',
         backgroundColor: props.p.fondo,
-        borderRadius: 22,
+        borderRadius: 20,
         paddingHorizontal: 16,
-        paddingVertical: 10,
+        paddingTop: 12,
+        paddingBottom: 10,
       }}>
       {contenido(props)}
     </FlexWidget>

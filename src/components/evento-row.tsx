@@ -1,39 +1,43 @@
 import { StyleSheet, View } from 'react-native';
 
+import { FilaRail } from '@/components/anden';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { hora } from '@/lib/format';
 import type { EventoGoogle } from '@/lib/google-cal';
 
-/** Un evento de tu Google Calendar en la agenda del día. */
-export function EventoRow({ evento }: { evento: EventoGoogle }) {
+/** Un evento de tu Google Calendar: raíl con su color, calendario, título y hora. */
+export function EventoRow({ evento, compacto }: { evento: EventoGoogle; compacto?: boolean }) {
+  const theme = useTheme();
   const inicio = new Date(evento.inicio);
   const fin = new Date(evento.fin);
-  const cuando = evento.todoElDia ? 'Todo el día' : `${hora(inicio)}–${hora(fin)}`;
+  const cuando = evento.todoElDia ? 'todo el día' : `${hora(inicio)}–${hora(fin)}`;
   return (
-    <View style={styles.row}>
-      <View style={[styles.bar, { backgroundColor: evento.color || '#888' }]} />
-      <ThemedText type="small" themeColor="textSecondary" style={styles.time}>
-        {cuando}
-      </ThemedText>
-      <View style={styles.body}>
-        <ThemedText type="small" numberOfLines={2} style={styles.title}>
-          {evento.titulo || '(Sin título)'}
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" numberOfLines={1} style={styles.meta}>
+    <FilaRail color={evento.color || theme.ink3} style={compacto && styles.compacto}>
+      <View style={styles.linea}>
+        <ThemedText type="label" themeColor="ink3" numberOfLines={1} style={styles.flex}>
           {evento.calendario}
-          {evento.lugar ? ` · ${evento.lugar}` : ''}
+        </ThemedText>
+        <ThemedText type="cifra" themeColor="ink2">
+          {cuando}
         </ThemedText>
       </View>
-    </View>
+      <ThemedText style={[styles.titulo, compacto && styles.tituloCompacto]} numberOfLines={2}>
+        {evento.titulo || '(Sin título)'}
+      </ThemedText>
+      {evento.lugar ? (
+        <ThemedText type="meta" themeColor="ink3" numberOfLines={1}>
+          {evento.lugar}
+        </ThemedText>
+      ) : null}
+    </FilaRail>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: 8 },
-  bar: { width: 4, alignSelf: 'stretch', borderRadius: 2 },
-  time: { width: 88, fontSize: 13 },
-  body: { flex: 1 },
-  title: { fontWeight: 600 },
-  meta: { fontSize: 12, lineHeight: 16 },
+  flex: { flex: 1 },
+  compacto: { paddingVertical: 10 },
+  linea: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  titulo: { fontSize: 15, lineHeight: 20, fontWeight: 500 },
+  tituloCompacto: { fontSize: 13.5, lineHeight: 18 },
 });

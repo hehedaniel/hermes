@@ -10,7 +10,9 @@ import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 
 const dist = 'dist';
 const base = (process.env.EXPO_BASE_URL ?? '').replace(/\/+$/, '');
-const AZUL = '#1F6FEB';
+/** Colores del tema «Andén»: papel en claro, papel oscuro en oscuro. */
+const PAPEL = '#F7F4ED';
+const PAPEL_OSCURO = '#0E1112';
 
 const head = `
     <link rel="manifest" href="${base}/manifest.webmanifest" />
@@ -19,8 +21,8 @@ const head = `
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Hermes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="${PAPEL}" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="${PAPEL_OSCURO}" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Entregas, apuntes, novedades y horario del Moodle de la FP a distancia." />
   </head>`;
 
@@ -46,8 +48,8 @@ const manifest = {
   scope: `${base}/`,
   display: 'standalone',
   orientation: 'portrait',
-  background_color: '#ffffff',
-  theme_color: AZUL,
+  background_color: PAPEL,
+  theme_color: PAPEL,
   icons: [
     { src: `${base}/icon-192.png`, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
     { src: `${base}/icon-512.png`, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },

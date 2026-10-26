@@ -1,9 +1,9 @@
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Campo, FilaAjuste, Interruptor } from '@/components/ajustes-ui';
 import { Button } from '@/components/button';
-import { SectionTitle } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -32,90 +32,82 @@ export function GoogleCalSettings() {
     }
   }
 
+  const [abierto, setAbierto] = useState(false);
+
   return (
-    <>
-      <SectionTitle>Google Calendar</SectionTitle>
-      {url ? (
-        <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
-          <ThemedText type="small">
-            ✓ Tus calendarios de Google salen en la pestaña Calendario.
-          </ThemedText>
-          <Button
-            title="Desconectar Google Calendar"
-            variant="secondary"
-            onPress={() =>
-              confirmar({
-                titulo: 'Google Calendar',
-                texto: '¿Dejar de mostrar tus eventos de Google?',
-                boton: 'Desconectar',
-                destructivo: true,
-                onOk: () => quitar(),
-              })
-            }
-          />
-        </View>
-      ) : (
-        <>
-          <ThemedText type="small" themeColor="textSecondary">
+    <View>
+      <FilaAjuste
+        icono="calendar"
+        titulo="Google Calendar"
+        texto={url ? 'Conectado · solo lectura' : 'Tus eventos junto a las entregas y el horario'}
+        sinRegla={abierto && !url}
+        derecha={
+          url ? (
+            <Interruptor
+              value
+              onValueChange={() =>
+                confirmar({
+                  titulo: 'Google Calendar',
+                  texto: '¿Dejar de mostrar tus eventos de Google?',
+                  boton: 'Desconectar',
+                  destructivo: true,
+                  onOk: () => quitar(),
+                })
+              }
+            />
+          ) : (
+            <Interruptor value={abierto} onValueChange={setAbierto} />
+          )
+        }
+      />
+      {!url && abierto ? (
+        <View style={[styles.form, { borderBottomColor: theme.line }]}>
+          <ThemedText type="meta" themeColor="ink2">
             Pega el enlace que da la función crearClaveApp del script de Google (ver
             google-apps-script/README.md).
           </ThemedText>
-          <TextInput
+          <Campo
             value={texto}
             onChangeText={setTexto}
             placeholder="https://script.google.com/macros/s/…/exec?key=…"
-            placeholderTextColor={theme.textSecondary}
             autoCapitalize="none"
             autoCorrect={false}
             multiline
-            style={[
-              styles.input,
-              {
-                color: theme.text,
-                backgroundColor: theme.backgroundElement,
-                borderColor: theme.border,
-              },
-            ]}
           />
           <View style={styles.row}>
             <View style={styles.flex}>
               <Button
                 title="Pegar"
                 variant="secondary"
+                icono="clipboard"
+                compacto
                 onPress={async () => setTexto((await Clipboard.getStringAsync()).trim())}
               />
             </View>
             <View style={styles.flex}>
               <Button
                 title="Conectar"
+                compacto
                 onPress={() => guardar(texto)}
                 loading={busy}
                 disabled={!texto.trim()}
               />
             </View>
           </View>
-        </>
-      )}
+        </View>
+      ) : null}
       {msg ? (
-        <ThemedText type="small" style={{ color: msg.ok ? theme.entregada : theme.vencida }}>
+        <ThemedText type="small" style={[styles.msg, { color: msg.ok ? theme.stDone : theme.urgent }]}>
           {msg.text}
         </ThemedText>
       ) : null}
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 14, padding: Spacing.three, gap: Spacing.two },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    minHeight: 64,
-    textAlignVertical: 'top',
-  },
+  form: { gap: 8, paddingBottom: 14, borderBottomWidth: 1 },
   row: { flexDirection: 'row', gap: Spacing.two },
   flex: { flex: 1 },
+  msg: { paddingVertical: 8 },
 });
