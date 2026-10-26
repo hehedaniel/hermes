@@ -8,4 +8,8 @@ export const CLAVES = {
   avisos: 'avisos_v1',
   permisoPedido: 'avisos_permiso_pedido',
   contenido: (cursoId: number) => `contents_v1_${cursoId}`,
+  iaConfig: 'ia_config_v1',
+  /** SecureStore solo admite letras, números, ".", "-" y "_" en las claves */
+  iaClave: (proveedor: string) => `ia_clave_${proveedor}`,
+  iaChat: (entregaKey: string) => `ia_chat_v1_${entregaKey}`,
 } as const;

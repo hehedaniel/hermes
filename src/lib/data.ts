@@ -12,6 +12,7 @@ import {
   type AssignPlugin,
   type SubmissionStatus,
 } from './moodle';
+import { configEntrega, type ConfigEntrega } from './entregar';
 
 export type Estado = 'entregada' | 'borrador' | 'pendiente' | 'vencida';
 
@@ -46,6 +47,8 @@ export type Entrega = {
   envio?: Envio;
   /** La corrección del profesor, si ya es visible para ti */
   correccion?: Correccion;
+  /** Cómo se entrega (solo tareas): para poder entregar desde la app */
+  entregable?: ConfigEntrega;
 };
 
 export type Envio = {
@@ -339,6 +342,7 @@ export async function fetchSnapshot(client: MoodleClient, nowMs = Date.now()): P
       })),
       apertura: a.allowsubmissionsfromdate || undefined,
       corte: a.cutoffdate || undefined,
+      entregable: configEntrega(a),
       ...detalleEntrega(st, a.course, a.cmid),
     });
   });

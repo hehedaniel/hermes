@@ -185,6 +185,12 @@ export type Assignment = {
   cutoffdate?: number;
   allowsubmissionsfromdate?: number;
   intro?: string;
+  /** 1 = el alumno guarda un borrador y luego lo envía con "Enviar tarea" */
+  submissiondrafts?: number;
+  /** 1 = hay que aceptar la declaración de que el trabajo es tuyo al enviar */
+  requiresubmissionstatement?: number;
+  /** Ajustes de los plugins: tipos de entrega activos, nº de archivos, tipos admitidos… */
+  configs?: { plugin: string; subtype: string; name: string; value: string }[];
   introattachments?: {
     filename: string;
     filepath?: string;
@@ -221,6 +227,8 @@ export type SubmissionStatus = {
     submission?: { status?: string; timemodified?: number; plugins?: AssignPlugin[] };
     teamsubmission?: { status?: string; timemodified?: number; plugins?: AssignPlugin[] };
     gradingstatus?: string; // graded, notgraded, released…
+    canedit?: boolean; // puedes cambiar tu entrega
+    cansubmit?: boolean; // puedes enviarla para calificar (si hay borradores)
   };
   feedback?: {
     gradefordisplay?: string;

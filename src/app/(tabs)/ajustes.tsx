@@ -7,6 +7,7 @@ import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { AvisosSettings } from '@/components/avisos-settings';
 import { Button } from '@/components/button';
 import { GoogleCalSettings } from '@/components/google-cal-settings';
+import { IASettings } from '@/components/ia-settings';
 import { Screen, SectionTitle } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -208,6 +209,8 @@ export default function AjustesScreen() {
       ) : null}
 
       {client ? <AvisosSettings /> : null}
+
+      <IASettings />
 
       <GoogleCalSettings />
 

@@ -51,6 +51,7 @@ En la FP a distancia todo pasa por el aula virtual: cada módulo tiene sus unida
 - **Widgets (Android).** *Próximas entregas*, con cuánto falta para cada una, y *Clases de hoy*, con la que toca **ahora**; si ya han acabado, enseña las de mañana. Se ven sin abrir la app y se actualizan solos.
 - **Visor integrado.** Los PDF e imágenes se ven dentro de la app, con zoom; Word, PowerPoint o ZIP se abren con la app del móvil que corresponda.
 - **Detalle de entrega.** Enunciado, fechas de apertura, entrega y cierre, estado, nota y archivos adjuntos.
+- **Hacer tareas con IA.** En cada tarea, un chat con la IA que ya conoce el enunciado: le pasas los archivos de la tarea, le pides lo que quieras y, si te genera el trabajo, lo ves como PDF y lo **entregas en Moodle** desde ahí. Con tu propia clave de **Gemini** (gratis) u **OpenRouter**.
 - **Login desde el móvil.** Inicias sesión con tu usuario de la Junta (CAS) y la app recibe el token sola.
 - **Sin servidor propio.** Habla directamente con Moodle y funciona sin conexión con lo último que descargó.
 
@@ -220,7 +221,7 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Notificaciones y sincronización en segundo plano (Android)
 - [x] Detalle de la corrección: nota, fecha, comentario y archivos del profesor
 - [ ] Compilar el APK en GitHub Actions, sin la cola de EAS
-- [ ] Hacer tareas con IA (Gemini / OpenRouter) y entregarlas desde la app. Comprobado: el Moodle de la Junta deja subir archivos y entregar con el token de la app
+- [x] Hacer tareas con IA (Gemini / OpenRouter) y entregarlas desde la app
 - [ ] Notificaciones en iPhone a través del script de Google (correo o ntfy), sin servidor propio
 - [ ] Visor de PDF sin conexión (pdf.js dentro de la app)
 - [ ] Menos datos en segundo plano: solo lo que puede cambiar; los temas cada pocas horas

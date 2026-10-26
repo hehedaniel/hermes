@@ -29,6 +29,8 @@ export default function RootLayout() {
               <Stack.Screen name="curso/[id]" options={{ title: '' }} />
               <Stack.Screen name="tarea/[key]" options={{ title: 'Entrega' }} />
               <Stack.Screen name="visor" options={{ title: '' }} />
+              <Stack.Screen name="ia/[key]" options={{ title: 'IA' }} />
+              <Stack.Screen name="documento" options={{ title: '' }} />
             </Stack>
           </ThemeProvider>
         </GoogleCalProvider>

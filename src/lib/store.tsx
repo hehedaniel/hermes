@@ -16,6 +16,7 @@ import { COURSE_PALETTE } from '@/constants/theme';
 
 import { actualizarWidgets } from '@/widgets/actualizar';
 
+import { CLAVES } from './claves';
 import { avisarNovedades, prepararAvisos, programarRecordatorios } from './avisos';
 import { activarSegundoPlano, desactivarSegundoPlano } from './segundo-plano';
 import { guardarListaNovedades, leerNovedades, leerSnapshot, sincronizarNovedades } from './sync';
@@ -244,7 +245,9 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
     await desactivarSegundoPlano();
     await programarRecordatorios(null); // quita los recordatorios pendientes
     await tokenStore.deleteItemAsync(TOKEN_KEY);
-    await AsyncStorage.multiRemove([CACHE_KEY, NOVEDADES_KEY, BASE_KEY]);
+    // Las conversaciones con la IA son de tus tareas: se van con la cuenta (la clave de la IA se queda)
+    const chats = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith(CLAVES.iaChat('')));
+    await AsyncStorage.multiRemove([CACHE_KEY, NOVEDADES_KEY, BASE_KEY, ...chats]);
     setClient(null);
     setSnapshot(null);
     setError(null);

@@ -1,4 +1,5 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import { StyleSheet, View } from 'react-native';
 
@@ -12,6 +13,8 @@ import { Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { fechaCorta, relativo } from '@/lib/format';
+import { htmlATexto } from '@/lib/html-texto';
+import { hayChat } from '@/lib/ia/chats';
 import { useCourseColors, useMoodle } from '@/lib/store';
 
 const TIPO: Record<string, string> = {
@@ -30,6 +33,12 @@ export default function TareaScreen() {
   const nowMs = useNow();
   const colorOf = useCourseColors();
   const e = snapshot?.entregas.find((x) => x.key === key);
+  const [conChat, setConChat] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (key) hayChat(key).then(setConChat);
+    }, [key]),
+  );
 
   if (!e) {
     return (
@@ -67,6 +76,11 @@ export default function TareaScreen() {
             </ThemedText>
           ) : null}
         </View>
+
+        <Button
+          title={conChat ? '✨ Seguir con la IA' : '✨ Hacer con IA'}
+          onPress={() => router.push(`/ia/${encodeURIComponent(e.key)}`)}
+        />
 
         {fechas.length ? (
           <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
@@ -193,25 +207,6 @@ export default function TareaScreen() {
       </Screen>
     </>
   );
-}
-
-/** Convierte el HTML del enunciado en texto legible (párrafos y viñetas). */
-function htmlATexto(html?: string) {
-  if (!html) return '';
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<li[^>]*>/gi, '\n• ')
-    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
 }
 
 const styles = StyleSheet.create({
