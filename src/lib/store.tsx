@@ -17,6 +17,7 @@ import { COURSE_PALETTE } from '@/constants/theme';
 import { actualizarWidgets } from '@/widgets/actualizar';
 
 import { CLAVES } from './claves';
+import { conTareaDePrueba } from './tarea-prueba';
 import { avisarNovedades, prepararAvisos, programarRecordatorios } from './avisos';
 import { activarSegundoPlano, desactivarSegundoPlano } from './segundo-plano';
 import { guardarListaNovedades, leerNovedades, leerSnapshot, sincronizarNovedades } from './sync';
@@ -278,12 +279,18 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
 
   const noLeidas = useMemo(() => novedades.filter((n) => !n.leida).length, [novedades]);
 
+  // En desarrollo se añade una tarea de prueba para probar la IA y la entrega sin tareas abiertas
+  const snapshotVisible = useMemo(
+    () => (__DEV__ && snapshot ? conTareaDePrueba(snapshot) : snapshot),
+    [snapshot],
+  );
+
   const value = useMemo(
     () => ({
       ready,
       client,
       moodleUrl,
-      snapshot,
+      snapshot: snapshotVisible,
       syncing,
       error,
       refresh,
@@ -298,7 +305,7 @@ export function MoodleProvider({ children }: { children: ReactNode }) {
       ready,
       client,
       moodleUrl,
-      snapshot,
+      snapshotVisible,
       syncing,
       error,
       refresh,

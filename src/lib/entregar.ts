@@ -22,6 +22,8 @@ export type ConfigEntrega = {
   borradores: boolean;
   /** Al enviar hay que aceptar la declaración de autoría */
   declaracion: boolean;
+  /** Tarea de prueba de Hermes Dev: el archivo se sube, pero no se entrega en ninguna tarea */
+  prueba?: boolean;
 };
 
 export function configEntrega(a: Assignment): ConfigEntrega | undefined {

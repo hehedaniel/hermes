@@ -42,6 +42,29 @@ export function useEntregar(e: Entrega | undefined) {
       const declaracion = cfg.declaracion
         ? '\n\nLa tarea pide aceptar la declaración de que el trabajo es tuyo: al entregar la aceptas.'
         : '';
+      if (cfg.prueba) {
+        confirmar({
+          titulo: 'Tarea de prueba',
+          texto: `Se crea «${doc.nombre}» y se sube a tu zona de borradores de Moodle para comprobar que la subida funciona. No se entrega en ninguna tarea (Moodle borra esos borradores solo).`,
+          boton: 'Probar subida',
+          onOk: async () => {
+            setEntregando(doc.nombre);
+            try {
+              const archivo = await archivoParaSubir(doc);
+              const itemid = await subirBorrador(client, [archivo]);
+              avisar(
+                'Subida correcta',
+                `«${doc.nombre}»${archivo.tamano ? ` (${formatoTamano(archivo.tamano)})` : ''} ha llegado a Moodle (borrador ${itemid}). En una tarea de verdad, ahora se guardaría la entrega.`,
+              );
+            } catch (err) {
+              avisar('No se pudo subir', (err as Error).message ?? String(err));
+            } finally {
+              setEntregando(null);
+            }
+          },
+        });
+        return;
+      }
       confirmar({
         titulo: '¿Entregar en Moodle?',
         texto: `${comoArchivo ? `Se subirá «${doc.nombre}»` : 'Se pegará el contenido como texto en línea'} en «${e.nombre}».${anteriores}${incompleto}${declaracion}`,
