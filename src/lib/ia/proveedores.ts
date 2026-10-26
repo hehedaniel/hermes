@@ -33,8 +33,10 @@ export type InfoProveedor = {
   imagenes: boolean;
 };
 
+/** Para los que no leen PDF: Hermes les pasa el texto, así que sí "leen" la tarea. */
+const LEE_TEXTO_PDF = 'Lee el texto de los PDF de la tarea (Hermes se lo saca y se lo pasa)';
 const PDF_COMO_TEXTO =
-  'No lee PDF directamente: Hermes saca el texto del PDF y se lo pasa (no ve las imágenes del PDF, y con un PDF escaneado no hay texto que pasar)';
+  'No ve las imágenes ni los gráficos de los PDF, y un PDF escaneado (una foto del papel) no tiene texto que pasarle';
 
 /** Los proveedores, en el orden en que salen en Ajustes. */
 export const PROVEEDORES: Record<Proveedor, InfoProveedor> = {
@@ -131,7 +133,11 @@ export const PROVEEDORES: Record<Proveedor, InfoProveedor> = {
     etiqueta: 'De pago (muy barato)',
     gratis: false,
     resumen: 'El más barato de los de pago: un trabajo cuesta céntimos.',
-    puede: ['El de pago más barato: un trabajo entero cuesta céntimos', 'Contexto muy largo'],
+    puede: [
+      'El de pago más barato: un trabajo entero cuesta céntimos',
+      LEE_TEXTO_PDF,
+      'Contexto muy largo',
+    ],
     noPuede: [
       'No es gratis: hay que poner saldo en la plataforma de DeepSeek',
       PDF_COMO_TEXTO,
@@ -151,7 +157,7 @@ export const PROVEEDORES: Record<Proveedor, InfoProveedor> = {
     etiqueta: 'Gratis con límites',
     gratis: true,
     resumen: 'Francesa. Plan gratis con bastante uso, a cambio de tus datos.',
-    puede: ['Plan gratis («Experiment») con bastante uso al mes'],
+    puede: ['Plan gratis («Experiment») con bastante uso al mes', LEE_TEXTO_PDF],
     noPuede: [
       'En el plan gratis, Mistral usa tus conversaciones para entrenar sus modelos',
       PDF_COMO_TEXTO,
@@ -171,7 +177,7 @@ export const PROVEEDORES: Record<Proveedor, InfoProveedor> = {
     etiqueta: 'Gratis',
     gratis: true,
     resumen: 'Gratis y muy rápido, con modelos abiertos (Llama, Qwen…).',
-    puede: ['Gratis, unas 1.000 peticiones al día', 'Respuestas muy rápidas'],
+    puede: ['Gratis, unas 1.000 peticiones al día', LEE_TEXTO_PDF, 'Respuestas muy rápidas'],
     noPuede: [
       'Solo modelos abiertos (Llama, Qwen…), no ChatGPT ni Claude',
       PDF_COMO_TEXTO,
@@ -192,6 +198,10 @@ export const LISTA_PROVEEDORES = Object.keys(PROVEEDORES) as Proveedor[];
 
 /** ¿Hay que sacar el texto de los PDF antes de pasárselos a este proveedor? */
 export const necesitaTextoPdf = (p: Proveedor) => PROVEEDORES[p].pdf === 'texto';
+
+/** ¿El texto sacado de un PDF está vacío? (PDF escaneado: solo imágenes) */
+export const pdfSinTexto = (texto: string) =>
+  texto.replace(/--- Página \d+ ---/g, '').replace(/\s+/g, '').length < 20;
 
 /** Un archivo que se le pasa a la IA (el PDF del enunciado, una imagen…). */
 export type AdjuntoIA = {

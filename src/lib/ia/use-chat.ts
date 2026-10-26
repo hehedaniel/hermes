@@ -16,6 +16,7 @@ import {
   MAX_ADJUNTOS_BYTES,
   type MensajeIA,
   necesitaTextoPdf,
+  pdfSinTexto,
   pedirIA,
   PROVEEDORES,
 } from './proveedores';
@@ -106,6 +107,13 @@ export function useChatIA(entrega: Entrega | undefined) {
                   );
                 }
                 cacheAdjuntos.current.set(archivo.fileurl, adj);
+              }
+              // Un PDF escaneado no tiene texto: mejor avisar que mandarle a la IA un PDF vacío
+              if (pdfSinTexto(adj.texto!)) {
+                throw new IAError(
+                  'pdf',
+                  `«${archivo.nombre}» es un PDF escaneado (una imagen, sin texto) y ${PROVEEDORES[a.config.proveedor].nombre} no puede leerlo. Cámbiate a Gemini, ChatGPT o Claude en Ajustes, o quita ese archivo.`,
+                );
               }
               bytes += adj.texto!.length;
             } else bytes += adj.base64.length * 0.75;

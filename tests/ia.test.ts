@@ -24,6 +24,7 @@ import {
   modeloRecomendado,
   necesitaTextoPdf,
   ordenarModelos,
+  pdfSinTexto,
   textoDeAnthropic,
   textoDeGemini,
 } from '@/lib/ia/proveedores';
@@ -290,6 +291,8 @@ test('Groq no ve imágenes: ni se ofrecen ni se mandan', () => {
     /no puede ver imágenes/,
   );
   assert.equal(necesitaTextoPdf('groq'), true);
+  assert.equal(pdfSinTexto('--- Página 1 ---\n\n--- Página 2 ---\n '), true);
+  assert.equal(pdfSinTexto('--- Página 1 ---\nEnunciado: realiza un informe sobre redes'), false);
   assert.equal(necesitaTextoPdf('anthropic'), false);
 });
 
