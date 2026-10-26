@@ -142,6 +142,14 @@ test('Modelo recomendado: el Flash estable más nuevo', () => {
   assert.equal(modeloRecomendado('gemini', modelos), 'gemini-2.5-flash');
   assert.equal(ordenarModelos('gemini', modelos)[0].id, 'gemini-2.5-flash');
   assert.equal(
+    modeloRecomendado('openrouter', [
+      { id: 'openai/gpt-x', nombre: 'GPT' },
+      { id: 'meta-llama/llama-x:free', nombre: 'Llama', gratis: true },
+      { id: 'deepseek/deepseek-x:free', nombre: 'DeepSeek', gratis: true },
+    ]),
+    'deepseek/deepseek-x:free',
+  );
+  assert.equal(
     ordenarModelos('openrouter', [
       { id: 'a', nombre: 'A' },
       { id: 'b:free', nombre: 'B', gratis: true },

@@ -413,5 +413,10 @@ export function modeloRecomendado(proveedor: Proveedor, modelos: ModeloIA[]): st
     const flash = ordenarModelos('gemini', modelos).find((m) => /^gemini-[\d.]+-flash$/.test(m.id));
     return flash?.id ?? modelos[0]?.id ?? PROVEEDORES.gemini.modeloPorDefecto;
   }
-  return PROVEEDORES.openrouter.modeloPorDefecto;
+  // Sin saldo solo funcionan los gratis: el mejor conocido que haya, o el primero gratis
+  const gratis = modelos.filter((m) => m.gratis);
+  const bueno = ['deepseek', 'gemini', 'qwen', 'llama', 'mistral']
+    .map((familia) => gratis.find((m) => m.id.toLowerCase().includes(familia)))
+    .find(Boolean);
+  return bueno?.id ?? gratis[0]?.id ?? PROVEEDORES.openrouter.modeloPorDefecto;
 }
