@@ -66,9 +66,10 @@ function Chat({ e }: { e: Entrega }) {
   const [elegidos, setSeleccion] = useState<string[] | null>(null);
   const [viendo, setViendo] = useState<string | null>(null);
 
+  const proveedorId = chat.ajustes?.config.proveedor ?? 'gemini';
   const adjuntables = useMemo(
-    () => (e.adjuntos ?? []).filter((a) => adjuntoCompatible(a.nombre, a.mimetype)),
-    [e.adjuntos],
+    () => (e.adjuntos ?? []).filter((a) => adjuntoCompatible(a.nombre, a.mimetype, proveedorId)),
+    [e.adjuntos, proveedorId],
   );
 
   // Hasta que se toquen, en una conversación nueva van marcados todos los archivos de la tarea

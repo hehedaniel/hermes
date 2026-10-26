@@ -8,11 +8,14 @@ import { leerAdjunto } from './archivos-ia';
 import { guardarChat, leerChat, type MensajeChat, nuevoId } from './chats';
 import { ajustesIA } from './config';
 import { construirSistema } from './prompt';
+import { extraerTextoPdf } from './pdf-texto';
 import {
   type AdjuntoIA,
+  esPdfAdjunto,
   IAError,
   MAX_ADJUNTOS_BYTES,
   type MensajeIA,
+  necesitaTextoPdf,
   pedirIA,
   PROVEEDORES,
 } from './proveedores';
@@ -90,7 +93,22 @@ export function useChatIA(entrega: Entrega | undefined) {
               adj = await leerAdjunto(archivo, descargas, client);
               cacheAdjuntos.current.set(archivo.fileurl, adj);
             }
-            bytes += adj.base64.length * 0.75;
+            // DeepSeek, Mistral y Groq no leen PDF: se les pasa el texto (se saca una vez y se guarda)
+            if (necesitaTextoPdf(a.config.proveedor) && esPdfAdjunto(adj.nombre, adj.mime)) {
+              if (adj.texto === undefined) {
+                setPensando(`Sacando el texto de ${archivo.nombre}…`);
+                try {
+                  adj = { ...adj, texto: await extraerTextoPdf(adj.base64) };
+                } catch (err) {
+                  throw new IAError(
+                    'pdf',
+                    `No se pudo sacar el texto de «${archivo.nombre}»: ${(err as Error).message}`,
+                  );
+                }
+                cacheAdjuntos.current.set(archivo.fileurl, adj);
+              }
+              bytes += adj.texto!.length;
+            } else bytes += adj.base64.length * 0.75;
             adjuntos.push(adj);
           }
           historial.push({ rol: m.rol, texto: m.texto, adjuntos });

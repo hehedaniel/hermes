@@ -4,6 +4,7 @@ import { useColorScheme } from 'react-native';
 
 import { useAbrirAviso } from '@/hooks/use-abrir-aviso';
 import { DownloadsProvider } from '@/lib/downloads';
+import { ExtractorPdf } from '@/lib/ia/pdf-texto';
 import { GoogleCalProvider } from '@/lib/google-cal';
 import { MoodleProvider } from '@/lib/store';
 
@@ -24,6 +25,7 @@ export default function RootLayout() {
         <GoogleCalProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <StatusBar style="auto" />
+            <ExtractorPdf />
             <Stack screenOptions={{ headerBackButtonDisplayMode: 'minimal' }}>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="curso/[id]" options={{ title: '' }} />

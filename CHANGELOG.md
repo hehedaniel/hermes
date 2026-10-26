@@ -10,7 +10,8 @@ Las notas de cada release del APK salen de aquí.
 - **Hacer tareas con IA.** Botón *Hacer con IA* en cada tarea: un chat que ya conoce el enunciado, la asignatura y la fecha. Le pasas los archivos de la tarea (PDF, imágenes, código, CSV…), le pides lo que quieras y la conversación se guarda para seguir otro día.
 - Los trabajos que genera la IA salen como documentos dentro del chat: los **PDF** se maquetan solos y se ven en el visor de la app; el código y los textos, como archivo.
 - **Entregar en Moodle** desde el chat, con confirmación antes: sube el archivo a la tarea (o lo pega como texto en línea si la tarea es de texto) y avisa si sustituye lo que ya tenías entregado.
-- *Ajustes → Inteligencia artificial*: proveedor (**Gemini**, gratis con tu cuenta de Google, u **OpenRouter**), tu clave, el modelo e indicaciones para todas las tareas.
+- *Ajustes → Inteligencia artificial*: eliges la IA de una lista (**Gemini**, **OpenRouter**, **ChatGPT**, **Claude**, **DeepSeek**, **Mistral** y **Groq**) y al tocar cada una ves qué puede y qué no (si es gratis, si lee PDF, si ve imágenes…). Cada una con tu clave, el modelo que prefieras e indicaciones para todas las tareas.
+- A las IA que no leen PDF (DeepSeek, Mistral, Groq) Hermes les pasa el texto del PDF.
 
 ## [1.2.0] - 2026-10-22
 

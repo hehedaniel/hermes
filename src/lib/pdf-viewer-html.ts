@@ -8,7 +8,7 @@
  *   app -> página: el PDF en base64 (postMessage)
  *   página -> app: {type:'loaded', pages} | {type:'error', message}
  */
-const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174';
+export const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174';
 
 export const PDF_VIEWER_HTML = (fondo: string) => `<!doctype html>
 <html>

@@ -3,7 +3,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { Button, Segmented } from '@/components/button';
+import { Button } from '@/components/button';
 import { SectionTitle } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -19,6 +19,7 @@ import {
 } from '@/lib/ia/config';
 import {
   IAError,
+  LISTA_PROVEEDORES,
   listarModelos,
   type ModeloIA,
   modeloRecomendado,
@@ -28,6 +29,15 @@ import {
 } from '@/lib/ia/proveedores';
 
 type Msg = { ok: boolean; texto: string } | null;
+
+/** Ayuda para elegir modelo en cada proveedor. */
+const CONSEJO_MODELO: Partial<Record<Proveedor, string>> = {
+  gemini: 'Los «Flash» tienen más uso gratis al día; los «Pro» razonan mejor pero se agotan antes.',
+  openrouter:
+    'Los marcados como gratis no gastan saldo, pero tienen límite diario. Escribe «free» para verlos.',
+  openai: 'Los «mini» y «nano» son mucho más baratos; los grandes, mejores pero caros.',
+  anthropic: 'Haiku es el más barato y rápido; Sonnet y Opus, mejores pero más caros.',
+};
 
 /** Ajustes > Inteligencia artificial: proveedor, clave, modelo e indicaciones para todas las tareas. */
 export function IASettings({ onCambio }: { onCambio?: () => void }) {
@@ -41,6 +51,8 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
   const [instrucciones, setInstrucciones] = useState('');
   const [ocupado, setOcupado] = useState<'clave' | 'modelos' | 'probar' | null>(null);
   const [msg, setMsg] = useState<Msg>(null);
+  /** Proveedores con clave guardada, para marcarlos en la lista */
+  const [conClave, setConClave] = useState<Set<Proveedor>>(new Set());
 
   const info = PROVEEDORES[config.proveedor];
   const inputStyle = [
@@ -54,6 +66,9 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
       setInstrucciones(c.instrucciones);
       leerClaveIA(c.proveedor).then(setClaveGuardada);
     });
+    Promise.all(LISTA_PROVEEDORES.map(async (p) => [p, await leerClaveIA(p)] as const)).then((r) =>
+      setConClave(new Set(r.filter(([, k]) => k).map(([p]) => p))),
+    );
   }, []);
 
   async function guardar(c: ConfigIA) {
@@ -86,6 +101,7 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
       }
       await guardarClaveIA(config.proveedor, k);
       setClaveGuardada(k);
+      setConClave((s) => new Set(s).add(config.proveedor));
       setClave('');
       setEditandoClave(false);
       if (lista) {
@@ -107,6 +123,11 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
   async function onBorrarClave() {
     await guardarClaveIA(config.proveedor, '');
     setClaveGuardada(null);
+    setConClave((s) => {
+      const n = new Set(s);
+      n.delete(config.proveedor);
+      return n;
+    });
     setEditandoClave(true);
     onCambio?.();
   }
@@ -165,17 +186,78 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
     <>
       <SectionTitle>Inteligencia artificial</SectionTitle>
       <ThemedText type="small" themeColor="textSecondary">
-        Para usar la IA en tus tareas. Usa tu propia clave: las conversaciones van directamente de
-        tu móvil a {info.nombre}, sin pasar por ningún otro sitio.
+        Elige qué IA usar en tus tareas. Cada una con tu propia clave: las conversaciones van
+        directamente de tu móvil a esa empresa, sin pasar por ningún otro sitio.
       </ThemedText>
-      <Segmented
-        value={config.proveedor}
-        options={[
-          { value: 'gemini', label: 'Gemini (gratis)' },
-          { value: 'openrouter', label: 'OpenRouter' },
-        ]}
-        onChange={cambiarProveedor}
-      />
+      <View style={[styles.proveedores, { backgroundColor: theme.backgroundElement }]}>
+        {LISTA_PROVEEDORES.map((p, i) => {
+          const sel = p === config.proveedor;
+          const pi = PROVEEDORES[p];
+          return (
+            <Pressable
+              key={p}
+              onPress={() => cambiarProveedor(p)}
+              style={({ pressed }) => [
+                styles.proveedor,
+                i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border },
+                sel && { backgroundColor: theme.backgroundSelected },
+                { opacity: pressed ? 0.7 : 1 },
+              ]}>
+              <View
+                style={[styles.radio, { borderColor: sel ? theme.accent : theme.textSecondary }]}>
+                {sel ? (
+                  <View style={[styles.radioDentro, { backgroundColor: theme.accent }]} />
+                ) : null}
+              </View>
+              <View style={styles.flex}>
+                <View style={styles.filaNombre}>
+                  <ThemedText type="smallBold">{pi.nombre}</ThemedText>
+                  <ThemedText
+                    type="small"
+                    style={[
+                      styles.etiqueta,
+                      { color: pi.gratis ? theme.entregada : theme.textSecondary },
+                    ]}>
+                    {pi.etiqueta}
+                  </ThemedText>
+                  {conClave.has(p) ? (
+                    <ThemedText type="small" style={[styles.etiqueta, { color: theme.accent }]}>
+                      · clave puesta
+                    </ThemedText>
+                  ) : null}
+                </View>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {pi.resumen}
+                </ThemedText>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+        <ThemedText type="smallBold">Con {info.nombre}</ThemedText>
+        {info.puede.map((t) => (
+          <View key={t} style={styles.punto}>
+            <ThemedText type="smallBold" style={{ color: theme.entregada }}>
+              ✓
+            </ThemedText>
+            <ThemedText type="small" style={styles.flex}>
+              {t}
+            </ThemedText>
+          </View>
+        ))}
+        {info.noPuede.map((t) => (
+          <View key={t} style={styles.punto}>
+            <ThemedText type="smallBold" style={{ color: theme.urgente }}>
+              ✗
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
+              {t}
+            </ThemedText>
+          </View>
+        ))}
+      </View>
 
       <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
         {mostrarCampoClave ? (
@@ -193,7 +275,7 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
             <TextInput
               value={clave}
               onChangeText={setClave}
-              placeholder={config.proveedor === 'gemini' ? 'AIza…' : 'sk-or-…'}
+              placeholder={info.placeholderClave}
               placeholderTextColor={theme.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
@@ -300,17 +382,11 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
                     </Pressable>
                   );
                 })}
-                {config.proveedor === 'gemini' ? (
+                {CONSEJO_MODELO[config.proveedor] ? (
                   <ThemedText type="small" themeColor="textSecondary">
-                    Los «Flash» tienen más uso gratis al día; los «Pro» razonan mejor pero se agotan
-                    antes.
+                    {CONSEJO_MODELO[config.proveedor]}
                   </ThemedText>
-                ) : (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Los marcados como gratis no gastan saldo, pero tienen límite diario. Para leer
-                    PDF conviene uno que admita archivos o imágenes.
-                  </ThemedText>
-                )}
+                ) : null}
               </View>
             ) : null}
             <Button
@@ -349,6 +425,26 @@ const oculta = (k: string) => (k.length > 10 ? `${k.slice(0, 4)}…${k.slice(-4)
 
 const styles = StyleSheet.create({
   card: { borderRadius: 14, padding: Spacing.three, gap: Spacing.two },
+  proveedores: { borderRadius: 14, overflow: 'hidden' },
+  proveedor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three - 4,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 10,
+  },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioDentro: { width: 10, height: 10, borderRadius: 5 },
+  filaNombre: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' },
+  etiqueta: { fontSize: 12, lineHeight: 16 },
+  punto: { flexDirection: 'row', gap: Spacing.two },
   input: {
     borderWidth: 1,
     borderRadius: 12,

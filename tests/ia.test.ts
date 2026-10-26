@@ -14,11 +14,17 @@ import {
   adjuntoCompatible,
   agruparTurnos,
   base64ATexto,
+  cabeceras,
+  cuerpoAnthropic,
+  cuerpoCompatible,
   cuerpoGemini,
   cuerpoOpenRouter,
   errorDeProveedor,
+  maxTokensClaude,
   modeloRecomendado,
+  necesitaTextoPdf,
   ordenarModelos,
+  textoDeAnthropic,
   textoDeGemini,
 } from '@/lib/ia/proveedores';
 
@@ -229,4 +235,147 @@ test('El sistema lleva la tarea, el enunciado, cómo se entrega y las indicacion
   assert.match(s, /no admite PDF/);
   assert.match(s, /<<<ARCHIVO/);
   assert.match(s, /Escribe sencillo/);
+});
+
+// ------------------------------------------------------------------ resto de proveedores
+
+test('ChatGPT: PDF como archivo; DeepSeek: el texto del PDF, en una cadena', () => {
+  const mensajes = [
+    { rol: 'usuario' as const, texto: 'Hazla', adjuntos: [{ ...pdf, texto: 'Hola PDF' }] },
+  ];
+  const openai = cuerpoCompatible('openai', { modelo: 'gpt-5-mini', sistema: 'S', mensajes });
+  const partes = openai.messages[1].content as { type: string }[];
+  assert.equal(partes[0].type, 'file');
+  assert.equal('plugins' in openai, false);
+
+  const deepseek = cuerpoCompatible('deepseek', {
+    modelo: 'deepseek-flash',
+    sistema: 'S',
+    mensajes,
+  });
+  const contenido = deepseek.messages[1].content as string;
+  assert.equal(typeof contenido, 'string');
+  assert.match(contenido, /Texto del PDF «enunciado\.pdf»/);
+  assert.match(contenido, /Hola PDF/);
+  assert.match(contenido, /Hazla$/);
+  // Sin el texto sacado no se puede mandar el PDF a DeepSeek
+  assert.throws(
+    () =>
+      cuerpoCompatible('deepseek', {
+        modelo: 'x',
+        sistema: 'S',
+        mensajes: [{ rol: 'usuario', texto: '', adjuntos: [pdf] }],
+      }),
+    /texto/,
+  );
+});
+
+test('Groq no ve imágenes: ni se ofrecen ni se mandan', () => {
+  assert.equal(adjuntoCompatible('foto.png', 'image/png', 'groq'), false);
+  assert.equal(adjuntoCompatible('foto.png', 'image/png', 'anthropic'), true);
+  assert.equal(adjuntoCompatible('tarea.pdf', 'application/pdf', 'groq'), true);
+  assert.throws(
+    () =>
+      cuerpoCompatible('groq', {
+        modelo: 'x',
+        sistema: 'S',
+        mensajes: [
+          {
+            rol: 'usuario',
+            texto: '',
+            adjuntos: [{ nombre: 'f.png', mime: 'image/png', base64: 'x' }],
+          },
+        ],
+      }),
+    /no puede ver imágenes/,
+  );
+  assert.equal(necesitaTextoPdf('groq'), true);
+  assert.equal(necesitaTextoPdf('anthropic'), false);
+});
+
+test('Claude: sistema aparte, el PDF como documento y límite de respuesta según el modelo', () => {
+  const b = cuerpoAnthropic({
+    modelo: 'claude-haiku-4-5',
+    sistema: 'S',
+    mensajes: [
+      {
+        rol: 'usuario',
+        texto: 'Hazla',
+        adjuntos: [pdf, { nombre: 'f.jpg', mime: 'image/jpeg', base64: 'iVB' }],
+      },
+      { rol: 'ia', texto: 'Hecho' },
+    ],
+  });
+  assert.equal(b.system, 'S');
+  assert.equal(b.max_tokens, 16000);
+  assert.deepEqual(
+    b.messages.map((m) => m.role),
+    ['user', 'assistant'],
+  );
+  assert.deepEqual(b.messages[0].content[0], {
+    type: 'document',
+    source: { type: 'base64', media_type: 'application/pdf', data: 'JVBERi0=' },
+  });
+  assert.equal(b.messages[0].content[1].type, 'image');
+  assert.equal(maxTokensClaude('claude-3-haiku-20240307'), 4096);
+  assert.equal(
+    textoDeAnthropic({
+      content: [{ type: 'text', text: 'Hola' }],
+      stop_reason: 'max_tokens',
+    }).startsWith('Hola'),
+    true,
+  );
+  assert.equal(cabeceras('anthropic', ' k ')['x-api-key'], 'k');
+  assert.equal(cabeceras('deepseek', 'k').Authorization, 'Bearer k');
+});
+
+test('Sin saldo se distingue de pasarse del límite', () => {
+  assert.equal(
+    errorDeProveedor('anthropic', 400, {
+      error: { message: 'Your credit balance is too low to access the Anthropic API.' },
+    }).code,
+    'saldo',
+  );
+  assert.equal(
+    errorDeProveedor('openai', 429, {
+      error: { code: 'insufficient_quota', message: 'You exceeded your current quota' },
+    }).code,
+    'saldo',
+  );
+  assert.equal(
+    errorDeProveedor('deepseek', 402, { error: { message: 'Insufficient Balance' } }).code,
+    'saldo',
+  );
+  // Gemini gratis usa "quota" para el límite diario: eso es esperar, no pagar
+  assert.equal(
+    errorDeProveedor('gemini', 429, {
+      error: { message: 'You exceeded your current quota, please check your plan' },
+    }).code,
+    'cuota',
+  );
+});
+
+test('Modelo recomendado de cada proveedor', () => {
+  const m = (...ids: string[]) => ids.map((id) => ({ id, nombre: id }));
+  assert.equal(
+    modeloRecomendado('openai', m('gpt-4o', 'gpt-4.1-mini', 'gpt-5-mini', 'gpt-5')),
+    'gpt-5-mini',
+  );
+  assert.equal(
+    modeloRecomendado('anthropic', m('claude-sonnet-4-6', 'claude-haiku-4-5', 'claude-3-haiku')),
+    'claude-haiku-4-5',
+  );
+  assert.equal(
+    modeloRecomendado('deepseek', m('deepseek-v4-pro', 'deepseek-flash')),
+    'deepseek-flash',
+  );
+  assert.equal(
+    modeloRecomendado('mistral', m('mistral-large-latest', 'mistral-small-latest')),
+    'mistral-small-latest',
+  );
+  assert.equal(
+    modeloRecomendado('groq', m('qwen-x', 'llama-3.3-70b-versatile')),
+    'llama-3.3-70b-versatile',
+  );
+  assert.equal(modeloRecomendado('deepseek', []), 'deepseek-flash');
 });
