@@ -24,7 +24,7 @@ export const MODULOS: Record<ModuloId, InfoModulo> = {
   SAA: {
     nombre: 'Sistemas de Aprendizaje Automático',
     corto: 'Aprendizaje Automático',
-    profesor: 'María Arantzazu Fiallega Escauriaza',
+    profesor: 'José Carlos del Arco Prieto',
     claves: ['aprendizaje automatico', 'saaut'],
   },
   BDA: {
