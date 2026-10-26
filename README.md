@@ -220,6 +220,7 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Versión web instalable en iPhone
 - [x] Notificaciones y sincronización en segundo plano (Android)
 - [x] Detalle de la corrección: nota, fecha, comentario y archivos del profesor
+- [ ] Rediseño de la app (versión 2.0)
 - [ ] Compilar el APK en GitHub Actions, sin la cola de EAS
 - [x] Hacer tareas con IA (Gemini / OpenRouter) y entregarlas desde la app
 - [ ] Notificaciones en iPhone a través del script de Google (correo o ntfy), sin servidor propio

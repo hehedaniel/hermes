@@ -6,12 +6,18 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [1.3.0] - 2026-10-26
+
 ### Añadido
 - **Hacer tareas con IA.** Botón *Hacer con IA* en cada tarea: un chat que ya conoce el enunciado, la asignatura y la fecha. Le pasas los archivos de la tarea (PDF, imágenes, código, CSV…), le pides lo que quieras y la conversación se guarda para seguir otro día.
 - Los trabajos que genera la IA salen como documentos dentro del chat: los **PDF** se maquetan solos y se ven en el visor de la app; el código y los textos, como archivo.
 - **Entregar en Moodle** desde el chat, con confirmación antes: sube el archivo a la tarea (o lo pega como texto en línea si la tarea es de texto) y avisa si sustituye lo que ya tenías entregado.
 - *Ajustes → Inteligencia artificial*: eliges la IA de una lista (**Gemini**, **OpenRouter**, **ChatGPT**, **Claude**, **DeepSeek**, **Mistral** y **Groq**) y al tocar cada una ves qué puede y qué no (si es gratis, si lee PDF, si ve imágenes…). Cada una con tu clave, el modelo que prefieras e indicaciones para todas las tareas.
-- A las IA que no leen PDF (DeepSeek, Mistral, Groq) Hermes les pasa el texto del PDF.
+- A las IA que no leen PDF (DeepSeek, Mistral, Groq) Hermes les pasa el texto del PDF; si el PDF es escaneado, avisa.
+
+### Cambiado
+- Horario: nuevo profesor de Sistemas de Aprendizaje Automático, José Carlos del Arco Prieto.
+- Ajustes muestra el número de versión correcto (se había quedado en 1.0.1).
 
 ## [1.2.0] - 2026-10-22
 
@@ -58,7 +64,8 @@ Primera versión para compañeros.
 ### Corregido
 - La app ya no se queda "sincronizando" para siempre si Moodle no responde: cada petición se corta a los 25 s.
 
-[Sin publicar]: https://github.com/hehedaniel/hermes/compare/v1.2.0...HEAD
+[Sin publicar]: https://github.com/hehedaniel/hermes/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/hehedaniel/hermes/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/hehedaniel/hermes/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/hehedaniel/hermes/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/hehedaniel/hermes/compare/v1.0.0...v1.0.1
