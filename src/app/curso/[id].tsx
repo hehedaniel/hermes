@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { EstadoChip, type IconoFeather, Progreso, Seccion } from '@/components/anden';
+import { EstadoChip, type IconoFeather, Marca, Progreso, Seccion } from '@/components/anden';
 import { ArchivoRow } from '@/components/archivo-row';
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
@@ -25,6 +25,7 @@ import { archivosDe, type Bloque, type Modulo } from '@/lib/contents';
 import { avisar } from '@/lib/dialogo';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
 import { diaMesHora } from '@/lib/format';
+import { claveArchivo } from '@/lib/novedades';
 import { useAsignaturas, useMoodle } from '@/lib/store';
 import { useCourseContents } from '@/lib/use-course-contents';
 
@@ -243,31 +244,95 @@ export default function CursoScreen() {
   );
 }
 
+/**
+ * Un apartado de la asignatura (Unidad 1, Unidad 2…). Empieza plegado: la cabecera dice qué
+ * hay dentro y si queda algo por entregar o algo nuevo; al tocarla se despliega.
+ */
 function BloqueView({ bloque }: { bloque: Bloque }) {
   const theme = useTheme();
-  const [abierto, setAbierto] = useState(true);
+  const { snapshot, novedades } = useMoodle();
+  const [abierto, setAbierto] = useState(false);
+
   const nArchivos = bloque.modulos.reduce((s, m) => s + m.archivos.length, 0);
+  const nActividades = bloque.modulos.filter(
+    (m) => !(m.tipo === 'resource' && m.archivos.length === 1),
+  ).length;
+  const entregas = bloque.modulos
+    .map((m) => (m.entregaKey ? snapshot?.entregas.find((e) => e.key === m.entregaKey) : undefined))
+    .filter((e) => !!e);
+  const porEntregar = entregas.filter((e) => e.estado === 'pendiente' || e.estado === 'borrador');
+  const vencidas = entregas.filter((e) => e.estado === 'vencida');
+  const urls = new Set(bloque.modulos.flatMap((m) => m.archivos.map((a) => claveArchivo(a.fileurl))));
+  const hayNuevo = novedades.some(
+    (n) => !n.leida && n.archivo && urls.has(claveArchivo(n.archivo.fileurl)),
+  );
+
+  const resumen = [
+    nActividades ? `${nActividades} ${nActividades === 1 ? 'actividad' : 'actividades'}` : null,
+    nArchivos ? `${nArchivos} ${nArchivos === 1 ? 'archivo' : 'archivos'}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <View>
       <Pressable
         onPress={() => setAbierto((v) => !v)}
         accessibilityRole="button"
         accessibilityState={{ expanded: abierto }}
-        style={[styles.bloqueCabecera, { borderBottomColor: theme.line }]}>
+        accessibilityLabel={`${bloque.nombre}. ${resumen}`}
+        style={({ pressed }) => [
+          styles.bloqueCabecera,
+          { borderBottomColor: abierto ? theme.line2 : theme.line },
+          pressed && { backgroundColor: theme.paper2 },
+        ]}>
         <ThemedText type="cifra" themeColor="ink3" style={styles.bloqueNum}>
           {String(bloque.numero).padStart(2, '0')}
         </ThemedText>
-        <ThemedText type="smallBold" style={styles.flex} numberOfLines={2}>
-          {bloque.nombre}
-        </ThemedText>
-        <ThemedText type="meta" themeColor="ink3">
-          {nArchivos ? `${nArchivos} ${nArchivos === 1 ? 'archivo' : 'archivos'}` : ''}
-        </ThemedText>
-        <Feather name={abierto ? 'chevron-up' : 'chevron-down'} size={16} color={theme.ink3} />
+        <View style={styles.flex}>
+          <ThemedText style={styles.bloqueTitulo} numberOfLines={2}>
+            {bloque.nombre}
+          </ThemedText>
+          <View style={styles.bloqueResumen}>
+            {resumen ? (
+              <ThemedText type="meta" themeColor="ink3">
+                {resumen}
+              </ThemedText>
+            ) : (
+              <ThemedText type="meta" themeColor="ink3">
+                Vacío
+              </ThemedText>
+            )}
+            {vencidas.length ? (
+              <Marca
+                texto={`${vencidas.length} ${vencidas.length === 1 ? 'vencida' : 'vencidas'}`}
+                color={theme.stLate}
+                fondo={theme.stLateW}
+              />
+            ) : null}
+            {porEntregar.length ? (
+              <Marca
+                texto={`${porEntregar.length} por entregar`}
+                color={theme.stPend}
+                fondo={theme.stPendW}
+              />
+            ) : null}
+            {hayNuevo ? <Marca texto="Nuevo" color={theme.brand} fondo={theme.brandWash} /> : null}
+          </View>
+        </View>
+        <Feather name={abierto ? 'chevron-up' : 'chevron-down'} size={18} color={theme.ink2} />
       </Pressable>
-      {abierto
-        ? bloque.modulos.map((m) => <ModuloView key={m.cmid} modulo={m} />)
-        : null}
+      {abierto ? (
+        <View style={styles.bloqueCuerpo}>
+          {bloque.modulos.length ? (
+            bloque.modulos.map((m) => <ModuloView key={m.cmid} modulo={m} />)
+          ) : (
+            <ThemedText type="small" themeColor="ink3" style={styles.bloqueVacio}>
+              Este apartado no tiene nada todavía.
+            </ThemedText>
+          )}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -371,7 +436,7 @@ const styles = StyleSheet.create({
     maxWidth: 760,
     width: '100%',
     alignSelf: 'center',
-    gap: Spacing.two,
+    paddingTop: Spacing.two,
   },
   aviso: {
     flexDirection: 'row',
@@ -385,12 +450,22 @@ const styles = StyleSheet.create({
   bloqueCabecera: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingTop: Spacing.four,
-    paddingBottom: 10,
+    gap: 12,
+    paddingVertical: 14,
+    minHeight: 60,
     borderBottomWidth: 1,
   },
-  bloqueNum: { fontSize: 11, minWidth: 16 },
+  bloqueNum: { fontSize: 12, minWidth: 20 },
+  bloqueTitulo: { fontSize: 15.5, lineHeight: 21, fontWeight: 600 },
+  bloqueResumen: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 3,
+  },
+  bloqueCuerpo: { paddingLeft: 32, paddingBottom: Spacing.two },
+  bloqueVacio: { paddingVertical: 12 },
   modulo: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   moduloIcono: { width: 32, alignItems: 'center' },
   moduloNombre: { fontSize: 14.5, lineHeight: 19, fontWeight: 500 },
