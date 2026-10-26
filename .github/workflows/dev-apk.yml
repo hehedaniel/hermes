@@ -1,0 +1,54 @@
+# APK de Hermes Dev (versión de desarrollo) compilado en GitHub, sin la cola de EAS.
+# Se lanza solo al subir a la rama "desarrollo", y también a mano:
+# Actions → "APK de desarrollo" → Run workflow (eso solo sale cuando el archivo ya está en main).
+# Es un APK "debug" con el cliente de desarrollo: se conecta a `npm run dev` en el PC.
+name: APK de desarrollo
+
+on:
+  push:
+    branches: [desarrollo]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    name: Compilar Hermes Dev
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      APP_VARIANT: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      # Guarda la caché de Gradle entre compilaciones: la segunda vez va bastante más rápido
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: Generar el proyecto Android
+        run: npx expo prebuild --platform android --no-install --clean
+      - name: Compilar el APK
+        working-directory: android
+        # Solo arm64 (todos los móviles actuales): tarda la mitad y el APK pesa mucho menos
+        run: ./gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a --no-daemon
+      - name: Nombre del APK
+        run: |
+          mkdir salida
+          cp android/app/build/outputs/apk/debug/app-debug.apk "salida/hermes-dev-${GITHUB_REF_NAME//\//-}-${GITHUB_SHA::7}.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hermes-dev
+          path: salida/*.apk
+          retention-days: 14
+          compression-level: 0
