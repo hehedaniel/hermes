@@ -228,6 +228,7 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [ ] Calculadora de nota por asignatura
 - [ ] Notas personales y checklist por entrega
 - [ ] Copia de seguridad de los datos
+- [ ] Arreglar las lecciones SCORM: salen como pendientes aunque estén hechas y, al pasar el plazo, desaparecen en vez de salir como vencidas o entregadas (prioridad baja)
 
 ## Créditos
 
