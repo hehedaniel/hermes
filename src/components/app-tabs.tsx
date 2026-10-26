@@ -1,7 +1,13 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Tabs } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  Pressable,
+  type PressableStateCallbackType,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { IconoFeather } from '@/components/anden';
@@ -49,12 +55,11 @@ function useContadores() {
     (e) => e.estado === 'pendiente' || e.estado === 'borrador' || e.estado === 'vencida',
   );
   return {
-    index: abiertas.filter(
-      (e) => e.estado === 'vencida' ? e.fecha > now - 30 * 86400 : !e.fecha || e.fecha - now < 7 * 86400,
+    index: abiertas.filter((e) =>
+      e.estado === 'vencida' ? e.fecha > now - 30 * 86400 : !e.fecha || e.fecha - now < 7 * 86400,
     ).length,
-    urgentes: abiertas.filter(
-      (e) => e.estado !== 'vencida' && e.fecha && e.fecha - now < 3 * 86400,
-    ).length,
+    urgentes: abiertas.filter((e) => e.estado !== 'vencida' && e.fecha && e.fecha - now < 3 * 86400)
+      .length,
     novedades: noLeidas,
   };
 }
@@ -100,16 +105,28 @@ function Inferior({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
             accessibilityState={{ selected: r.activa }}
             accessibilityLabel={r.info.titulo}
             style={styles.inferiorItem}>
-            <View style={[styles.indicador, { backgroundColor: r.activa ? theme.brand : 'transparent' }]} />
+            <View
+              style={[
+                styles.indicador,
+                { backgroundColor: r.activa ? theme.brand : 'transparent' },
+              ]}
+            />
             <View>
               <Feather name={r.info.icono} size={21} color={color} />
               {globo ? (
                 <View
                   style={[
                     styles.globo,
-                    { backgroundColor: r.name === 'index' ? theme.urgent : theme.brand, borderColor: theme.paper },
+                    {
+                      backgroundColor: r.name === 'index' ? theme.urgent : theme.brand,
+                      borderColor: theme.paper,
+                    },
                   ]}>
-                  <ThemedText style={[styles.globoTexto, { color: r.name === 'index' ? theme.surface : theme.brandInk }]}>
+                  <ThemedText
+                    style={[
+                      styles.globoTexto,
+                      { color: r.name === 'index' ? theme.surface : theme.brandInk },
+                    ]}>
                     {globo > 9 ? '9+' : globo}
                   </ThemedText>
                 </View>
@@ -148,15 +165,16 @@ function Rail({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
       accessibilityRole="tab"
       accessibilityState={{ selected: r.activa }}
       accessibilityLabel={r.info.titulo}
-      style={[
-        styles.railItem,
-        r.activa && [styles.sombra1, { backgroundColor: theme.surface }],
-      ]}>
+      style={[styles.railItem, r.activa && [styles.sombra1, { backgroundColor: theme.surface }]]}>
       <Feather name={r.info.icono} size={20} color={r.activa ? theme.ink : theme.ink3} />
     </Pressable>
   );
   return (
-    <View style={[styles.rail, { backgroundColor: theme.paper2, borderRightColor: theme.line, paddingTop: 16 + top }]}>
+    <View
+      style={[
+        styles.rail,
+        { backgroundColor: theme.paper2, borderRightColor: theme.line, paddingTop: 16 + top },
+      ]}>
       <Logo />
       <View style={styles.railGrupo}>{principales.map(boton)}</View>
       <View style={styles.flex} />
@@ -187,11 +205,15 @@ function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
         onPress={() => ir(r.name, r.key, r.activa)}
         accessibilityRole="tab"
         accessibilityState={{ selected: r.activa }}
-        style={({ hovered }: { hovered?: boolean }) => [
-          styles.lateralItem,
-          r.activa && [styles.sombra1, { backgroundColor: theme.surface }],
-          !r.activa && hovered && { backgroundColor: theme.paper },
-        ]}>
+        style={(estado) => {
+          // «hovered» solo existe en la web (ratón); en el móvil no viene
+          const { hovered } = estado as PressableStateCallbackType & { hovered?: boolean };
+          return [
+            styles.lateralItem,
+            r.activa && [styles.sombra1, { backgroundColor: theme.surface }],
+            !r.activa && hovered && { backgroundColor: theme.paper },
+          ];
+        }}>
         <Feather name={r.info.icono} size={16} color={r.activa ? theme.ink : theme.ink2} />
         <ThemedText
           type="small"
@@ -200,7 +222,9 @@ function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
           {r.info.titulo}
         </ThemedText>
         {n ? (
-          <ThemedText type="cifra" style={{ color: r.name === 'index' ? theme.urgent : theme.ink2 }}>
+          <ThemedText
+            type="cifra"
+            style={{ color: r.name === 'index' ? theme.urgent : theme.ink2 }}>
             {n}
           </ThemedText>
         ) : null}
@@ -291,7 +315,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lateral: { width: 240, paddingHorizontal: 12, paddingTop: 20, borderRightWidth: 1 },
-  marca: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 8, marginBottom: 20 },
+  marca: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 8,
+    marginBottom: 20,
+  },
   lateralGrupo: { gap: 2 },
   lateralItem: {
     flexDirection: 'row',
@@ -310,5 +340,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 8,
   },
-  avatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  avatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
