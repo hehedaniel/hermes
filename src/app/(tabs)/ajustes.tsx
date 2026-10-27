@@ -16,6 +16,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ANCHO_ESCRITORIO, ANCHO_TABLETA, Spacing } from '@/constants/theme';
 import { TEMAS, type TemaId } from '@/constants/colors';
 import { VERSION } from '@/constants/version';
+import { useAppUpdates } from '@/hooks/app-updates';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import { confirmar } from '@/lib/dialogo';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
@@ -37,6 +38,7 @@ export default function AjustesScreen() {
   const { client, snapshot, moodleUrl, connect, disconnect, refresh, syncing } = useMoodle();
   const theme = useTheme();
   const { tema, cambiarTema, modoColor, cambiarModoColor, oscuro, listo } = useThemePreference();
+  const { enabled: updatesEnabled, checking, checkNow } = useAppUpdates();
   const { width } = useWindowDimensions();
   useEffect(() => {
     if (snapshot) actualizarWidgets(snapshot);
@@ -424,6 +426,28 @@ export default function AjustesScreen() {
               </ThemedText>
             </Caja>
           )}
+        </View>
+      ) : null}
+
+      {updatesEnabled ? (
+        <View>
+          <Seccion titulo="Actualizaciones" sinRegla />
+          <FilaAjuste
+            icono="download"
+            titulo="Buscar actualizaciones"
+            texto={`Versión instalada: ${VERSION}`}
+            derecha={
+              <Button
+                title="Buscar"
+                variant="secondary"
+                compacto
+                onPress={checkNow}
+                loading={checking}
+                disabled={checking}
+              />
+            }
+            sinRegla
+          />
         </View>
       ) : null}
 

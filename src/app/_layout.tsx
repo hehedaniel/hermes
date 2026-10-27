@@ -9,10 +9,10 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform } from 'react-native';
 
 import { FAMILIA } from '@/constants/theme';
-import { useAppUpdateCheck } from '@/hooks/use-app-update-check';
+import { AppUpdateProvider } from '@/hooks/app-updates';
 import { useAbrirAviso } from '@/hooks/use-abrir-aviso';
 import { ThemePreferenceProvider, useTheme, useThemePreference } from '@/hooks/use-theme';
 import { DownloadsProvider } from '@/lib/downloads';
@@ -49,9 +49,6 @@ function RootLayoutContent() {
     SpaceGrotesk_600SemiBold,
     SpaceGrotesk_700Bold,
   });
-  const { downloadProgress, cancelarDescarga } = useAppUpdateCheck(
-    comprobarActualizaciones && fuentes && listo,
-  );
   useAbrirAviso();
 
   // Colores de la navegación con los del tema (sin destellos blancos entre pantallas)
@@ -77,81 +74,33 @@ function RootLayoutContent() {
       <DownloadsProvider>
         <GoogleCalProvider>
           <ThemeProvider value={temaNavegacion}>
-            <StatusBar style={oscuro ? 'light' : 'dark'} />
-            <ExtractorPdf />
-            <Modal
-              transparent
-              animationType="fade"
-              visible={downloadProgress !== null}
-              onRequestClose={cancelarDescarga}>
-              <View style={updateStyles.overlay}>
-                <View style={[updateStyles.card, { backgroundColor: c.paper, borderColor: c.line }]}>
-                  <Text style={[updateStyles.title, { color: c.ink }]}>Descargando actualización</Text>
-                  <Text style={[updateStyles.caption, { color: c.ink2 }]}>
-                    {downloadProgress === null
-                      ? 'Preparando descarga…'
-                      : `${Math.round(downloadProgress * 100)} %`}
-                  </Text>
-                  <View style={[updateStyles.track, { backgroundColor: c.line }]}>
-                    <View
-                      style={[
-                        updateStyles.progress,
-                        {
-                          backgroundColor: c.brand,
-                          width: `${Math.round((downloadProgress ?? 0) * 100)}%`,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Pressable onPress={cancelarDescarga} accessibilityRole="button">
-                    <Text style={[updateStyles.cancel, { color: c.ink2 }]}>Cancelar</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </Modal>
-            <Stack
-              screenOptions={{
-                headerBackButtonDisplayMode: 'minimal',
-                headerShadowVisible: false,
-                headerStyle: { backgroundColor: c.paper },
-                headerTintColor: c.ink,
-                headerTitleStyle: {
-                  fontFamily: tema === 'cuaderno' ? undefined : FAMILIA[600],
-                  fontSize: 15,
-                },
-                contentStyle: { backgroundColor: c.paper },
-              }}>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="curso/[id]" options={{ headerShown: false }} />
-              <Stack.Screen name="tarea/[key]" options={{ title: 'Detalle de la tarea' }} />
-              <Stack.Screen name="visor" options={{ title: '' }} />
-              <Stack.Screen name="ia/[key]" options={{ title: 'IA' }} />
-              <Stack.Screen name="documento" options={{ title: '' }} />
-              <Stack.Screen name="ajustes-ia" options={{ title: 'Inteligencia artificial' }} />
-            </Stack>
+            <AppUpdateProvider enabled={comprobarActualizaciones && fuentes && listo}>
+              <StatusBar style={oscuro ? 'light' : 'dark'} />
+              <ExtractorPdf />
+              <Stack
+                screenOptions={{
+                  headerBackButtonDisplayMode: 'minimal',
+                  headerShadowVisible: false,
+                  headerStyle: { backgroundColor: c.paper },
+                  headerTintColor: c.ink,
+                  headerTitleStyle: {
+                    fontFamily: tema === 'cuaderno' ? undefined : FAMILIA[600],
+                    fontSize: 15,
+                  },
+                  contentStyle: { backgroundColor: c.paper },
+                }}>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="curso/[id]" options={{ headerShown: false }} />
+                <Stack.Screen name="tarea/[key]" options={{ title: 'Detalle de la tarea' }} />
+                <Stack.Screen name="visor" options={{ title: '' }} />
+                <Stack.Screen name="ia/[key]" options={{ title: 'IA' }} />
+                <Stack.Screen name="documento" options={{ title: '' }} />
+                <Stack.Screen name="ajustes-ia" options={{ title: 'Inteligencia artificial' }} />
+              </Stack>
+            </AppUpdateProvider>
           </ThemeProvider>
         </GoogleCalProvider>
       </DownloadsProvider>
     </MoodleProvider>
   );
 }
-
-const updateStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 28,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-  },
-  card: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 22,
-    gap: 14,
-  },
-  title: { fontSize: 17, fontWeight: '700' },
-  caption: { fontSize: 14 },
-  track: { height: 7, overflow: 'hidden', borderRadius: 4 },
-  progress: { height: '100%', borderRadius: 4 },
-  cancel: { alignSelf: 'flex-end', fontSize: 14, fontWeight: '600', paddingTop: 4 },
-});
