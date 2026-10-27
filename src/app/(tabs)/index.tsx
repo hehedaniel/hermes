@@ -1,6 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -20,6 +21,8 @@ import { MODULOS, type ModuloId } from '@/lib/horario';
 import { useMoodle } from '@/lib/store';
 
 const DIA = 86400;
+const ANCHO_LISTA_KEY = 'hermes.pendientes.escritorio.lista';
+const ANCHO_LATERAL_KEY = 'hermes.pendientes.escritorio.lateral';
 /** Entregadas que se ven sin pulsar «Ver todas». */
 const ENTREGADAS_VISIBLES = 4;
 
@@ -48,16 +51,57 @@ export default function PendientesScreen() {
   const nowMs = useNow();
   const [verTodas, setVerTodas] = useState(false);
   const [elegida, setElegida] = useState<string>();
+  const [anchoLista, setAnchoLista] = useState(380);
+  const [anchoLateral, setAnchoLateral] = useState(280);
+  const [anchosCargados, setAnchosCargados] = useState(false);
 
   const g = useMemo(() => agrupar(snapshot?.entregas ?? [], nowMs / 1000), [snapshot, nowMs]);
   const abiertas = g.vencidas.length + g.semana.length + g.despues.length;
   const urgentes = g.semana.filter((e) => esUrgente(e, nowMs)).length;
 
+  useEffect(() => {
+    let activa = true;
+    Promise.all([
+      AsyncStorage.getItem(ANCHO_LISTA_KEY),
+      AsyncStorage.getItem(ANCHO_LATERAL_KEY),
+    ])
+      .then(([lista, lateral]) => {
+        if (!activa) return;
+        const parse = (value: string | null, fallback: number) => {
+          if (value === null) return fallback;
+          const parsed = Number(value);
+          if (!Number.isFinite(parsed) || parsed < 1) {
+            throw new Error('La preferencia de ancho de columnas no es válida.');
+          }
+          return parsed;
+        };
+        setAnchoLista(parse(lista, 380));
+        setAnchoLateral(parse(lateral, 280));
+      })
+      .catch((error: unknown) =>
+        console.error('No se pudieron leer los anchos de columnas.', error),
+      )
+      .finally(() => {
+        if (activa) setAnchosCargados(true);
+      });
+    return () => {
+      activa = false;
+    };
+  }, []);
+
   if (ready && !client) return <Bienvenida />;
   if (client && !snapshot) return <Sincronizando />;
 
   const maestro = width >= ANCHO_TABLETA;
-  const anchoLista = width >= ANCHO_ESCRITORIO ? 380 : 330;
+  const escritorio = width >= ANCHO_ESCRITORIO;
+  const anchoListaMaximo = Math.max(
+    260,
+    width - anchoNavegacion(width) - anchoLateral - 284,
+  );
+  const anchoListaActual = escritorio ? Math.min(anchoLista, anchoListaMaximo) : 330;
+  const anchoLateralActual = escritorio
+    ? Math.min(anchoLateral, Math.max(200, width - anchoNavegacion(width) - anchoListaActual - 284))
+    : anchoLateral;
 
   const grupos: Grupo[] = [
     { titulo: 'Vencidas', items: g.vencidas },
@@ -86,7 +130,8 @@ export default function PendientesScreen() {
     <Screen
       title="Pendientes"
       etiqueta={`FP IA y Big Data · ${snapshot?.courses.length ?? 0} asignaturas`}
-      maxWidth={maestro ? anchoLista : undefined}>
+      maxWidth={maestro ? anchoListaActual : undefined}
+      showVerticalScrollIndicator={!escritorio}>
       <Cifras
         items={[
           { n: abiertas, texto: abiertas === 1 ? 'Entrega' : 'Entregas' },
@@ -149,15 +194,47 @@ export default function PendientesScreen() {
 
   if (!maestro) return lista;
 
-  const anchoDetalle = width - anchoNavegacion(width) - anchoLista - 1;
+  const anchoDetalle = width - anchoNavegacion(width) - anchoListaActual - (escritorio ? 12 : 1);
+  const ajustarAnchoLista = (ancho: number) => {
+    setAnchoLista(ancho);
+    AsyncStorage.setItem(ANCHO_LISTA_KEY, String(ancho)).catch((error: unknown) =>
+      console.error('No se pudo guardar el ancho de Pendientes.', error),
+    );
+  };
+  const ajustarAnchoLateral = (ancho: number) => {
+    setAnchoLateral(ancho);
+  };
+  const guardarAnchoLateral = (ancho: number) =>
+    AsyncStorage.setItem(ANCHO_LATERAL_KEY, String(ancho)).catch((error: unknown) =>
+      console.error('No se pudo guardar el ancho del panel de información.', error),
+    );
   return (
     <ThemedView style={styles.fila}>
-      <View style={{ width: anchoLista }}>{lista}</View>
+      <View style={{ width: anchoListaActual }}>{lista}</View>
+      {escritorio ? (
+        <SeparadorVertical
+          value={anchoLista}
+          min={260}
+          max={anchoListaMaximo}
+          habilitado={anchosCargados}
+          onChange={setAnchoLista}
+          onRelease={ajustarAnchoLista}
+          etiqueta="Ancho de la lista Pendientes"
+        />
+      ) : null}
       <SafeAreaView
         edges={['top']}
         style={[styles.detalle, { borderLeftColor: theme.line }]}>
         {seleccion ? (
-          <PanelTarea key={seleccion.key} entrega={seleccion} nowMs={nowMs} ancho={anchoDetalle} />
+          <PanelTarea
+            key={seleccion.key}
+            entrega={seleccion}
+            nowMs={nowMs}
+            ancho={anchoDetalle}
+            anchoLateral={escritorio ? anchoLateralActual : undefined}
+            alCambiarAnchoLateral={escritorio ? ajustarAnchoLateral : undefined}
+            alSoltarAnchoLateral={escritorio ? guardarAnchoLateral : undefined}
+          />
         ) : (
           <View style={styles.detalleVacio}>
             <Feather name="clipboard" size={22} color={theme.ink3} />
@@ -168,6 +245,54 @@ export default function PendientesScreen() {
         )}
       </SafeAreaView>
     </ThemedView>
+  );
+}
+
+function SeparadorVertical({
+  value,
+  min,
+  max,
+  habilitado,
+  onChange,
+  onRelease,
+  etiqueta,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  habilitado: boolean;
+  onChange: (value: number) => void;
+  onRelease: (value: number) => void;
+  etiqueta: string;
+}) {
+  const valorInicial = useRef(value);
+  const posicionInicial = useRef(0);
+  const valorActual = useRef(value);
+  const limitado = Math.min(value, max);
+  return (
+    <View
+      accessible
+      accessibilityRole="adjustable"
+      accessibilityLabel={etiqueta}
+      accessibilityHint="Arrastra a izquierda o derecha para cambiar el ancho"
+      style={styles.separadorVertical}
+      onStartShouldSetResponder={() => habilitado}
+      onResponderGrant={(event) => {
+        valorInicial.current = limitado;
+        valorActual.current = limitado;
+        posicionInicial.current = event.nativeEvent.pageX;
+      }}
+      onResponderMove={(event) => {
+        const ancho = Math.max(
+          min,
+          Math.min(max, valorInicial.current + event.nativeEvent.pageX - posicionInicial.current),
+        );
+        valorActual.current = ancho;
+        onChange(ancho);
+      }}
+      onResponderRelease={() => onRelease(valorActual.current)}>
+      <Feather name="more-vertical" size={18} color="#8A8F98" />
+    </View>
   );
 }
 
@@ -276,6 +401,12 @@ const styles = StyleSheet.create({
   detalle: { flex: 1, borderLeftWidth: 1 },
   detalleVacio: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
   verTodas: { alignItems: 'flex-start', paddingTop: Spacing.two },
+  separadorVertical: {
+    width: 12,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   bienvenida: {
     padding: MARGEN + 4,
     paddingTop: Spacing.five,

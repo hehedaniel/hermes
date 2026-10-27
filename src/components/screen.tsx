@@ -35,6 +35,7 @@ type Props = {
   /** Ancho máximo del contenido (por defecto, el de lectura) */
   maxWidth?: number;
   contentStyle?: StyleProp<ViewStyle>;
+  showVerticalScrollIndicator?: boolean;
 };
 
 export function Screen({
@@ -48,6 +49,7 @@ export function Screen({
   refreshing,
   maxWidth = MaxContentWidth,
   contentStyle,
+  showVerticalScrollIndicator = true,
 }: Props) {
   const { snapshot, syncing, error, refresh, client } = useMoodle();
   const theme = useTheme();
@@ -67,6 +69,7 @@ export function Screen({
         <ScrollView
           contentContainerStyle={[styles.content, { maxWidth }, contentStyle]}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={showVerticalScrollIndicator}
           refreshControl={
             refreshable && client ? (
               <RefreshControl

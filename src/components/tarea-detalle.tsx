@@ -1,7 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { type ReactNode, useCallback, useState } from 'react';
+import { type ReactNode, useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Caja, EstadoChip, Seccion } from '@/components/anden';
@@ -39,16 +39,27 @@ export function TareaDetalle({
   entrega: e,
   nowMs,
   ancho,
+  anchoLateral,
+  alCambiarAnchoLateral,
+  alSoltarAnchoLateral,
+  umbralDosColumnas = ANCHO_DOS_COLUMNAS,
 }: {
   entrega: Entrega;
   nowMs: number;
   /** Ancho disponible para el detalle (decide si van dos columnas) */
   ancho: number;
+  anchoLateral?: number;
+  alCambiarAnchoLateral?: (ancho: number) => void;
+  alSoltarAnchoLateral?: (ancho: number) => void;
+  umbralDosColumnas?: number;
 }) {
   const theme = useTheme();
   const info = useAsignaturas()(e.cursoId, e.curso);
-  const dos = ancho >= ANCHO_DOS_COLUMNAS;
+  const dos = ancho >= umbralDosColumnas;
   const [chat, setChat] = useState<{ key: string; hay: boolean }>();
+  const inicioAnchoLateral = useRef(0);
+  const posicionInicioLateral = useRef(0);
+  const anchoLateralActual = useRef(anchoLateral ?? 280);
   useFocusEffect(
     useCallback(() => {
       let vivo = true;
@@ -326,7 +337,37 @@ export function TareaDetalle({
         {archivos}
         {e.correccion ? tuEntrega : null}
       </View>
-      <Lateral>
+      {alCambiarAnchoLateral ? (
+        <View
+          accessible
+          accessibilityRole="adjustable"
+          accessibilityLabel="Ancho de la información de la tarea"
+          accessibilityHint="Arrastra a izquierda o derecha para cambiar el ancho"
+          style={styles.separadorLateral}
+          onStartShouldSetResponder={() => true}
+          onResponderGrant={(event) => {
+            const inicial = anchoLateral ?? 280;
+            inicioAnchoLateral.current = inicial;
+            anchoLateralActual.current = inicial;
+            posicionInicioLateral.current = event.nativeEvent.pageX;
+          }}
+          onResponderMove={(event) => {
+            const siguiente = Math.max(
+              200,
+              Math.min(
+                Math.min(420, ancho - 272),
+                inicioAnchoLateral.current -
+                  (event.nativeEvent.pageX - posicionInicioLateral.current),
+              ),
+            );
+            anchoLateralActual.current = siguiente;
+            alCambiarAnchoLateral(siguiente);
+          }}
+          onResponderRelease={() => alSoltarAnchoLateral?.(anchoLateralActual.current)}>
+          <Feather name="more-vertical" size={18} color="#8A8F98" />
+        </View>
+      ) : null}
+      <Lateral ancho={anchoLateral}>
         {e.correccion ? (
           <>
             {correccion}
@@ -352,23 +393,43 @@ export function PanelTarea({
   entrega,
   nowMs,
   ancho,
+  anchoLateral,
+  alCambiarAnchoLateral,
+  alSoltarAnchoLateral,
 }: {
   entrega: Entrega;
   nowMs: number;
   ancho: number;
+  anchoLateral?: number;
+  alCambiarAnchoLateral?: (ancho: number) => void;
+  alSoltarAnchoLateral?: (ancho: number) => void;
 }) {
-  const dos = ancho >= ANCHO_DOS_COLUMNAS;
+  const umbralDosColumnas = alCambiarAnchoLateral ? 500 : ANCHO_DOS_COLUMNAS;
+  const dos = ancho >= umbralDosColumnas;
   return (
     <ScrollView contentContainerStyle={[styles.panel, !dos && styles.panelUna]}>
-      <TareaDetalle entrega={entrega} nowMs={nowMs} ancho={dos ? ancho : ancho - 64} />
+      <TareaDetalle
+        entrega={entrega}
+        nowMs={nowMs}
+        ancho={dos ? ancho : ancho - 64}
+        anchoLateral={anchoLateral}
+        alCambiarAnchoLateral={dos ? alCambiarAnchoLateral : undefined}
+        alSoltarAnchoLateral={alSoltarAnchoLateral}
+        umbralDosColumnas={umbralDosColumnas}
+      />
     </ScrollView>
   );
 }
 
-function Lateral({ children }: { children: ReactNode }) {
+function Lateral({ children, ancho }: { children: ReactNode; ancho?: number }) {
   const theme = useTheme();
   return (
-    <View style={[styles.lateral, { borderLeftColor: theme.line, backgroundColor: theme.surface2 }]}>
+    <View
+      style={[
+        styles.lateral,
+        ancho ? { width: ancho } : null,
+        { borderLeftColor: theme.line, backgroundColor: theme.surface2 },
+      ]}>
       {children}
     </View>
   );
@@ -401,6 +462,12 @@ const styles = StyleSheet.create({
   columna: { gap: Spacing.three, minWidth: 0 },
   dos: { flex: 1, flexDirection: 'row', alignItems: 'stretch' },
   dosPrincipal: { padding: 32, paddingBottom: 48 },
+  separadorLateral: {
+    width: 12,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   lateral: {
     width: 280,
     borderLeftWidth: 1,
