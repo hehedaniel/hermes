@@ -1,9 +1,11 @@
-# Al subir una etiqueta vX.Y.Z: pasa las comprobaciones (ci.yml), compila el APK en EAS
-# y lo publica como release del repo, con las notas de esa versión del CHANGELOG.
+# Al subir una etiqueta vX.Y.Z: pasa las comprobaciones (ci.yml), compila el APK firmado
+# aquí mismo con Gradle (sin la cola de EAS) y lo publica como release del repo, con las
+# notas de esa versión del CHANGELOG.
 #   git tag v1.1.0
 #   git push origin v1.1.0
-# Primera vez: crea un token en expo.dev (Account settings → Access tokens) y guárdalo en
-# Settings → Secrets and variables → Actions como EXPO_TOKEN.
+# Secretos necesarios (Settings → Secrets and variables → Actions): la firma del APK, que es
+# la misma que usaba EAS para que el móvil lo tome como actualización:
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
 name: Release APK
 
 on:
@@ -28,6 +30,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,28 +41,68 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - uses: expo/expo-github-action@v8
+      - uses: actions/setup-java@v4
         with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+          distribution: temurin
+          java-version: 17
       - run: npm ci
 
       - name: Poner la versión de la etiqueta en la app
         run: |
+          # versionName = la etiqueta; versionCode = X*10000 + Y*100 + Z, que siempre crece
+          # con la versión (Android no deja instalar un APK con versionCode menor).
           node -e "
             const fs = require('fs');
             const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
-            app.expo.version = process.env.TAG.replace(/^v/, '');
+            const v = process.env.TAG.replace(/^v/, '');
+            const [x, y, z] = v.split('.').map(Number);
+            app.expo.version = v;
+            app.expo.android = { ...app.expo.android, versionCode: x * 10000 + y * 100 + z };
             fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+            console.log('versionName', v, 'versionCode', app.expo.android.versionCode);
           "
 
-      - name: Compilar el APK en EAS (espera a que termine)
-        run: eas build -p android --profile preview --non-interactive --wait --json > build.json
+      - name: Generar el proyecto de Android
+        run: npx expo prebuild --platform android --no-install
 
-      - name: Descargar el APK
+      - name: Firmar con la clave de siempre
         run: |
-          URL=$(node -e "console.log(require('./build.json')[0].artifacts.buildUrl)")
-          curl -fsSL -o "Hermes-$TAG.apk" "$URL"
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.jks
+          node -e "
+            const fs = require('fs');
+            const f = 'android/app/build.gradle';
+            let g = fs.readFileSync(f, 'utf8');
+            // 1) el build de release firma con la clave nueva (en vez de la de depuración)
+            g = g.replace(
+              /(buildTypes \{[\s\S]*?release \{[\s\S]*?)signingConfig signingConfigs\.debug/,
+              '\$1signingConfig signingConfigs.release',
+            );
+            // 2) la define, leyendo las contraseñas del entorno
+            g = g.replace(
+              'signingConfigs {\n',
+              'signingConfigs {\n        release {\n' +
+                \"            storeFile file('release.jks')\n\" +
+                \"            storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')\n\" +
+                \"            keyAlias System.getenv('ANDROID_KEY_ALIAS')\n\" +
+                \"            keyPassword System.getenv('ANDROID_KEY_PASSWORD')\n\" +
+                '        }\n',
+            );
+            if (!g.includes('signingConfig signingConfigs.release') || !g.includes('release.jks')) {
+              console.error('No pude poner la firma en build.gradle: la plantilla ha cambiado');
+              process.exit(1);
+            }
+            fs.writeFileSync(f, g);
+          "
+
+      - name: Compilar el APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+
+      - name: Comprobar la firma y preparar el archivo
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          "$(ls -d $ANDROID_HOME/build-tools/*/ | tail -1)apksigner" verify --print-certs "$APK" | head -3
+          cp "$APK" "Hermes-$TAG.apk"
 
       - name: Notas de la versión (del CHANGELOG)
         run: |
