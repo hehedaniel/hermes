@@ -80,3 +80,35 @@ test('sin entregar: ni envío ni corrección', () => {
     correccion: undefined,
   });
 });
+
+test('corrección con editpdf: solo el PDF anotado, sin imágenes de página ni sellos', () => {
+  const { correccion } = detalleEntrega(
+    {
+      feedback: {
+        gradefordisplay: '9,00 / 10,00',
+        plugins: [
+          {
+            type: 'editpdf',
+            fileareas: [
+              { area: 'download', files: [archivo('combined.pdf')] },
+              {
+                area: 'pages',
+                files: [archivo('image_page0.png'), archivo('image_page1.png')],
+              },
+              {
+                area: 'stamps',
+                files: [archivo('cross.png'), archivo('smile.png'), archivo('sad.png')],
+              },
+            ],
+          },
+        ],
+      },
+    },
+    11,
+    105,
+  );
+  assert.deepEqual(
+    correccion?.archivos.map((a) => a.nombre),
+    ['combined.pdf'],
+  );
+});

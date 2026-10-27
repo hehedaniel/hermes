@@ -72,6 +72,19 @@ export type Snapshot = {
   syncedAt: number; // ms
 };
 
+/**
+ * El editor de PDF de Moodle (editpdf) guarda, además del PDF anotado («combined.pdf»), sus
+ * cosas internas: una imagen por cada página (image_page0.png…) y los sellos de la barra de
+ * herramientas (tick, cruz, cara sonriente y triste). No son archivos del profesor: se ocultan.
+ */
+function esArchivoInterno(tipo: string, area: string | undefined, nombre: string): boolean {
+  if (tipo !== 'editpdf') return false;
+  if (area && /^(pages|stamps|readonlypages|importedpages)$/.test(area)) return true;
+  return (
+    /^image_page\d+\.png$/i.test(nombre) || /^(smile|sad|tick|cross|frown)\.png$/i.test(nombre)
+  );
+}
+
 /** Archivos de los plugins de una entrega o corrección, como Archivo de Hermes. */
 function archivosDePlugins(
   plugins: AssignPlugin[] | undefined,
@@ -81,7 +94,7 @@ function archivosDePlugins(
   return (plugins ?? []).flatMap((pl) =>
     (pl.fileareas ?? []).flatMap((fa) =>
       (fa.files ?? [])
-        .filter((f) => f.fileurl)
+        .filter((f) => f.fileurl && !esArchivoInterno(pl.type, fa.area, f.filename))
         .map((f) => ({
           nombre: f.filename,
           fileurl: f.fileurl,
