@@ -77,7 +77,7 @@ export function EntregaCard({
         </ThemedText>
         <ThemedText
           type="small"
-          style={{ color: colorCuando, fontWeight: urgente ? 600 : 500 }}
+          style={[styles.cuando, { color: colorCuando, fontWeight: urgente ? 600 : 500 }]}
           numberOfLines={1}>
           {cuandoDe(e, nowMs)}
         </ThemedText>
@@ -108,6 +108,7 @@ export { EntregaCard as EntregaFila };
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   linea: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  cuando: { marginRight: 8 },
   nombre: { fontSize: 15.5, lineHeight: 21, fontWeight: 500 },
   linea2: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 },
 });

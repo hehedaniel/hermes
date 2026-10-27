@@ -87,6 +87,8 @@ export function Seccion({
   derechaColor,
   sinRegla,
   style,
+  onPress,
+  expanded,
 }: {
   numero?: number;
   titulo: string;
@@ -95,16 +97,12 @@ export function Seccion({
   /** Sin la regla de debajo (cuando lo que sigue ya trae sus propias reglas o es una caja) */
   sinRegla?: boolean;
   style?: StyleProp<ViewStyle>;
+  onPress?: () => void;
+  expanded?: boolean;
 }) {
   const theme = useTheme();
-  return (
-    <View
-      style={[
-        styles.seccion,
-        { borderBottomColor: theme.line },
-        sinRegla && { borderBottomWidth: 0, paddingBottom: 4 },
-        style,
-      ]}>
+  const contenido = (
+    <>
       {numero !== undefined ? (
         <ThemedText type="cifra" themeColor="ink3" style={styles.seccionNum}>
           {String(numero).padStart(2, '0')}
@@ -118,6 +116,36 @@ export function Seccion({
           {derecha}
         </ThemedText>
       ) : null}
+      {onPress ? (
+        <Feather
+          name={expanded ? 'chevron-up' : 'chevron-down'}
+          size={16}
+          color={theme.ink2}
+        />
+      ) : null}
+    </>
+  );
+  const base = [
+    styles.seccion,
+    { borderBottomColor: theme.line },
+    sinRegla && { borderBottomWidth: 0, paddingBottom: 4 },
+    style,
+  ];
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: !!expanded }}
+        style={({ pressed }) => [...base, pressed && { opacity: 0.7 }]}>
+        {contenido}
+      </Pressable>
+    );
+  }
+  return (
+    <View
+      style={base}>
+      {contenido}
     </View>
   );
 }

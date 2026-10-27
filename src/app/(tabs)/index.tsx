@@ -23,6 +23,7 @@ import { useMoodle } from '@/lib/store';
 const DIA = 86400;
 const ANCHO_LISTA_KEY = 'hermes.pendientes.escritorio.lista';
 const ANCHO_LATERAL_KEY = 'hermes.pendientes.escritorio.lateral';
+const SECCIONES_PLEGADAS_KEY = 'hermes.pendientes.secciones-plegadas';
 /** Entregadas que se ven sin pulsar «Ver todas». */
 const ENTREGADAS_VISIBLES = 4;
 
@@ -51,6 +52,8 @@ export default function PendientesScreen() {
   const nowMs = useNow();
   const [verTodas, setVerTodas] = useState(false);
   const [elegida, setElegida] = useState<string>();
+  const [plegadas, setPlegadas] = useState<Record<string, boolean>>({});
+  const plegadasRef = useRef(plegadas);
   const [anchoLista, setAnchoLista] = useState(380);
   const [anchoLateral, setAnchoLateral] = useState(280);
   const [anchosCargados, setAnchosCargados] = useState(false);
@@ -64,8 +67,9 @@ export default function PendientesScreen() {
     Promise.all([
       AsyncStorage.getItem(ANCHO_LISTA_KEY),
       AsyncStorage.getItem(ANCHO_LATERAL_KEY),
+      AsyncStorage.getItem(SECCIONES_PLEGADAS_KEY),
     ])
-      .then(([lista, lateral]) => {
+      .then(([lista, lateral, secciones]) => {
         if (!activa) return;
         const parse = (value: string | null, fallback: number) => {
           if (value === null) return fallback;
@@ -77,6 +81,20 @@ export default function PendientesScreen() {
         };
         setAnchoLista(parse(lista, 380));
         setAnchoLateral(parse(lateral, 280));
+        if (secciones) {
+          const valor: unknown = JSON.parse(secciones);
+          if (
+            typeof valor !== 'object' ||
+            valor === null ||
+            Array.isArray(valor) ||
+            !Object.values(valor).every((plegada) => typeof plegada === 'boolean')
+          ) {
+            throw new Error('La preferencia de secciones plegadas no es válida.');
+          }
+          const guardadas = valor as Record<string, boolean>;
+          plegadasRef.current = guardadas;
+          setPlegadas(guardadas);
+        }
       })
       .catch((error: unknown) =>
         console.error('No se pudieron leer los anchos de columnas.', error),
@@ -88,6 +106,15 @@ export default function PendientesScreen() {
       activa = false;
     };
   }, []);
+
+  const alternarPlegada = (clave: string) => {
+    const nuevas = { ...plegadasRef.current, [clave]: !plegadasRef.current[clave] };
+    plegadasRef.current = nuevas;
+    setPlegadas(nuevas);
+    AsyncStorage.setItem(SECCIONES_PLEGADAS_KEY, JSON.stringify(nuevas)).catch(
+      (error: unknown) => console.error('No se pudo guardar el estado de las secciones.', error),
+    );
+  };
 
   if (ready && !client) return <Bienvenida />;
   if (client && !snapshot) return <Sincronizando />;
@@ -109,6 +136,37 @@ export default function PendientesScreen() {
     { titulo: 'Más adelante', items: g.despues },
   ];
   const entregadas = verTodas ? g.entregadas : g.entregadas.slice(0, ENTREGADAS_VISIBLES);
+  const cifras = [
+    { key: 'entregas', n: abiertas, texto: abiertas === 1 ? 'Entrega' : 'Entregas' },
+    {
+      key: 'vencidas',
+      n: g.vencidas.length,
+      texto: g.vencidas.length === 1 ? 'Vencida' : 'Vencidas',
+      alerta: g.vencidas.length > 0,
+    },
+    {
+      key: 'urgentes',
+      n: urgentes,
+      texto: urgentes === 1 ? 'Urgente' : 'Urgentes',
+      alerta: urgentes > 0,
+    },
+    ...(maestro && !escritorio
+      ? []
+      : [
+          {
+            key: 'cerradas',
+            n: g.entregadas.length,
+            texto: g.entregadas.length === 1 ? 'Cerrada' : 'Cerradas',
+          },
+        ]),
+  ];
+  const cifrasVisibles = escritorio
+    ? cifras.filter(
+        (cifra) =>
+          (cifra.key !== 'cerradas' || anchoListaActual >= 360) &&
+          (cifra.key !== 'vencidas' || anchoListaActual >= 300),
+      )
+    : cifras;
 
   // En tableta y escritorio, la tarea elegida se ve al lado (por defecto, la primera abierta)
   const todas = [...g.vencidas, ...g.semana, ...g.despues, ...g.entregadas];
@@ -131,17 +189,9 @@ export default function PendientesScreen() {
       title="Pendientes"
       etiqueta={`FP IA y Big Data · ${snapshot?.courses.length ?? 0} asignaturas`}
       maxWidth={maestro ? anchoListaActual : undefined}
+      contentStyle={escritorio ? { paddingRight: 4 } : undefined}
       showVerticalScrollIndicator={!escritorio}>
-      <Cifras
-        items={[
-          { n: abiertas, texto: abiertas === 1 ? 'Entrega' : 'Entregas' },
-          { n: g.vencidas.length, texto: g.vencidas.length === 1 ? 'Vencida' : 'Vencidas', alerta: g.vencidas.length > 0 },
-          { n: urgentes, texto: urgentes === 1 ? 'Urgente' : 'Urgentes', alerta: urgentes > 0 },
-          ...(maestro && width < ANCHO_ESCRITORIO
-            ? []
-            : [{ n: g.entregadas.length, texto: g.entregadas.length === 1 ? 'Cerrada' : 'Cerradas' }]),
-        ]}
-      />
+      <Cifras items={cifrasVisibles} />
 
       {abiertas === 0 ? (
         <Vacio
@@ -161,12 +211,26 @@ export default function PendientesScreen() {
 
       {grupos
         .filter((gr) => gr.items.length)
-        .map((gr, i) => (
-          <View key={gr.titulo}>
-            <Seccion numero={i + 1} titulo={gr.titulo} derecha={String(gr.items.length)} />
-            {gr.items.map(fila)}
-          </View>
-        ))}
+        .map((gr, i) => {
+          const plegable = gr.titulo !== 'Vencidas';
+          const plegada = !!plegadas[gr.titulo];
+          return (
+            <View key={gr.titulo}>
+              <Seccion
+                numero={i + 1}
+                titulo={gr.titulo}
+                derecha={String(gr.items.length)}
+                onPress={
+                  plegable && anchosCargados
+                    ? () => alternarPlegada(gr.titulo)
+                    : undefined
+                }
+                expanded={plegable ? !plegada : undefined}
+              />
+              {!plegada ? gr.items.map(fila) : null}
+            </View>
+          );
+        })}
 
       {g.entregadas.length ? (
         <View>
@@ -174,18 +238,24 @@ export default function PendientesScreen() {
             numero={grupos.filter((gr) => gr.items.length).length + 1}
             titulo="Entregadas"
             derecha={`${g.entregadas.length} cerradas`}
+            onPress={anchosCargados ? () => alternarPlegada('entregadas') : undefined}
+            expanded={!plegadas.entregadas}
           />
-          {entregadas.map(fila)}
-          {g.entregadas.length > ENTREGADAS_VISIBLES ? (
-            <View style={styles.verTodas}>
-              <Button
-                title={verTodas ? 'Ver menos' : `Ver las ${g.entregadas.length} entregadas`}
-                variant="ghost"
-                compacto
-                icono={verTodas ? 'chevron-up' : 'chevron-down'}
-                onPress={() => setVerTodas((v) => !v)}
-              />
-            </View>
+          {!plegadas.entregadas ? (
+            <>
+              {entregadas.map(fila)}
+              {g.entregadas.length > ENTREGADAS_VISIBLES ? (
+                <View style={styles.verTodas}>
+                  <Button
+                    title={verTodas ? 'Ver menos' : `Ver las ${g.entregadas.length} entregadas`}
+                    variant="ghost"
+                    compacto
+                    icono={verTodas ? 'chevron-up' : 'chevron-down'}
+                    onPress={() => setVerTodas((v) => !v)}
+                  />
+                </View>
+              ) : null}
+            </>
           ) : null}
         </View>
       ) : null}
