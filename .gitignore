@@ -12,7 +12,7 @@ expo-env.d.ts
 # Native
 .kotlin/
 *.orig.*
-*.jks
+# *.jks
 *.p8
 *.p12
 *.key
@@ -41,3 +41,8 @@ example
 # generated native folders
 /ios
 /android
+
+# Claves de firma
+/credentials/
+credentials.json
+*.jks
