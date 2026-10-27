@@ -43,12 +43,12 @@ En la FP a distancia todo pasa por el aula virtual: cada módulo tiene sus unida
 
 ### 📱 La app (Android y iPhone)
 
-- **Pendientes.** Todas las entregas de todos los módulos en una lista: vencidas, próximos 7 días, más adelante. Cada una con su estado (*pendiente, borrador, entregada, vencida*), la **nota** si ya está corregida y cuánto falta. Lo que vence en menos de 3 días se marca en naranja y sale en el globo de la pestaña.
+- **Pendientes.** Todas las entregas de todos los módulos en una lista: vencidas, próximos 7 días, más adelante. Cada una con su estado (_pendiente, borrador, entregada, vencida_), la **nota** si ya está corregida y cuánto falta. Lo que vence en menos de 3 días se marca en naranja y sale en el globo de la pestaña.
 - **Novedades.** Lo que ha cambiado desde la última vez, en todas las asignaturas: **apuntes nuevos**, archivos que el profesor ha **actualizado**, **actividades** y **entregas nuevas**, **notas publicadas** y **cambios de fecha**. Con globo de no leídas; al tocar una, te lleva al archivo, la tarea o la asignatura.
 - **Horario.** Desliza en Calendario y ves **las clases del día**: hora, módulo, profesor y aula, con el descanso y la clase en curso marcada como "AHORA". Arriba, una tira con los días de la semana para saltar a ayer, mañana o cualquier otro día. Los **festivos y vacaciones** del calendario escolar aparecen como "No hay clase" con el motivo. Debajo salen las entregas de ese día y el resto de tus eventos de Google.
 - **Calendario.** Vista de mes con un punto por entrega, del color de su estado, y **tu Google Calendar dentro**: horario de clases y eventos personales en la agenda de cada día.
 - **Asignaturas.** Cada módulo con su profesor, sus bloques y actividades, como en Moodle. Los archivos se **descargan al móvil** (uno a uno o "Descargar todo") y se abren sin conexión.
-- **Widgets (Android).** *Próximas entregas*, con cuánto falta para cada una, y *Clases de hoy*, con la que toca **ahora**; si ya han acabado, enseña las de mañana. Se ven sin abrir la app y se actualizan solos.
+- **Widgets (Android).** _Próximas entregas_, con cuánto falta para cada una, y _Clases de hoy_, con la que toca **ahora**; si ya han acabado, enseña las de mañana. Se ven sin abrir la app y se actualizan solos.
 - **Visor integrado.** Los PDF e imágenes se ven dentro de la app, con zoom; Word, PowerPoint o ZIP se abren con la app del móvil que corresponda.
 - **Detalle de entrega.** Enunciado, fechas de apertura, entrega y cierre, estado, nota y archivos adjuntos.
 - **Hacer tareas con IA.** En cada tarea, un chat con la IA que ya conoce el enunciado: le pasas los archivos de la tarea, le pides lo que quieras y, si te genera el trabajo, lo ves como PDF y lo **entregas en Moodle** desde ahí. Eliges la IA en Ajustes, con tu propia clave: **Gemini**, **OpenRouter**, **ChatGPT**, **Claude**, **DeepSeek**, **Mistral** o **Groq**.
@@ -110,7 +110,8 @@ npx eas-cli@latest login
 npx eas-cli@latest build -p android --profile preview
 ```
 
-Responde **Yes** a crear el proyecto y la *keystore*. A los 10-20 minutos tendrás un enlace y un QR para descargar el APK.
+Responde **Yes** a crear el proyecto y la _keystore_. A los 10-20 minutos tendrás un enlace y un QR para descargar el APK.
+
 </details>
 
 <details>
@@ -118,10 +119,10 @@ Responde **Yes** a crear el proyecto y la *keystore*. A los 10-20 minutos tendr�
 
 Hay dos GitHub Actions:
 
-- **Web** (`.github/workflows/web.yml`): cada push a `main` publica la versión web en GitHub Pages. La primera vez: *Settings → Pages → Source: GitHub Actions*.
-- **Release APK** (`.github/workflows/release.yml`): al subir una etiqueta `vX.Y.Z`, compila el APK en EAS y crea la release con el APK adjunto. La primera vez, guarda un token de [expo.dev](https://expo.dev/settings/access-tokens) como secreto `EXPO_TOKEN` en *Settings → Secrets and variables → Actions*.
+- **Web** (`.github/workflows/web.yml`): cada push a `main` publica la versión web en GitHub Pages. La primera vez: _Settings → Pages → Source: GitHub Actions_.
+- **Release APK** (`.github/workflows/release.yml`): al subir una etiqueta `vX.Y.Z`, compila el APK en EAS y crea la release con el APK adjunto. La primera vez, guarda un token de [expo.dev](https://expo.dev/settings/access-tokens) como secreto `EXPO_TOKEN` en _Settings → Secrets and variables → Actions_.
 
-Antes de etiquetar, pasa lo de *Sin publicar* del [`CHANGELOG.md`](CHANGELOG.md) a una sección `## [1.1.0] - fecha`: las notas de la release salen de ahí.
+Antes de etiquetar, pasa lo de _Sin publicar_ del [`CHANGELOG.md`](CHANGELOG.md) a una sección `## [1.1.0] - fecha`: las notas de la release salen de ahí.
 
 ```bash
 git tag v1.1.0
@@ -131,6 +132,7 @@ git push origin v1.1.0
 Las dos Actions pasan antes las **comprobaciones** (`.github/workflows/ci.yml`): tipos, lint, pruebas y detección de secretos con gitleaks. Si algo falla, no se publica nada. En local, lo mismo con `npm run check`.
 
 Para probar la web en local: `npm run web`. Para generarla como en GitHub Pages: `npm run build:web` (sale en `dist/`).
+
 </details>
 
 <details>
@@ -145,6 +147,7 @@ npm run dev                                                  # cada día: arranc
 ```
 
 Abre **Hermes Dev** en el móvil (misma WiFi que el PC) y elige el servidor que aparece, o escanea el QR de la terminal. Antes de subir cambios: `npm run check` (tipos, lint y pruebas).
+
 </details>
 
 ### 2. Conectar Google (opcional)
@@ -160,7 +163,7 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 ## Privacidad y seguridad
 
 - **No hay servidor de por medio.** La app habla directamente con Moodle desde tu móvil; el script de Google se ejecuta en tu propia cuenta.
-- **El token de Moodle se guarda cifrado** en el móvil (SecureStore) y en las *Propiedades del script*, nunca en el código. Da acceso a tu Moodle: no lo compartas. Si se filtra, anúlalo en *Moodle → Preferencias → Claves de seguridad*.
+- **El token de Moodle se guarda cifrado** en el móvil (SecureStore) y en las _Propiedades del script_, nunca en el código. Da acceso a tu Moodle: no lo compartas. Si se filtra, anúlalo en _Moodle → Preferencias → Claves de seguridad_.
 - El enlace de Google Calendar lleva una **clave privada**. Si lo compartes por error, ejecuta `cambiarClaveApp`.
 
 ## Estructura del repositorio
@@ -194,16 +197,17 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 <details>
 <summary><b>Funciones de la API de Moodle que se usan</b></summary>
 
-| Función | Para qué |
-|---|---|
-| `core_webservice_get_site_info` | validar el token y saber tu usuario |
-| `core_enrol_get_users_courses` | tus cursos |
-| `mod_assign_get_assignments` | tareas de todos los cursos, con fechas y adjuntos |
-| `mod_assign_get_submission_status` | si la has entregado y la nota |
+| Función                                       | Para qué                                            |
+| --------------------------------------------- | --------------------------------------------------- |
+| `core_webservice_get_site_info`               | validar el token y saber tu usuario                 |
+| `core_enrol_get_users_courses`                | tus cursos                                          |
+| `mod_assign_get_assignments`                  | tareas de todos los cursos, con fechas y adjuntos   |
+| `mod_assign_get_submission_status`            | si la has entregado y la nota                       |
 | `core_calendar_get_action_events_by_timesort` | otras actividades con fecha (SCORM, cuestionarios…) |
-| `core_course_get_contents` | bloques, actividades y archivos de cada curso |
+| `core_course_get_contents`                    | bloques, actividades y archivos de cada curso       |
 
 El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/launch.php`, que redirige a `moodlemobile://token=…`.
+
 </details>
 
 ## Hoja de ruta
@@ -232,11 +236,12 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [ ] Notas personales y checklist por entrega
 - [ ] Copia de seguridad de los datos
 - [ ] Arreglar las lecciones SCORM: salen como pendientes aunque estén hechas y, al pasar el plazo, desaparecen en vez de salir como vencidas o entregadas (prioridad baja)
+- [ ] Cambiar diseño inicio para que sea reajustable cada apartado (Pendientes, Tarea e Info tarea)
 
 ## Créditos
 
 Hecho por **Dani Hermoso** · idea original de **Jose**, compañero del curso de especialización en IA y Big Data.
 
-> **Aviso:** Hermes es un proyecto personal de estudiantes y **no es oficial**. No está afiliado a la Junta de Andalucía ni a Moodle Pty Ltd. *Moodle™* es una marca registrada de Moodle Pty Ltd. Cada persona usa su propia cuenta y su propio token.
+> **Aviso:** Hermes es un proyecto personal de estudiantes y **no es oficial**. No está afiliado a la Junta de Andalucía ni a Moodle Pty Ltd. _Moodle™_ es una marca registrada de Moodle Pty Ltd. Cada persona usa su propia cuenta y su propio token.
 
 Licencia [MIT](LICENSE).

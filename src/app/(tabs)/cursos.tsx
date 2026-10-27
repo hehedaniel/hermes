@@ -17,9 +17,15 @@ function resumenDe(entregas: Entrega[]) {
   const vencidas = entregas.filter((e) => e.estado === 'vencida').length;
   const pendientes = entregas.filter((e) => e.estado === 'pendiente').length;
   const borradores = entregas.filter((e) => e.estado === 'borrador').length;
-  if (vencidas) return { texto: `${vencidas} ${vencidas === 1 ? 'vencida' : 'vencidas'}`, alerta: true };
-  if (pendientes) return { texto: `${pendientes} ${pendientes === 1 ? 'entrega' : 'entregas'}`, alerta: false };
-  if (borradores) return { texto: `${borradores} ${borradores === 1 ? 'borrador' : 'borradores'}`, alerta: false };
+  if (vencidas)
+    return { texto: `${vencidas} ${vencidas === 1 ? 'vencida' : 'vencidas'}`, alerta: true };
+  if (pendientes)
+    return { texto: `${pendientes} ${pendientes === 1 ? 'entrega' : 'entregas'}`, alerta: false };
+  if (borradores)
+    return {
+      texto: `${borradores} ${borradores === 1 ? 'borrador' : 'borradores'}`,
+      alerta: false,
+    };
   return { texto: 'Sin pendientes', alerta: false };
 }
 
@@ -61,18 +67,15 @@ export default function CursosScreen() {
   ).length;
 
   return (
-    <Screen
-      title="Asignaturas"
-      etiqueta="FP IA y Big Data · curso 26-27"
-      derecha={`${cursos.length} activas`}>
+    <Screen title="Asignaturas" etiqueta="FP IA y Big Data · curso 26-27">
       <Cifras
         items={[
           { n: cursos.length, texto: 'Asignaturas' },
-          {
-            n: vencidasRecientes,
-            texto: vencidasRecientes === 1 ? 'Vencida' : 'Vencidas',
-            alerta: vencidasRecientes > 0,
-          },
+          // {
+          //   n: vencidasRecientes,
+          //   texto: vencidasRecientes === 1 ? 'Vencida' : 'Vencidas',
+          //   alerta: vencidasRecientes > 0,
+          // },
           ...(guardaArchivos ? [{ n: resumen.archivos, texto: 'Archivos' }] : []),
         ]}
       />
@@ -95,7 +98,10 @@ export default function CursosScreen() {
                 </ThemedText>
                 <ThemedText
                   type="small"
-                  style={{ color: r.alerta ? theme.urgent : theme.ink2, fontWeight: r.alerta ? 600 : 500 }}>
+                  style={{
+                    color: r.alerta ? theme.urgent : theme.ink2,
+                    fontWeight: r.alerta ? 600 : 500,
+                  }}>
                   {r.texto}
                 </ThemedText>
               </View>
