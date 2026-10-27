@@ -8,7 +8,7 @@ import {
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo } from 'react';
 import { Platform } from 'react-native';
 
 import { FAMILIA } from '@/constants/theme';
@@ -39,6 +39,16 @@ export default function RootLayout() {
 function RootLayoutContent() {
   const { oscuro, listo, tema } = useThemePreference();
   const c = useTheme();
+  useLayoutEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+
+    document.documentElement.style.backgroundColor = c.paper;
+    document.body.style.backgroundColor = c.paper;
+    document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+      meta.setAttribute('content', c.paper);
+    });
+  }, [c.paper]);
+
   const comprobarActualizaciones =
     Platform.OS === 'android' &&
     Constants.executionEnvironment !== ExecutionEnvironment.StoreClient &&

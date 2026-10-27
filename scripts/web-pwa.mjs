@@ -21,6 +21,9 @@ const head = `
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Hermes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <style id="hermes-pwa-background">
+      html, body { background-color: ${PAPEL}; }
+    </style>
     <meta name="theme-color" content="${PAPEL}" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="${PAPEL_OSCURO}" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="Entregas, apuntes, novedades y horario del Moodle de la FP a distancia." />
