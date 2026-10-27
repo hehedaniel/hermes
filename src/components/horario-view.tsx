@@ -7,7 +7,7 @@ import { EntregaCard } from '@/components/entrega-card';
 import { EventoRow } from '@/components/evento-row';
 import { ThemedText } from '@/components/themed-text';
 import { Radii, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Entrega } from '@/lib/data';
 import { DIAS_CORTOS, dayKey, fechaTitulo } from '@/lib/format';
 import type { EventoGoogle } from '@/lib/google-cal';
@@ -252,6 +252,7 @@ function ClaseRow({
   compacto?: boolean;
 }) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
   const { snapshot } = useMoodle();
   const m = MODULOS[clase.modulo];
   const curso = snapshot?.courses.find(
@@ -277,12 +278,18 @@ function ClaseRow({
       }
       style={({ pressed }) => [
         styles.clase,
+        tema === 'cuaderno' && [
+          styles.cuadernoClase,
+          { backgroundColor: theme.surface, borderColor: theme.line, borderLeftColor: theme[clase.modulo] },
+        ],
         { opacity: pressed ? 0.7 : acabada ? 0.5 : 1 },
       ]}>
       <ThemedText type="cifra" themeColor="ink3" style={styles.hora}>
         {clase.inicio}
       </ThemedText>
-      <View style={[styles.barra, { backgroundColor: theme[clase.modulo] }]} />
+      {tema === 'cuaderno' ? null : (
+        <View style={[styles.barra, { backgroundColor: theme[clase.modulo] }]} />
+      )}
       <View style={styles.body}>
         <View style={styles.tituloFila}>
           <ThemedText type="smallBold" numberOfLines={1} style={styles.flexShrink}>
@@ -333,5 +340,12 @@ const styles = StyleSheet.create({
   tituloFila: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   flexShrink: { flexShrink: 1 },
   sinClase: { borderLeftWidth: 3, gap: 2 },
+  cuadernoClase: {
+    borderWidth: 1,
+    borderLeftWidth: 3,
+    borderRadius: 9,
+    paddingHorizontal: 9,
+    marginVertical: 4,
+  },
   nada: { paddingVertical: 12 },
 });

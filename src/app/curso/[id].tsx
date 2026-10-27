@@ -18,8 +18,8 @@ import { ArchivoRow } from '@/components/archivo-row';
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MARGEN, Radii, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { ANCHO_ESCRITORIO, ANCHO_TABLETA, MARGEN, Radii, Spacing } from '@/constants/theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Archivo } from '@/lib/data';
 import { archivosDe, type Bloque, type Modulo } from '@/lib/contents';
 import { avisar } from '@/lib/dialogo';
@@ -57,8 +57,14 @@ export default function CursoScreen() {
   const { guardaArchivos, estado, descargarVarios } = useDownloads();
   const { novedades } = useMoodle();
   const theme = useTheme();
+  const { tema } = useThemePreference();
   const info = useAsignaturas()(cursoId, nombre);
   const { width } = useWindowDimensions();
+  const nocturnoWeb =
+    width >= ANCHO_ESCRITORIO && (tema === 'nocturno' || tema === 'cuaderno');
+  const nocturnoMovil =
+    width < ANCHO_TABLETA && (tema === 'nocturno' || tema === 'cuaderno');
+  const nocturno = nocturnoWeb || nocturnoMovil;
   const [progreso, setProgreso] = useState<{ hechos: number; total: number } | null>(null);
 
   const archivos = contenido ? archivosDe(contenido) : [];
@@ -93,10 +99,15 @@ export default function CursoScreen() {
     ) : null;
 
   // En oscuro los colores de asignatura son claros: el texto de la banda va en tinta oscura
-  const sobreBanda = theme.paper;
+  const sobreBanda = nocturno ? theme.ink : theme.paper;
 
   const banda = (
-    <View style={[styles.banda, { backgroundColor: info.color }]}>
+    <View
+      style={[
+        styles.banda,
+        nocturno && styles.nocturnoBanda,
+        { backgroundColor: nocturno ? theme.paper : info.color, borderBottomColor: theme.line },
+      ]}>
       <SafeAreaView edges={['top']}>
         <View style={styles.bandaContenido}>
           <View style={styles.bandaFila}>
@@ -128,11 +139,15 @@ export default function CursoScreen() {
               </Pressable>
             ) : null}
           </View>
-          <ThemedText type="label" style={{ color: sobreBanda, opacity: 0.85 }}>
+          <ThemedText
+            type="label"
+            style={{ color: nocturno ? info.color : sobreBanda, opacity: 0.9 }}>
             {info.siglas}
           </ThemedText>
           <ThemedText style={[styles.bandaTitulo, { color: sobreBanda }]}>{info.nombre}</ThemedText>
-          <ThemedText type="meta" style={{ color: sobreBanda, opacity: 0.85 }}>
+          <ThemedText
+            type="meta"
+            style={{ color: nocturno ? theme.ink2 : sobreBanda, opacity: 0.9 }}>
             {[
               info.profesor,
               contenido ? `${contenido.bloques.length} bloques` : null,
@@ -147,7 +162,7 @@ export default function CursoScreen() {
   );
 
   const cuerpo = (
-    <View style={styles.cuerpo}>
+    <View style={[styles.cuerpo, nocturno && styles.nocturnoCuerpo]}>
       {error ? (
         <View style={[styles.aviso, { backgroundColor: theme.urgentWash }]}>
           <Feather name="wifi-off" size={14} color={theme.urgent} />
@@ -160,7 +175,7 @@ export default function CursoScreen() {
         <ActivityIndicator color={theme.brand} style={styles.cargando} />
       ) : null}
       {contenido?.bloques.map((b) => (
-        <BloqueView key={b.id} bloque={b} />
+        <BloqueView key={b.id} bloque={b} nocturno={nocturno} />
       ))}
       {!conPanel && botonDescargar ? (
         <View style={styles.pie}>
@@ -202,7 +217,11 @@ export default function CursoScreen() {
       </ScrollView>
       <SafeAreaView
         edges={['top']}
-        style={[styles.panel, { borderLeftColor: theme.line, backgroundColor: theme.surface2 }]}>
+        style={[
+          styles.panel,
+          nocturno && styles.nocturnoPanel,
+          { borderLeftColor: theme.line, backgroundColor: theme.surface2 },
+        ]}>
         <ScrollView contentContainerStyle={styles.panelContenido}>
           {guardaArchivos ? (
             <View style={styles.panelBloque}>
@@ -248,7 +267,7 @@ export default function CursoScreen() {
  * Un apartado de la asignatura (Unidad 1, Unidad 2…). Empieza plegado: la cabecera dice qué
  * hay dentro y si queda algo por entregar o algo nuevo; al tocarla se despliega.
  */
-function BloqueView({ bloque }: { bloque: Bloque }) {
+function BloqueView({ bloque, nocturno }: { bloque: Bloque; nocturno: boolean }) {
   const theme = useTheme();
   const { snapshot, novedades } = useMoodle();
   const [abierto, setAbierto] = useState(false);
@@ -275,7 +294,11 @@ function BloqueView({ bloque }: { bloque: Bloque }) {
     .join(' · ');
 
   return (
-    <View>
+    <View
+      style={[
+        nocturno && styles.nocturnoBloque,
+        nocturno && { backgroundColor: theme.surface, borderColor: theme.line },
+      ]}>
       <Pressable
         onPress={() => setAbierto((v) => !v)}
         accessibilityRole="button"
@@ -283,6 +306,7 @@ function BloqueView({ bloque }: { bloque: Bloque }) {
         accessibilityLabel={`${bloque.nombre}. ${resumen}`}
         style={({ pressed }) => [
           styles.bloqueCabecera,
+          nocturno && styles.nocturnoBloqueCabecera,
           { borderBottomColor: abierto ? theme.line2 : theme.line },
           pressed && { backgroundColor: theme.paper2 },
         ]}>
@@ -323,9 +347,11 @@ function BloqueView({ bloque }: { bloque: Bloque }) {
         <Feather name={abierto ? 'chevron-up' : 'chevron-down'} size={18} color={theme.ink2} />
       </Pressable>
       {abierto ? (
-        <View style={styles.bloqueCuerpo}>
+        <View style={[styles.bloqueCuerpo, nocturno && styles.nocturnoBloqueCuerpo]}>
           {bloque.modulos.length ? (
-            bloque.modulos.map((m) => <ModuloView key={m.cmid} modulo={m} />)
+            bloque.modulos.map((m) => (
+              <ModuloView key={m.cmid} modulo={m} nocturno={nocturno} />
+            ))
           ) : (
             <ThemedText type="small" themeColor="ink3" style={styles.bloqueVacio}>
               Este apartado no tiene nada todavía.
@@ -337,7 +363,7 @@ function BloqueView({ bloque }: { bloque: Bloque }) {
   );
 }
 
-function ModuloView({ modulo }: { modulo: Modulo }) {
+function ModuloView({ modulo, nocturno }: { modulo: Modulo; nocturno: boolean }) {
   const theme = useTheme();
   const { snapshot } = useMoodle();
 
@@ -358,12 +384,17 @@ function ModuloView({ modulo }: { modulo: Modulo }) {
   };
 
   return (
-    <View>
+    <View
+      style={[
+        nocturno && styles.nocturnoModulo,
+        nocturno && { borderBottomColor: theme.line },
+      ]}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.modulo,
+          nocturno && styles.nocturnoModuloFila,
           !modulo.archivos.length && { borderBottomWidth: 1, borderBottomColor: theme.line },
           { opacity: pressed ? 0.6 : 1 },
         ]}>
@@ -405,6 +436,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   fila: { flexDirection: 'row' },
   banda: {},
+  nocturnoBanda: { borderBottomWidth: 1 },
   bandaContenido: {
     paddingHorizontal: MARGEN,
     paddingTop: Spacing.three,
@@ -438,6 +470,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingTop: Spacing.two,
   },
+  nocturnoCuerpo: { gap: 12, paddingTop: Spacing.three },
   aviso: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -455,6 +488,13 @@ const styles = StyleSheet.create({
     minHeight: 60,
     borderBottomWidth: 1,
   },
+  nocturnoBloque: {
+    borderWidth: 1,
+    borderRadius: Radii.superficie,
+    overflow: 'hidden',
+  },
+  nocturnoBloqueCabecera: { paddingHorizontal: 14, minHeight: 68 },
+  nocturnoBloqueCuerpo: { paddingHorizontal: 14, paddingLeft: 26, paddingBottom: 8 },
   bloqueNum: { fontSize: 12, minWidth: 20 },
   bloqueTitulo: { fontSize: 15.5, lineHeight: 21, fontWeight: 600 },
   bloqueResumen: {
@@ -467,11 +507,14 @@ const styles = StyleSheet.create({
   bloqueCuerpo: { paddingLeft: 32, paddingBottom: Spacing.two },
   bloqueVacio: { paddingVertical: 12 },
   modulo: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  nocturnoModulo: { borderBottomWidth: 1 },
+  nocturnoModuloFila: { paddingHorizontal: 8 },
   moduloIcono: { width: 32, alignItems: 'center' },
   moduloNombre: { fontSize: 14.5, lineHeight: 19, fontWeight: 500 },
   sangria: { paddingLeft: 44 },
   pie: { gap: 8, marginTop: Spacing.three },
   panel: { width: 290, borderLeftWidth: 1 },
+  nocturnoPanel: { width: 330 },
   panelContenido: { padding: 22, paddingTop: 28, gap: Spacing.four },
   panelBloque: { gap: 8 },
   cifra: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },

@@ -18,7 +18,7 @@ import {
 import type { IconoFeather } from '@/components/anden';
 import { estiloCampo, ThemedText } from '@/components/themed-text';
 import { Radii } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 
 /** Fila de ajuste: icono, título, explicación y algo a la derecha (botón, interruptor, chip…). */
 export function FilaAjuste({
@@ -78,15 +78,18 @@ export function FilaAjuste({
 export function Interruptor({
   value,
   onValueChange,
+  accessibilityLabel,
 }: {
   value: boolean;
   onValueChange: (v: boolean) => void;
+  accessibilityLabel?: string;
 }) {
   const theme = useTheme();
   return (
     <Switch
       value={value}
       onValueChange={onValueChange}
+      accessibilityLabel={accessibilityLabel}
       trackColor={{ true: theme.brand, false: theme.line2 }}
       thumbColor={Platform.OS === 'android' ? theme.surface : undefined}
       {...(Platform.OS === 'web' ? { activeThumbColor: theme.surface } : {})}
@@ -101,6 +104,7 @@ export function Campo({
   ...props
 }: TextInputProps & { style?: StyleProp<TextStyle> }) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
   return (
     <TextInput
       placeholderTextColor={theme.ink3}
@@ -108,7 +112,7 @@ export function Campo({
       {...props}
       style={[
         styles.campo,
-        estiloCampo(),
+        tema === 'cuaderno' ? { fontSize: 15 } : estiloCampo(),
         { color: theme.ink, backgroundColor: theme.surface, borderColor: theme.line2 },
         multiline && styles.multi,
         style,

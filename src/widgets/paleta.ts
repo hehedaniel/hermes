@@ -1,5 +1,6 @@
-import { Colors, type Paleta as PaletaTema } from '@/constants/colors';
+import { Colors, TEMAS, type Paleta as PaletaTema, type TemaId } from '@/constants/colors';
 import type { ModuloId } from '@/lib/horario';
+import type { ModoColor } from '@/hooks/use-theme';
 
 export type Hex = `#${string}`;
 export type Paleta = {
@@ -29,8 +30,19 @@ const desde = (c: PaletaTema): Paleta => ({
   modulo: { MIA: c.MIA as Hex, SAA: c.SAA as Hex, BDA: c.BDA as Hex, PIA: c.PIA as Hex, SBD: c.SBD as Hex },
 });
 
-/** Los colores de la app, en claro y oscuro. */
-export const PALETAS: Record<'claro' | 'oscuro', Paleta> = {
+export type PaletasWidget = { claro: Paleta; oscuro: Paleta };
+
+/** Paleta del widget según el tema seleccionado y el modo de color de la app. */
+export function paletasDeTema(tema: TemaId, modo: ModoColor): PaletasWidget {
+  const colores = TEMAS[tema];
+  return {
+    claro: desde(modo === 'oscuro' ? colores.oscuro : colores.claro),
+    oscuro: desde(modo === 'claro' ? colores.claro : colores.oscuro),
+  };
+}
+
+/** Colores de Andén para las llamadas que aún no reciben preferencias. */
+export const PALETAS: PaletasWidget = {
   claro: desde(Colors.light),
   oscuro: desde(Colors.dark),
 };

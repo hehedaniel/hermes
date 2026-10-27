@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { IconoIA, type IconoFeather } from '@/components/anden';
 import { ThemedText } from '@/components/themed-text';
 import { Radii } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 
 type Props = {
   title: string;
@@ -29,6 +29,7 @@ export function Button({
   compacto,
 }: Props) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
   const bg = variant === 'primary' ? theme.brand : variant === 'secondary' ? theme.surface : 'transparent';
   const fg =
     variant === 'primary'
@@ -46,6 +47,7 @@ export function Button({
       style={({ pressed }) => [
         styles.btn,
         compacto && styles.compacto,
+        tema === 'cuaderno' && styles.cuaderno,
         {
           backgroundColor: bg,
           borderColor: variant === 'secondary' ? theme.line2 : 'transparent',
@@ -118,6 +120,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   compacto: { minHeight: 36, paddingHorizontal: 12 },
+  cuaderno: { minHeight: 44, borderRadius: 10 },
   fila: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   text: { fontSize: 15, lineHeight: 20, fontWeight: 600 },
   textCompacto: { fontSize: 13.5, lineHeight: 18 },

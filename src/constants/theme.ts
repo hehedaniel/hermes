@@ -48,6 +48,8 @@ export const Spacing = {
 export const MARGEN = 20;
 
 export const Radii = { chip: 4, control: 8, superficie: 12, hoja: 20, pastilla: 999 } as const;
+export const TEMA_PREFERENCIA_KEY = 'hermes.tema';
+export const MODO_COLOR_PREFERENCIA_KEY = 'hermes.modo-color';
 
 /** Ancho a partir del cual hay rail lateral (tableta) y barra lateral completa (escritorio). */
 export const ANCHO_TABLETA = 768;

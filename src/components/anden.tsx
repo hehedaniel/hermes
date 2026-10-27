@@ -6,11 +6,19 @@
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps, ReactNode } from 'react';
-import { Pressable, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  type StyleProp,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type ViewStyle,
+} from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radii, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { ANCHO_ESCRITORIO, ANCHO_TABLETA, Radii, Spacing } from '@/constants/theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Estado } from '@/lib/data';
 
 export type IconoFeather = ComponentProps<typeof Feather>['name'];
@@ -33,15 +41,19 @@ export function Cabecera({
   derechaColor?: string;
 }) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
   return (
-    <View style={styles.cabecera}>
+    <View style={[styles.cabecera, tema === 'cuaderno' && styles.cuadernoCabecera]}>
       {etiqueta ? (
         <ThemedText type="label" themeColor="ink2">
           {etiqueta}
         </ThemedText>
       ) : null}
       <View style={styles.cabeceraFila}>
-        <ThemedText type="display" style={styles.flex} numberOfLines={2}>
+        <ThemedText
+          type="display"
+          style={[styles.flex, tema === 'cuaderno' && styles.cuadernoTitulo]}
+          numberOfLines={2}>
           {titulo}
         </ThemedText>
         {derecha ? (
@@ -233,14 +245,43 @@ export function FilaRail({
   style?: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
+  const { width } = useWindowDimensions();
+  const nocturnoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
+  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
+  const nocturno = nocturnoWeb || nocturnoMovil;
   const contenido = (
     <>
-      <View style={[styles.rail, { backgroundColor: color, opacity: apagada ? 0.55 : 1 }]} />
-      <View style={styles.filaCuerpo}>{children}</View>
+      <View
+        style={[
+          styles.rail,
+          tema === 'cuaderno' && styles.cuadernoRail,
+          nocturno && styles.nocturnoRail,
+          { backgroundColor: color, opacity: apagada ? 0.55 : 1 },
+        ]}
+      />
+      <View style={[styles.filaCuerpo, nocturno && styles.nocturnoFilaCuerpo]}>
+        {children}
+      </View>
     </>
   );
   const base = [
     styles.fila,
+    nocturno && [
+      styles.nocturnoFila,
+      {
+        backgroundColor: seleccionada ? theme.surface2 : theme.surface,
+        borderColor: theme.line,
+      },
+    ],
+    tema === 'cuaderno' && [
+      styles.cuadernoFila,
+      {
+        backgroundColor: seleccionada ? theme.brandWash : theme.surface,
+        borderColor: theme.line,
+        borderLeftColor: color,
+      },
+    ],
     { borderBottomColor: theme.line },
     seleccionada && { backgroundColor: theme.surface },
     style,
@@ -250,7 +291,10 @@ export function FilaRail({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={({ pressed }) => [...base, pressed && { backgroundColor: theme.paper2 }]}>
+      style={({ pressed }) => [
+        ...base,
+        pressed && { backgroundColor: nocturno ? theme.surface2 : theme.paper2 },
+      ]}>
       {contenido}
     </Pressable>
   );
@@ -294,11 +338,16 @@ export function Progreso({ valor, ancho }: { valor: number; ancho?: boolean }) {
 /** Caja de texto de apoyo sobre papel 2 (enunciados, comentarios). */
 export function Caja({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
   return (
     <View
       style={[
         styles.caja,
-        { backgroundColor: theme.paper2, borderColor: theme.line },
+        {
+          backgroundColor: tema === 'cuaderno' ? theme.surface : theme.paper2,
+          borderColor: theme.line,
+        },
+        tema === 'cuaderno' && styles.cuadernoCaja,
         style,
       ]}>
       {children}
@@ -309,6 +358,8 @@ export function Caja({ children, style }: { children: ReactNode; style?: StylePr
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   cabecera: { gap: 2, paddingTop: Spacing.three, paddingBottom: Spacing.three },
+  cuadernoCabecera: { paddingTop: 4, paddingBottom: 8 },
+  cuadernoTitulo: { fontSize: 26, lineHeight: 32, letterSpacing: -0.8 },
   cabeceraFila: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.three },
   cifras: {
     flexDirection: 'row',
@@ -350,8 +401,30 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
   },
+  nocturnoFila: {
+    minHeight: 72,
+    paddingVertical: 0,
+    paddingRight: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderBottomWidth: 1,
+    borderRadius: Radii.superficie,
+    overflow: 'hidden',
+  },
+  cuadernoFila: {
+    minHeight: 76,
+    marginVertical: 4,
+    paddingVertical: 10,
+    paddingRight: 12,
+    borderWidth: 1,
+    borderLeftWidth: 4,
+    borderRadius: 13,
+  },
   rail: { width: 3, borderRadius: 2, marginRight: 12 },
+  cuadernoRail: { width: 0, marginRight: 0 },
+  nocturnoRail: { width: 3, borderRadius: 0, marginRight: 12 },
   filaCuerpo: { flex: 1, gap: 4 },
+  nocturnoFilaCuerpo: { paddingVertical: 12 },
   tipo: {
     width: 32,
     height: 34,
@@ -364,4 +437,5 @@ const styles = StyleSheet.create({
   progreso: { height: 3, borderRadius: 2, overflow: 'hidden', width: 76 },
   progresoLleno: { height: 3, borderRadius: 2 },
   caja: { borderRadius: Radii.control, borderWidth: 1, padding: 12, gap: 6 },
+  cuadernoCaja: { borderRadius: 14, padding: 14 },
 });

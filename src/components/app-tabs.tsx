@@ -1,9 +1,10 @@
 import Feather from '@expo/vector-icons/Feather';
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 import {
   Pressable,
   type PressableStateCallbackType,
+  Platform,
   StyleSheet,
   useWindowDimensions,
   View,
@@ -14,8 +15,8 @@ import type { IconoFeather } from '@/components/anden';
 import { ThemedText } from '@/components/themed-text';
 import { ANCHO_ESCRITORIO, ANCHO_TABLETA, Radii } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
-import { useTheme } from '@/hooks/use-theme';
-import { haceCuanto } from '@/lib/format';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
+import { haceCuanto, quedan } from '@/lib/format';
 import { useMoodle } from '@/lib/store';
 
 type Pestana = { name: string; titulo: string; icono: IconoFeather };
@@ -85,16 +86,31 @@ type Ir = (name: string, key: string, activa: boolean) => void;
 
 function Inferior({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
+  const { width } = useWindowDimensions();
+  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
+  const cuadernoMovil = width < ANCHO_TABLETA && tema === 'cuaderno';
   const { bottom } = useSafeAreaInsets();
   const cont = useContadores();
   return (
     <View
       style={[
         styles.inferior,
+        cuadernoMovil && styles.cuadernoInferior,
         { backgroundColor: theme.paper, borderTopColor: theme.line, paddingBottom: 6 + bottom },
       ]}>
       {rutas.map((r) => {
-        const color = r.activa ? theme.ink : theme.ink3;
+        const titulo =
+          nocturnoMovil && r.name === 'calendario'
+            ? 'Horario'
+            : nocturnoMovil && r.name === 'ajustes'
+              ? 'Perfil'
+              : r.info.titulo;
+        const color = r.activa
+          ? nocturnoMovil || cuadernoMovil
+            ? theme.brand
+            : theme.ink
+          : theme.ink3;
         const globo =
           r.name === 'index' ? cont.urgentes : r.name === 'novedades' ? cont.novedades : 0;
         return (
@@ -104,14 +120,18 @@ function Inferior({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
             accessibilityRole="tab"
             accessibilityState={{ selected: r.activa }}
             accessibilityLabel={r.info.titulo}
-            style={styles.inferiorItem}>
+            style={[styles.inferiorItem, cuadernoMovil && styles.cuadernoInferiorItem]}>
             <View
               style={[
                 styles.indicador,
                 { backgroundColor: r.activa ? theme.brand : 'transparent' },
               ]}
             />
-            <View>
+            <View
+              style={[
+                cuadernoMovil && r.activa && styles.cuadernoActiveIcon,
+                cuadernoMovil && r.activa && { backgroundColor: theme.brandWash },
+              ]}>
               <Feather name={r.info.icono} size={21} color={color} />
               {globo ? (
                 <View
@@ -133,9 +153,13 @@ function Inferior({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
               ) : null}
             </View>
             <ThemedText
-              style={[styles.inferiorTexto, { color, fontWeight: r.activa ? 600 : 500 }]}
+              style={[
+                styles.inferiorTexto,
+                nocturnoMovil && styles.nocturnoInferiorTexto,
+                { color, fontWeight: r.activa ? 600 : 500 },
+              ]}
               numberOfLines={1}>
-              {r.info.titulo}
+              {titulo}
             </ThemedText>
           </Pressable>
         );
@@ -144,11 +168,19 @@ function Inferior({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
   );
 }
 
-function Logo({ grande }: { grande?: boolean }) {
+function Logo({ grande, nocturno }: { grande?: boolean; nocturno?: boolean }) {
   const theme = useTheme();
   return (
-    <View style={[styles.logo, grande && styles.logoGrande, { backgroundColor: theme.ink }]}>
-      <ThemedText style={[styles.logoTexto, { color: theme.paper }]}>H</ThemedText>
+    <View
+      style={[
+        styles.logo,
+        grande && styles.logoGrande,
+        { backgroundColor: nocturno ? theme.brand : theme.ink },
+      ]}>
+      <ThemedText
+        style={[styles.logoTexto, { color: nocturno ? theme.brandInk : theme.paper }]}>
+        H
+      </ThemedText>
     </View>
   );
 }
@@ -185,7 +217,10 @@ function Rail({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
 
 function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
   const { snapshot } = useMoodle();
+  const nowMs = useNow();
+  const nocturnoWeb = Platform.OS === 'web' && tema === 'nocturno';
   const cont = useContadores();
   const principales = rutas.filter((r) => r.name !== 'ajustes');
   const ajustes = rutas.find((r) => r.name === 'ajustes');
@@ -196,14 +231,24 @@ function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
     .map((p) => p[0])
     .join('')
     .toUpperCase();
+  const proxima = (snapshot?.entregas ?? [])
+    .filter((e) => e.estado !== 'entregada')
+    .sort((a, b) => (a.fecha || Infinity) - (b.fecha || Infinity))[0];
 
   const item = (r: Rutas[number]) => {
     const n = r.name === 'index' ? cont.index : r.name === 'novedades' ? cont.novedades : 0;
+    const titulo =
+      nocturnoWeb && r.name === 'calendario'
+        ? 'Horario'
+        : nocturnoWeb && r.name === 'ajustes'
+          ? 'Perfil'
+          : r.info.titulo;
     return (
       <Pressable
         key={r.key}
         onPress={() => ir(r.name, r.key, r.activa)}
         accessibilityRole="tab"
+        accessibilityLabel={titulo}
         accessibilityState={{ selected: r.activa }}
         style={(estado) => {
           // «hovered» solo existe en la web (ratón); en el móvil no viene
@@ -211,7 +256,7 @@ function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
           return [
             styles.lateralItem,
             r.activa && [styles.sombra1, { backgroundColor: theme.surface }],
-            !r.activa && hovered && { backgroundColor: theme.paper },
+              !r.activa && hovered && { backgroundColor: nocturnoWeb ? theme.surface : theme.paper },
           ];
         }}>
         <Feather name={r.info.icono} size={16} color={r.activa ? theme.ink : theme.ink2} />
@@ -219,7 +264,7 @@ function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
           type="small"
           style={[styles.flex, { fontWeight: r.activa ? 600 : 500, fontSize: 14 }]}
           themeColor={r.activa ? 'ink' : 'ink2'}>
-          {r.info.titulo}
+          {titulo}
         </ThemedText>
         {n ? (
           <ThemedText
@@ -233,9 +278,13 @@ function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
   };
 
   return (
-    <View style={[styles.lateral, { backgroundColor: theme.paper2, borderRightColor: theme.line }]}>
+    <View
+      style={[
+        styles.lateral,
+        { backgroundColor: nocturnoWeb ? theme.paper : theme.paper2, borderRightColor: theme.line },
+      ]}>
       <View style={styles.marca}>
-        <Logo grande />
+        <Logo grande nocturno={nocturnoWeb} />
         <View>
           <ThemedText type="heading" style={{ fontSize: 15 }}>
             Hermes
@@ -250,6 +299,50 @@ function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
         Preferencias
       </ThemedText>
       <View style={styles.lateralGrupo}>{ajustes ? item(ajustes) : null}</View>
+      {nocturnoWeb && snapshot ? (
+        <View style={styles.sidebarAcciones}>
+          <Pressable
+            disabled={!proxima}
+            accessibilityRole="button"
+            accessibilityLabel={proxima ? `Abrir ${proxima.nombre}` : 'No hay próximas entregas'}
+            onPress={() =>
+              proxima &&
+              router.push({ pathname: '/tarea/[key]', params: { key: proxima.key } })
+            }
+            style={[
+              styles.proxima,
+              { backgroundColor: theme.surface, borderColor: theme.line },
+            ]}>
+            <ThemedText type="label" themeColor="ink2">
+              PRÓXIMA ENTREGA
+            </ThemedText>
+            <ThemedText type="smallBold" numberOfLines={2} style={styles.proximaTitulo}>
+              {proxima?.nombre ?? 'No hay entregas pendientes'}
+            </ThemedText>
+            {proxima?.fecha ? (
+              <ThemedText type="meta" style={{ color: theme.stDraft }}>
+                {quedan(proxima.fecha, nowMs)}
+              </ThemedText>
+            ) : null}
+          </Pressable>
+          <Pressable
+            disabled={!proxima}
+            onPress={() =>
+              proxima &&
+              router.push({ pathname: '/ia/[key]', params: { key: proxima.key } })
+            }
+            style={[
+              styles.preguntar,
+              { backgroundColor: theme.brandWash, borderColor: theme.line2 },
+              !proxima && styles.deshabilitado,
+            ]}>
+            <Feather name="star" size={14} color={theme.brand} />
+            <ThemedText type="smallBold" style={{ color: theme.brand }}>
+              Preguntar a Hermes
+            </ThemedText>
+          </Pressable>
+        </View>
+      ) : null}
       <View style={styles.flex} />
       <View style={[styles.usuario, { borderTopColor: theme.line }]}>
         <View style={[styles.avatar, { backgroundColor: theme.brandWash }]}>
@@ -280,9 +373,19 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   inferior: { flexDirection: 'row', borderTopWidth: 1, paddingTop: 0 },
+  cuadernoInferior: { minHeight: 62, paddingTop: 5 },
   inferiorItem: { flex: 1, alignItems: 'center', gap: 3, paddingTop: 0, minHeight: 52 },
+  cuadernoInferiorItem: { minHeight: 56, gap: 2 },
+  cuadernoActiveIcon: {
+    width: 36,
+    height: 30,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   indicador: { width: 18, height: 2.5, borderRadius: 2, marginBottom: 6 },
   inferiorTexto: { fontSize: 10.5, lineHeight: 13 },
+  nocturnoInferiorTexto: { fontSize: 9.5 },
   globo: {
     position: 'absolute',
     top: -5,
@@ -323,6 +426,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   lateralGrupo: { gap: 2 },
+  sidebarAcciones: { gap: 8, marginTop: 'auto' },
+  proxima: { gap: 5, borderWidth: 1, borderRadius: Radii.superficie, padding: 12 },
+  proximaTitulo: { lineHeight: 19 },
+  preguntar: {
+    minHeight: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: Radii.control,
+    paddingHorizontal: 8,
+  },
+  deshabilitado: { opacity: 0.5 },
   lateralItem: {
     flexDirection: 'row',
     alignItems: 'center',

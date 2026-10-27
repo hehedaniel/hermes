@@ -3,9 +3,14 @@
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
 import { type DatosEntregas, type FilaEntrega, haceTexto } from './datos';
-import { FUENTE, type Hex, type Paleta, PALETAS } from './paleta';
+import { FUENTE, type Hex, type Paleta, PALETAS, type PaletasWidget } from './paleta';
 
-type Props = { datos: DatosEntregas; alto: number; enlace: (key: string) => string };
+type Props = {
+  datos: DatosEntregas;
+  alto: number;
+  enlace: (key: string) => string;
+  paletas?: PaletasWidget;
+};
 
 /**
  * Por debajo de este alto (dp) las filas son de una línea, para que quepan varias
@@ -194,9 +199,9 @@ function Tarjeta(props: Props & { p: Paleta }) {
 }
 
 /** Widget "Próximas entregas", en claro y oscuro (Android elige según el tema del móvil). */
-export function EntregasWidget(props: Props) {
+export function EntregasWidget({ paletas = PALETAS, ...props }: Props) {
   return {
-    light: <Tarjeta {...props} p={PALETAS.claro} />,
-    dark: <Tarjeta {...props} p={PALETAS.oscuro} />,
+    light: <Tarjeta {...props} p={paletas.claro} />,
+    dark: <Tarjeta {...props} p={paletas.oscuro} />,
   };
 }

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Radii } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Entrega, Estado } from '@/lib/data';
 import { DIAS_CORTOS, dayKey } from '@/lib/format';
 import { useAsignaturas } from '@/lib/store';
@@ -64,6 +64,7 @@ export function MonthCalendar({
   clasesDe,
 }: Props) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
   const colorEstado = useColorEstado();
   const info = useAsignaturas();
   const today = dayKey(new Date());
@@ -171,14 +172,22 @@ export function MonthCalendar({
                 accessibilityState={{ selected: isSel }}
                 style={[
                   styles.cell,
-                  isSel && { backgroundColor: theme.ink },
+                  isSel && { backgroundColor: tema === 'cuaderno' ? theme.brand : theme.ink },
                   !isSel && isToday && { borderWidth: 1.5, borderColor: theme.ink },
                 ]}>
                 <ThemedText
                   type="cifra"
                   style={[
                     styles.dayNum,
-                    { color: isSel ? theme.paper : inMonth ? theme.ink : theme.ink3 },
+                    {
+                      color: isSel
+                        ? tema === 'cuaderno'
+                          ? theme.brandInk
+                          : theme.paper
+                        : inMonth
+                          ? theme.ink
+                          : theme.ink3,
+                    },
                     !inMonth && { opacity: 0.6 },
                     (isSel || isToday) && { fontWeight: 700 },
                   ]}>
@@ -190,7 +199,7 @@ export function MonthCalendar({
                       key={e.key}
                       style={[
                         styles.dot,
-                        { backgroundColor: isSel ? theme.paper : colorEstado(e.estado) },
+                        { backgroundColor: isSel ? (tema === 'cuaderno' ? theme.brandInk : theme.paper) : colorEstado(e.estado) },
                       ]}
                     />
                   ))}

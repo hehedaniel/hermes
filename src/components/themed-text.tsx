@@ -1,7 +1,7 @@
 import { StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
 
 import { familia, Fonts, type ThemeColor } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 
 /**
  * Escala tipográfica de Andén (Space Grotesk):
@@ -28,12 +28,15 @@ export type ThemedTextProps = TextProps & {
 
 export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
   const plano = StyleSheet.flatten([styles[type], style]) as TextStyle;
   // Cada peso de Space Grotesk es una fuente aparte: se elige la familia y no se sintetiza
   // (si el estilo trae su propia fuente, p. ej. la monoespaciada, se respeta)
   const tipo =
     type === 'code'
       ? { fontFamily: Fonts.mono }
+      : tema === 'cuaderno'
+        ? {}
       : plano.fontFamily
         ? {}
         : { fontFamily: familia(plano.fontWeight), fontWeight: 'normal' as const };

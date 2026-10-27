@@ -4,7 +4,7 @@
 
 # Hermes
 
-**El mensajero de tu FP a distancia.**
+**El mensajero de tu FP.**
 Entregas, apuntes y horario del Moodle de la Junta de Andalucía en el bolsillo, sin entrar asignatura por asignatura.
 
 ![Expo SDK 57](https://img.shields.io/badge/Expo-SDK%2057-000020?logo=expo&logoColor=white)
@@ -21,7 +21,7 @@ Entregas, apuntes y horario del Moodle de la Junta de Andalucía en el bolsillo,
 
 ## ¿Por qué?
 
-En la FP a distancia todo pasa por el aula virtual: cada módulo tiene sus unidades, sus PDFs, sus tareas con fecha y sus lecciones SCORM. Saber qué tienes que entregar implica **entrar en cada asignatura, una por una**, descargar los archivos a mano y apuntar las fechas en otro sitio.
+En la FP todo pasa por el aula virtual: cada módulo tiene sus unidades, sus PDFs, sus tareas con fecha y sus lecciones SCORM. Saber qué tienes que entregar implica **entrar en cada asignatura, una por una**, descargar los archivos a mano y apuntar las fechas en otro sitio.
 
 **Hermes hace ese trabajo por ti.** Habla directamente con la API de Moodle (la misma que usa la app oficial), junta todo en un solo sitio y lo lleva donde ya miras cada día: tu móvil, Google Tasks y Google Calendar.
 
@@ -74,7 +74,7 @@ Un script de Python que **descarga todo el material a tu ordenador**, ordenado p
 
 ```mermaid
 flowchart LR
-    M[("🎓 Moodle<br/>Educación a Distancia")]
+    M[("🎓 Moodle<br/>")]
     A["📱 App Hermes"]
     G["⚙️ Google Apps Script<br/><sub>cada hora</sub>"]
     T["✅ Google Tasks<br/><sub>una lista por módulo</sub>"]
@@ -95,7 +95,7 @@ flowchart LR
 
 ### 1. Instalar la app
 
-**Android.** Descarga el APK de la [última versión](https://github.com/hehedaniel/hermes/releases/latest) e instálalo; Android te pedirá permitir "orígenes desconocidos". Abre **Hermes → Ajustes → Iniciar sesión en Moodle** y entra con tu usuario de la Junta. Si el móvil pregunta con qué app abrir el enlace, elige **Hermes**.
+**Android.** Descarga el APK de la [última versión](https://github.com/hehedaniel/hermes/releases/latest) e instálalo; Android te pedirá permitir "orígenes desconocidos". Hermes comprobará al abrirse si hay una release más reciente y te ofrecerá descargarla e iniciar el instalador; Android te pedirá confirmar la instalación. Abre **Hermes → Ajustes → Iniciar sesión en Moodle** y entra con tu usuario de la Junta. Si el móvil pregunta con qué app abrir el enlace, elige **Hermes**.
 
 **iPhone.** Abre **[hehedaniel.github.io/hermes](https://hehedaniel.github.io/hermes)** en Safari y pulsa **Compartir → Añadir a pantalla de inicio**: queda un icono como el de cualquier app. La primera vez hace falta un ordenador para sacar el token; los pasos salen en **Ajustes → ¿Cómo consigo el token?**. En la versión web los archivos se abren en el navegador en lugar de guardarse en el móvil; todo lo demás es igual.
 

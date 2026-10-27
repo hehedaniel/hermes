@@ -5,13 +5,16 @@ import {
   SpaceGrotesk_700Bold,
   useFonts,
 } from '@expo-google-fonts/space-grotesk';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo } from 'react';
-import { useColorScheme } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Colors, FAMILIA } from '@/constants/theme';
+import { FAMILIA } from '@/constants/theme';
+import { useAppUpdateCheck } from '@/hooks/use-app-update-check';
 import { useAbrirAviso } from '@/hooks/use-abrir-aviso';
+import { ThemePreferenceProvider, useTheme, useThemePreference } from '@/hooks/use-theme';
 import { DownloadsProvider } from '@/lib/downloads';
 import { GoogleCalProvider } from '@/lib/google-cal';
 import { ExtractorPdf } from '@/lib/ia/pdf-texto';
@@ -26,19 +29,33 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const oscuro = colorScheme === 'dark';
-  const c = Colors[oscuro ? 'dark' : 'light'];
+  return (
+    <ThemePreferenceProvider>
+      <RootLayoutContent />
+    </ThemePreferenceProvider>
+  );
+}
+
+function RootLayoutContent() {
+  const { oscuro, listo, tema } = useThemePreference();
+  const c = useTheme();
+  const comprobarActualizaciones =
+    Platform.OS === 'android' &&
+    Constants.executionEnvironment !== ExecutionEnvironment.StoreClient &&
+    Constants.expoConfig?.android?.package === 'es.danihermoso.campus';
   const [fuentes] = useFonts({
     SpaceGrotesk_400Regular,
     SpaceGrotesk_500Medium,
     SpaceGrotesk_600SemiBold,
     SpaceGrotesk_700Bold,
   });
+  const { downloadProgress, cancelarDescarga } = useAppUpdateCheck(
+    comprobarActualizaciones && fuentes && listo,
+  );
   useAbrirAviso();
 
   // Colores de la navegación con los del tema (sin destellos blancos entre pantallas)
-  const tema = useMemo(() => {
+  const temaNavegacion = useMemo(() => {
     const base = oscuro ? DarkTheme : DefaultTheme;
     return {
       ...base,
@@ -53,22 +70,55 @@ export default function RootLayout() {
     };
   }, [oscuro, c]);
 
-  if (!fuentes) return null;
+  if (!fuentes || !listo) return null;
 
   return (
     <MoodleProvider>
       <DownloadsProvider>
         <GoogleCalProvider>
-          <ThemeProvider value={tema}>
-            <StatusBar style="auto" />
+          <ThemeProvider value={temaNavegacion}>
+            <StatusBar style={oscuro ? 'light' : 'dark'} />
             <ExtractorPdf />
+            <Modal
+              transparent
+              animationType="fade"
+              visible={downloadProgress !== null}
+              onRequestClose={cancelarDescarga}>
+              <View style={updateStyles.overlay}>
+                <View style={[updateStyles.card, { backgroundColor: c.paper, borderColor: c.line }]}>
+                  <Text style={[updateStyles.title, { color: c.ink }]}>Descargando actualización</Text>
+                  <Text style={[updateStyles.caption, { color: c.ink2 }]}>
+                    {downloadProgress === null
+                      ? 'Preparando descarga…'
+                      : `${Math.round(downloadProgress * 100)} %`}
+                  </Text>
+                  <View style={[updateStyles.track, { backgroundColor: c.line }]}>
+                    <View
+                      style={[
+                        updateStyles.progress,
+                        {
+                          backgroundColor: c.brand,
+                          width: `${Math.round((downloadProgress ?? 0) * 100)}%`,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Pressable onPress={cancelarDescarga} accessibilityRole="button">
+                    <Text style={[updateStyles.cancel, { color: c.ink2 }]}>Cancelar</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </Modal>
             <Stack
               screenOptions={{
                 headerBackButtonDisplayMode: 'minimal',
                 headerShadowVisible: false,
                 headerStyle: { backgroundColor: c.paper },
                 headerTintColor: c.ink,
-                headerTitleStyle: { fontFamily: FAMILIA[600], fontSize: 15 },
+                headerTitleStyle: {
+                  fontFamily: tema === 'cuaderno' ? undefined : FAMILIA[600],
+                  fontSize: 15,
+                },
                 contentStyle: { backgroundColor: c.paper },
               }}>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -85,3 +135,23 @@ export default function RootLayout() {
     </MoodleProvider>
   );
 }
+
+const updateStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 28,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
+  card: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 22,
+    gap: 14,
+  },
+  title: { fontSize: 17, fontWeight: '700' },
+  caption: { fontSize: 14 },
+  track: { height: 7, overflow: 'hidden', borderRadius: 4 },
+  progress: { height: '100%', borderRadius: 4 },
+  cancel: { alignSelf: 'flex-end', fontSize: 14, fontWeight: '600', paddingTop: 4 },
+});

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -18,9 +19,11 @@ import { EntregaCard } from '@/components/entrega-card';
 import { EventoRow } from '@/components/evento-row';
 import { ClasesDelDia, HorarioView, lunesDe, numClases } from '@/components/horario-view';
 import { MonthCalendar, useColorEstado } from '@/components/month-calendar';
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import {
+  ANCHO_ESCRITORIO,
   ANCHO_TABLETA,
   anchoNavegacion,
   MARGEN,
@@ -29,7 +32,7 @@ import {
   Spacing,
 } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Entrega, Estado } from '@/lib/data';
 import { dayKey, fechaTitulo, MESES } from '@/lib/format';
 import { type EventoGoogle, eventosPorDia, useGoogleCal } from '@/lib/google-cal';
@@ -62,10 +65,16 @@ export default function CalendarioScreen() {
   const google = useGoogleCal();
   const { cargarRango } = google;
   const theme = useTheme();
+  const { tema } = useThemePreference();
   const nowMs = useNow();
   const { width } = useWindowDimensions();
+  const nocturnoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
+  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
+  const cuadernoMovil = width < ANCHO_TABLETA && tema === 'cuaderno';
   const pager = useRef<ScrollView>(null);
-  const [vista, setVista] = useState<Vista>('mes');
+  const [vistaElegida, setVistaElegida] = useState<Vista | null>(null);
+  const vista = vistaElegida ?? (nocturnoWeb || nocturnoMovil ? 'horario' : 'mes');
+  const setVista = (siguiente: Vista) => setVistaElegida(siguiente);
 
   const [month, setMonth] = useState(() => new Date());
   const [selected, setSelected] = useState(() => dayKey(new Date()));
@@ -234,11 +243,118 @@ export default function CalendarioScreen() {
     (a, b) => Number(b.todoElDia) - Number(a.todoElDia) || a.inicio - b.inicio,
   );
 
+  if (cuadernoMovil) {
+    const clasesSeleccionadas = numClases(deClave(selected));
+    return (
+      <Screen
+        title="Calendario"
+        derecha=" "
+        refreshable
+        refreshing={syncing || google.cargando}
+        onRefresh={() => {
+          refresh();
+          cargarRango(desde, hasta);
+        }}
+        maxWidth={480}
+        contentStyle={styles.cuadernoCalendario}>
+        <ThemedText type="small" themeColor="ink2">
+          Tus próximas fechas y clases.
+        </ThemedText>
+        <View style={styles.cuadernoMonthHead}>
+          <ThemedText type="subtitle">{mesTexto}</ThemedText>
+          <View style={styles.flechas}>
+            <Flecha icono="chevron-left" etiqueta="Mes anterior" onPress={() => moverMes(-1)} />
+            <Flecha icono="chevron-right" etiqueta="Mes siguiente" onPress={() => moverMes(1)} />
+          </View>
+        </View>
+        <View style={[styles.cuadernoMonthCard, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+          <MonthCalendar
+            month={month}
+            selected={selected}
+            entregasPorDia={porDia}
+            googlePorDia={googlePorDia}
+            onSelect={elegir}
+          />
+        </View>
+        {leyenda}
+        <View style={styles.cuadernoAgenda}>
+          <View style={styles.cuadernoAgendaHead}>
+            <View style={styles.flex}>
+              <ThemedText type="label" themeColor="ink2">
+                {fechaTitulo(deClave(selected))} · Horario
+              </ThemedText>
+              <ThemedText type="meta" themeColor="ink2">
+                {clasesSeleccionadas
+                  ? plural(clasesSeleccionadas, 'clase', 'clases')
+                  : 'Sin clases programadas'}
+              </ThemedText>
+            </View>
+            <Pressable onPress={irAHoy} hitSlop={8}>
+              <ThemedText type="meta" style={{ color: theme.brand, fontWeight: 700 }}>
+                Hoy
+              </ThemedText>
+            </Pressable>
+          </View>
+          <ClasesDelDia dia={deClave(selected)} nowMs={nowMs} />
+        </View>
+        <View style={[styles.cuadernoCalendarCard, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+          <ThemedText type="smallBold">Entregas de este día</ThemedText>
+          {delDia.length ? (
+            delDia.map((entrega) => (
+              <EntregaCard key={entrega.key} entrega={entrega} nowMs={nowMs} />
+            ))
+          ) : (
+            <ThemedText type="meta" themeColor="ink2">
+              No hay entregas previstas para este día.
+            </ThemedText>
+          )}
+        </View>
+        {google.url ? (
+          <View style={[styles.cuadernoCalendarCard, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+            <ThemedText type="smallBold">Google Calendar</ThemedText>
+            {google.error ? (
+              <ThemedText type="meta" style={{ color: theme.urgent }}>
+                {google.error}
+              </ThemedText>
+            ) : agenda.length ? (
+              agenda.map((evento) => <EventoRow key={evento.id} evento={evento} />)
+            ) : (
+              <ThemedText type="meta" themeColor="ink2">
+                {google.cargando ? 'Cargando…' : 'Nada en tu calendario este día.'}
+              </ThemedText>
+            )}
+          </View>
+        ) : null}
+      </Screen>
+    );
+  }
+
   return (
     <ThemedView style={styles.flex}>
       <SafeAreaView style={styles.flex} edges={['top']}>
-        <View style={[styles.header, { width: pageWidth }]}>
-          {vista === 'mes' ? (
+        <View
+          style={[
+            styles.header,
+            nocturnoMovil && styles.nocturnoMobileHeader,
+            { width: pageWidth },
+          ]}>
+          {nocturnoMovil ? (
+            <View style={styles.nocturnoMobileHeading}>
+              <ThemedText type="meta" themeColor="ink2">
+                {vista === 'horario' ? fechaTitulo(diaHorario) : mesTexto}
+              </ThemedText>
+              <ThemedText type="display" style={styles.nocturnoMobileTitle}>
+                {vista === 'horario' ? 'Horario' : 'Calendario'}
+              </ThemedText>
+              <ThemedText type="small" themeColor="ink2">
+                {vista === 'horario'
+                  ? clasesHorario
+                    ? plural(clasesHorario, 'clase', 'clases')
+                    : 'Sin clases programadas'
+                  : plural(entregasMes, 'entrega', 'entregas')}
+              </ThemedText>
+            </View>
+          ) : vista === 'mes' ? (
             <Cabecera
               etiqueta={mesTexto}
               titulo="Calendario"
@@ -251,7 +367,7 @@ export default function CalendarioScreen() {
               derecha={clasesHorario ? plural(clasesHorario, 'clase', 'clases') : 'sin clase'}
             />
           )}
-          <View style={styles.controles}>
+          <View style={[styles.controles, nocturnoMovil && styles.nocturnoMobileControls]}>
             {conmutador}
             {vista === 'mes' ? flechasMes : null}
           </View>
@@ -433,7 +549,11 @@ const styles = StyleSheet.create({
   fila: { flexDirection: 'row' },
   pager: { alignItems: 'stretch' },
   header: { alignSelf: 'center', paddingHorizontal: MARGEN, gap: 4, paddingBottom: Spacing.two },
+  nocturnoMobileHeader: { paddingTop: 10, gap: 12, paddingBottom: 8 },
+  nocturnoMobileHeading: { gap: 2 },
+  nocturnoMobileTitle: { fontSize: 28, lineHeight: 34 },
   controles: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  nocturnoMobileControls: { justifyContent: 'flex-start', gap: 10 },
   flechas: { flexDirection: 'row', gap: 6 },
   flecha: {
     width: 32,
@@ -473,4 +593,25 @@ const styles = StyleSheet.create({
   panelContenido: { padding: 22, paddingTop: 32 },
   panelDia: { gap: Spacing.four },
   panelTitulo: { fontSize: 24, lineHeight: 30, letterSpacing: -0.6 },
+  cuadernoCalendario: { gap: 12, paddingTop: 16, paddingBottom: 96 },
+  cuadernoMonthHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  cuadernoMonthCard: { borderWidth: 1, borderRadius: Radii.superficie, padding: 8 },
+  cuadernoAgenda: { gap: 4, marginTop: 6 },
+  cuadernoAgendaHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  cuadernoCalendarCard: {
+    borderWidth: 1,
+    borderRadius: Radii.superficie,
+    padding: 12,
+    gap: 6,
+  },
 });

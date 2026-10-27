@@ -1,13 +1,18 @@
 import { registerWidgetTaskHandler, type WidgetTaskHandler } from 'react-native-android-widget';
 
-import { dibujar, leerSnapshot } from './render';
+import { dibujar, leerPaletasWidget, leerSnapshot } from './render';
 
 /** Android pide redibujar el widget al añadirlo, al cambiarlo de tamaño y cada 30 min. */
 const handler: WidgetTaskHandler = async ({ widgetInfo, widgetAction, renderWidget }) => {
   if (widgetAction === 'WIDGET_DELETED') return;
-  const snapshot = await leerSnapshot();
+  const [snapshot, paletas] = await Promise.all([leerSnapshot(), leerPaletasWidget()]);
   renderWidget(
-    dibujar(widgetInfo.widgetName, snapshot, { ancho: widgetInfo.width, alto: widgetInfo.height }),
+    dibujar(
+      widgetInfo.widgetName,
+      snapshot,
+      { ancho: widgetInfo.width, alto: widgetInfo.height },
+      paletas,
+    ),
   );
 };
 

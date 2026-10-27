@@ -3,9 +3,9 @@
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
 import type { DatosClases } from './datos';
-import { FUENTE, type Hex, type Paleta, PALETAS } from './paleta';
+import { FUENTE, type Hex, type Paleta, PALETAS, type PaletasWidget } from './paleta';
 
-type Props = { datos: DatosClases; enlace: string; alto: number };
+type Props = { datos: DatosClases; enlace: string; alto: number; paletas?: PaletasWidget };
 
 /**
  * Las clases que caben según el alto del widget (en dp). Si no caben todas, se quitan
@@ -164,9 +164,9 @@ function Tarjeta(props: Props & { p: Paleta }) {
 }
 
 /** Widget "Clases de hoy", en claro y oscuro. Al tocarlo abre el calendario. */
-export function ClasesWidget(props: Props) {
+export function ClasesWidget({ paletas = PALETAS, ...props }: Props) {
   return {
-    light: <Tarjeta {...props} p={PALETAS.claro} />,
-    dark: <Tarjeta {...props} p={PALETAS.oscuro} />,
+    light: <Tarjeta {...props} p={paletas.claro} />,
+    dark: <Tarjeta {...props} p={paletas.oscuro} />,
   };
 }

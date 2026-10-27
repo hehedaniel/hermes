@@ -2,15 +2,15 @@ import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { type ReactNode, useCallback, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { Caja, EstadoChip, Seccion } from '@/components/anden';
 import { ArchivoRow } from '@/components/archivo-row';
 import { Button } from '@/components/button';
 import { esUrgente } from '@/components/entrega-card';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { ANCHO_ESCRITORIO, ANCHO_TABLETA, Radii, Spacing } from '@/constants/theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Archivo, Entrega } from '@/lib/data';
 import { formatoTamano } from '@/lib/downloads';
 import { diaMes, diaMesHora, hora, quedan } from '@/lib/format';
@@ -54,6 +54,13 @@ export function TareaDetalle({
   umbralDosColumnas?: number;
 }) {
   const theme = useTheme();
+  const { tema } = useThemePreference();
+  const { width: windowWidth } = useWindowDimensions();
+  const nocturnoWeb =
+    Platform.OS === 'web' &&
+    windowWidth >= ANCHO_ESCRITORIO &&
+    (tema === 'nocturno' || tema === 'cuaderno');
+  const cuadernoMovil = tema === 'cuaderno' && windowWidth < ANCHO_TABLETA;
   const info = useAsignaturas()(e.cursoId, e.curso);
   const dos = ancho >= umbralDosColumnas;
   const [chat, setChat] = useState<{ key: string; hay: boolean }>();
@@ -113,21 +120,52 @@ export function TareaDetalle({
     </View>
   );
 
-  const tiraFechas = fechas.length ? (
-    <View style={[styles.tira, { borderColor: theme.line }]}>
+  const tiraFechas = fechas.length ? cuadernoMovil ? (
+    <View style={styles.cuadernoFechas}>
+      {fechas.map((f) => (
+        <View
+          key={f.label}
+          style={[styles.cuadernoFecha, { backgroundColor: theme.paper2 }]}>
+          <ThemedText type="meta" themeColor="ink2">
+            {f.label}
+          </ThemedText>
+          <ThemedText
+            type="meta"
+            numberOfLines={1}
+            style={[styles.cuadernoFechaDato, f.alerta && { color: theme.urgent }]}>
+            {diaMesHora(f.ts)}
+          </ThemedText>
+        </View>
+      ))}
+    </View>
+  ) : (
+    <View
+      style={[
+        styles.tira,
+        !dos && styles.tiraUnaLinea,
+        nocturnoWeb && styles.nocturnoTira,
+        { borderColor: theme.line },
+      ]}>
       {fechas.map((f, i) => (
         <View
           key={f.label}
-          style={[styles.tiraCol, i > 0 && { borderLeftWidth: 1, borderLeftColor: theme.line }]}>
+          style={[
+            styles.tiraCol,
+            !dos && styles.tiraFila,
+            nocturnoWeb && styles.nocturnoTiraCol,
+            !dos && i < fechas.length - 1 && { borderBottomWidth: 1, borderBottomColor: theme.line },
+            dos && i > 0 && { borderLeftWidth: 1, borderLeftColor: theme.line },
+          ]}>
           <ThemedText
             type="label"
             style={[styles.tiraLabel, { color: f.alerta ? theme.urgent : theme.ink3 }]}>
             {f.label}
           </ThemedText>
-          <ThemedText type="cifra" style={f.alerta && { color: theme.urgent }}>
-            {diaMes(f.ts)}
-            {dos ? ' · ' : '\n'}
-            {hora(new Date(f.ts * 1000))}
+          <ThemedText
+            type="cifra"
+            numberOfLines={1}
+            style={[styles.tiraDato, f.alerta && { color: theme.urgent }]}>
+            {diaMes(f.ts)} · {hora(new Date(f.ts * 1000))}
           </ThemedText>
         </View>
       ))}
@@ -304,6 +342,48 @@ export function TareaDetalle({
   );
 
   if (!dos) {
+    if (cuadernoMovil) {
+      return (
+        <View style={styles.cuadernoDetalle}>
+          {cabecera}
+          {tiraFechas}
+          {acciones}
+          {correccion ? <View style={[styles.cuadernoBloque, { backgroundColor: theme.surface, borderColor: theme.line }]}>{correccion}</View> : null}
+          {e.envio ? (
+            <View style={[styles.cuadernoBloque, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+              {tuEntrega}
+            </View>
+          ) : (
+            <View style={[styles.cuadernoBloque, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+              <Seccion titulo="Tu entrega" sinRegla />
+              <ThemedText type="meta" themeColor="ink2">
+                Todavía no has enviado tu trabajo.
+              </ThemedText>
+            </View>
+          )}
+          {archivos ? (
+            <View style={[styles.cuadernoBloque, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+              {archivos}
+            </View>
+          ) : null}
+          {enunciado ? (
+            <View style={[styles.cuadernoBloque, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+              {enunciado}
+            </View>
+          ) : null}
+          {abrirMoodle ? (
+            <View style={styles.bloque}>
+              <Button
+                title="Abrir en Moodle"
+                variant="secondary"
+                icono="arrow-up-right"
+                onPress={abrirMoodle}
+              />
+            </View>
+          ) : null}
+        </View>
+      );
+    }
     return (
       <View style={styles.columna}>
         {cabecera}
@@ -329,7 +409,16 @@ export function TareaDetalle({
 
   return (
     <View style={styles.dos}>
-      <View style={[styles.columna, styles.flex, styles.dosPrincipal]}>
+      <View
+        style={[
+          styles.columna,
+          styles.flex,
+          styles.dosPrincipal,
+          nocturnoWeb && [
+            styles.nocturnoMainCard,
+            { backgroundColor: theme.surface, borderColor: theme.line },
+          ],
+        ]}>
         {cabecera}
         {tiraFechas}
         {acciones}
@@ -367,7 +456,7 @@ export function TareaDetalle({
           <Feather name="more-vertical" size={18} color="#8A8F98" />
         </View>
       ) : null}
-      <Lateral ancho={anchoLateral}>
+      <Lateral ancho={anchoLateral} nocturnoWeb={nocturnoWeb}>
         {e.correccion ? (
           <>
             {correccion}
@@ -421,12 +510,21 @@ export function PanelTarea({
   );
 }
 
-function Lateral({ children, ancho }: { children: ReactNode; ancho?: number }) {
+function Lateral({
+  children,
+  ancho,
+  nocturnoWeb,
+}: {
+  children: ReactNode;
+  ancho?: number;
+  nocturnoWeb: boolean;
+}) {
   const theme = useTheme();
   return (
     <View
       style={[
         styles.lateral,
+        nocturnoWeb && styles.nocturnoLateral,
         ancho ? { width: ancho } : null,
         { borderLeftColor: theme.line, backgroundColor: theme.surface2 },
       ]}>
@@ -483,8 +581,32 @@ const styles = StyleSheet.create({
   titulo: { fontSize: 24, lineHeight: 29, fontWeight: 700, letterSpacing: -0.6 },
   tituloGrande: { fontSize: 26, lineHeight: 31 },
   tira: { flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1 },
+  tiraUnaLinea: { flexDirection: 'column' },
+  nocturnoTira: { borderWidth: 1, borderRadius: Radii.control, overflow: 'hidden' },
   tiraCol: { flex: 1, paddingVertical: 10, paddingHorizontal: 10, gap: 4 },
+  tiraFila: {
+    flex: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  nocturnoTiraCol: { paddingVertical: 12, paddingHorizontal: 12 },
+  nocturnoMainCard: {
+    borderWidth: 1,
+    borderRadius: Radii.superficie,
+    padding: 22,
+    margin: 20,
+  },
+  nocturnoLateral: {
+    borderLeftWidth: 0,
+    marginTop: 20,
+    marginBottom: 20,
+    borderRadius: Radii.superficie,
+  },
   tiraLabel: { fontSize: 9, letterSpacing: 1 },
+  tiraDato: { flexShrink: 0 },
   bloque: { gap: 8 },
   botones: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
   boton: { flexGrow: 1, flexBasis: 170 },
@@ -517,4 +639,14 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   notaPie: { gap: 1 },
+  cuadernoDetalle: { gap: 12 },
+  cuadernoFechas: { flexDirection: 'row', gap: 6 },
+  cuadernoFecha: { flex: 1, minWidth: 0, padding: 8, borderRadius: Radii.control },
+  cuadernoFechaDato: { fontWeight: 700, marginTop: 2 },
+  cuadernoBloque: {
+    borderWidth: 1,
+    borderRadius: Radii.superficie,
+    padding: 12,
+    overflow: 'hidden',
+  },
 });

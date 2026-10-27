@@ -1,20 +1,22 @@
+import Feather from '@expo/vector-icons/Feather';
 import * as Clipboard from 'expo-clipboard';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { Campo, Etiqueta, FilaAjuste } from '@/components/ajustes-ui';
+import { Campo, Etiqueta, FilaAjuste, Interruptor } from '@/components/ajustes-ui';
 import { Caja, Marca, Seccion } from '@/components/anden';
 import { AvisosSettings } from '@/components/avisos-settings';
 import { Button } from '@/components/button';
 import { GoogleCalSettings } from '@/components/google-cal-settings';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { ANCHO_ESCRITORIO, ANCHO_TABLETA, Spacing } from '@/constants/theme';
+import { TEMAS, type TemaId } from '@/constants/colors';
 import { VERSION } from '@/constants/version';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import { confirmar } from '@/lib/dialogo';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
 import { haceCuanto } from '@/lib/format';
@@ -23,6 +25,7 @@ import { PROVEEDORES } from '@/lib/ia/proveedores';
 import { launchUrl, MoodleError, normalizeUrl } from '@/lib/moodle';
 import { useMoodle } from '@/lib/store';
 import { onTokenPendiente, tomarTokenPendiente } from '@/lib/token-pendiente';
+import { actualizarWidgets } from '@/widgets/actualizar';
 
 // El login automático necesita recibir enlaces moodlemobile://: solo funciona en el APK (no en Expo Go ni en web)
 const loginMovil =
@@ -33,6 +36,14 @@ const CAMBIOS_URL = 'https://github.com/hehedaniel/hermes/blob/main/CHANGELOG.md
 export default function AjustesScreen() {
   const { client, snapshot, moodleUrl, connect, disconnect, refresh, syncing } = useMoodle();
   const theme = useTheme();
+  const { tema, cambiarTema, modoColor, cambiarModoColor, oscuro, listo } = useThemePreference();
+  const { width } = useWindowDimensions();
+  useEffect(() => {
+    if (snapshot) actualizarWidgets(snapshot);
+  }, [snapshot, tema, modoColor]);
+  const nocturnoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
+  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
+  const nocturnoDesign = nocturnoWeb || nocturnoMovil;
   const { guardaArchivos, resumen, borrarTodo } = useDownloads();
   const [url, setUrl] = useState(moodleUrl);
   const [token, setToken] = useState('');
@@ -117,10 +128,94 @@ export default function AjustesScreen() {
   const sitio = snapshot?.site;
   return (
     <Screen
-      title="Ajustes"
-      etiqueta="Cuenta y app"
+      title={nocturnoDesign ? 'Perfil' : 'Ajustes'}
+      etiqueta={nocturnoDesign ? 'Tu espacio en Hermes' : 'Cuenta y app'}
       derecha={VERSION}
       refreshable={false}>
+      {nocturnoDesign && snapshot ? (
+        <View
+          style={[
+            styles.perfilNocturno,
+            { backgroundColor: theme.surface, borderColor: theme.line },
+          ]}>
+          <View style={[styles.avatarNocturno, { backgroundColor: theme.brandWash }]}>
+            <ThemedText type="heading" style={{ color: theme.brand }}>
+              {(sitio?.fullname ?? 'H').trim().slice(0, 1).toUpperCase()}
+            </ThemedText>
+          </View>
+          <View style={styles.flex}>
+            <ThemedText type="smallBold" style={styles.nombrePerfilNocturno}>
+              {sitio?.fullname ?? 'Cuenta de Moodle'}
+            </ThemedText>
+            <ThemedText type="meta" themeColor="ink2">
+              {sitio?.sitename ?? 'Moodle'}
+            </ThemedText>
+            <ThemedText type="meta" themeColor="ink3">
+              {snapshot.courses.length} asignaturas · Sincronizado {haceCuanto(snapshot.syncedAt)}
+            </ThemedText>
+          </View>
+          <Marca texto="Activa" color={theme.stDone} fondo={theme.stDoneW} />
+        </View>
+      ) : null}
+      <View>
+        <Seccion titulo="Apariencia" sinRegla />
+        {(Object.keys(TEMAS) as TemaId[]).map((id) => {
+          const paleta = TEMAS[id][oscuro ? 'oscuro' : 'claro'];
+          const seleccionado = tema === id;
+          return (
+            <Pressable
+              key={id}
+              onPress={() => cambiarTema(id)}
+              disabled={!listo}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: seleccionado }}
+              style={[
+                styles.tema,
+                {
+                  backgroundColor: paleta.surface,
+                  borderColor: seleccionado ? theme.brand : theme.line,
+                },
+              ]}>
+              <View style={[styles.muestraTema, { backgroundColor: paleta.paper }]}>
+                <View style={[styles.muestraBarra, { backgroundColor: paleta.brand }]} />
+                <View style={[styles.muestraFila, { backgroundColor: paleta.surface2 }]} />
+                <View style={[styles.muestraFila, { backgroundColor: paleta.surface2 }]} />
+              </View>
+              <View style={styles.flex}>
+                <ThemedText type="smallBold">{TEMAS[id].nombre}</ThemedText>
+                <ThemedText type="meta" themeColor="ink2">
+                  {id === 'nocturno'
+                    ? 'Dorado y violeta'
+                    : id === 'cuaderno'
+                      ? 'Verde petróleo · claro u oscuro'
+                      : 'Cálido y minimalista'}
+                </ThemedText>
+              </View>
+              {seleccionado ? <Feather name="check-circle" size={18} color={theme.brand} /> : null}
+            </Pressable>
+          );
+        })}
+        <FilaAjuste
+          icono={oscuro ? 'moon' : 'sun'}
+          titulo="Modo oscuro"
+          texto={
+            modoColor === 'sistema'
+              ? 'Siguiendo el ajuste de apariencia del dispositivo'
+              : oscuro
+                ? 'Activado'
+                : 'Desactivado'
+          }
+          derecha={
+            <Interruptor
+              value={oscuro}
+              onValueChange={(activo) => cambiarModoColor(activo ? 'oscuro' : 'claro')}
+              accessibilityLabel="Modo oscuro"
+            />
+          }
+          sinRegla
+        />
+      </View>
+
       {client && snapshot ? (
         <View>
           <FilaAjuste
@@ -348,10 +443,45 @@ function paginaActual() {
 }
 
 const styles = StyleSheet.create({
+  tema: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 8,
+  },
+  muestraTema: {
+    width: 52,
+    height: 40,
+    borderRadius: 6,
+    padding: 5,
+    gap: 3,
+  },
+  muestraBarra: { height: 5, width: 22, borderRadius: 3 },
+  muestraFila: { height: 6, borderRadius: 3 },
   flex: { flex: 1 },
   row: { flexDirection: 'row', gap: Spacing.two },
   conexion: { gap: 8, paddingTop: 4 },
   token: { minHeight: 70 },
   msg: { marginTop: 8 },
   version: { alignItems: 'center', marginTop: Spacing.three, paddingVertical: 8 },
+  perfilNocturno: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 8,
+  },
+  avatarNocturno: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nombrePerfilNocturno: { fontSize: 16 },
 });

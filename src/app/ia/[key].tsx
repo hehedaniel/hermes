@@ -6,6 +6,7 @@ import { useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,9 +25,9 @@ import { TextoMarkdown } from '@/components/texto-markdown';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Vacio } from '@/components/vacio';
-import { MARGEN, Radii, Spacing } from '@/constants/theme';
+import { ANCHO_ESCRITORIO, ANCHO_TABLETA, MARGEN, Radii, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Archivo, Entrega } from '@/lib/data';
 import { avisar, confirmar } from '@/lib/dialogo';
 import { formatoTamano } from '@/lib/downloads';
@@ -75,12 +76,13 @@ export default function ChatIAScreen() {
 function Chat({ e }: { e: Entrega }) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
+  const { tema } = useThemePreference();
   const info = useAsignaturas()(e.cursoId, e.curso);
   const nowMs = useNow();
   const chat = useChatIA(e);
   const { entregar, entregando, puede } = useEntregar(e);
   const headerHeight = useHeaderHeight();
-  const { bottom } = useSafeAreaInsets();
+  const { bottom, top } = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const [texto, setTexto] = useState('');
   const [elegidos, setSeleccion] = useState<string[] | null>(null);
@@ -142,6 +144,14 @@ function Chat({ e }: { e: Entrega }) {
   const ultimo = chat.mensajes.at(-1);
   const modelo = chat.ajustes?.modelo ?? '';
   const conPanel = width >= ANCHO_PANEL;
+  const nocturnoWeb =
+    Platform.OS === 'web' &&
+    width >= ANCHO_ESCRITORIO &&
+    conPanel &&
+    (tema === 'nocturno' || tema === 'cuaderno');
+  const nocturnoMovil =
+    width < ANCHO_TABLETA && (tema === 'nocturno' || tema === 'cuaderno');
+  const nocturnoDesign = nocturnoWeb || nocturnoMovil;
   const vacio = !chat.mensajes.length && chat.cargado;
   const puedeEnviar = !sinClave && (!!texto.trim() || !!seleccion.length);
 
@@ -160,6 +170,7 @@ function Chat({ e }: { e: Entrega }) {
     <ThemedView style={styles.flex}>
       <Stack.Screen
         options={{
+          headerShown: !nocturnoDesign,
           headerTitle: cabecera,
           headerTitleAlign: 'left',
           headerRight: () => (
@@ -183,15 +194,101 @@ function Chat({ e }: { e: Entrega }) {
           ),
         }}
       />
-      <View style={[styles.flex, styles.fila]}>
+      {nocturnoWeb ? (
+        <View style={[styles.nocturnoChatHeader, { borderBottomColor: theme.line }]}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+            style={[
+              styles.nocturnoBack,
+              { borderColor: theme.line, backgroundColor: theme.surface },
+            ]}>
+            <Feather name="arrow-left" size={16} color={theme.ink2} />
+          </Pressable>
+          <View style={styles.nocturnoChatMark}>
+            <View style={[styles.nocturnoChatIcon, { backgroundColor: theme.brand }]}>
+              <IconoIA size={17} color={theme.brandInk} />
+            </View>
+            <View style={styles.flex}>
+              <ThemedText type="label" themeColor="ink2">
+                ASISTENTE DE HERMES
+              </ThemedText>
+              <ThemedText type="smallBold" numberOfLines={1}>
+                Hacer con IA
+              </ThemedText>
+            </View>
+          </View>
+          <View style={[styles.nocturnoTaskBadge, { backgroundColor: theme.surface2 }]}>
+            <ThemedText type="label" style={{ color: info.color }}>
+              {info.siglas}
+            </ThemedText>
+            <ThemedText type="meta" themeColor="ink2" numberOfLines={1}>
+              {e.nombre}
+            </ThemedText>
+          </View>
+          {chat.mensajes.length ? (
+            <Pressable
+              hitSlop={12}
+              onPress={onBorrar}
+              accessibilityRole="button"
+              accessibilityLabel="Borrar conversación"
+              style={styles.nocturnoDelete}>
+              <Feather name="trash-2" size={17} color={theme.ink2} />
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+      {nocturnoMovil ? (
+        <View
+          style={[
+            styles.nocturnoMobileChatHeader,
+            { borderBottomColor: theme.line, paddingTop: top + 8 },
+          ]}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Volver a la tarea"
+            style={[
+              styles.nocturnoBack,
+              { borderColor: theme.line, backgroundColor: theme.surface },
+            ]}>
+            <Feather name="arrow-left" size={16} color={theme.ink2} />
+          </Pressable>
+          <View style={[styles.nocturnoChatIcon, { backgroundColor: theme.brand }]}>
+            <IconoIA size={16} color={theme.brandInk} />
+          </View>
+          <View style={styles.flex}>
+            <ThemedText type="smallBold">Hacer con IA</ThemedText>
+            <ThemedText type="meta" themeColor="ink2" numberOfLines={1}>
+              {info.nombre} · {e.nombre}
+            </ThemedText>
+          </View>
+          {chat.mensajes.length ? (
+            <Pressable
+              onPress={onBorrar}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Borrar conversación">
+              <Feather name="trash-2" size={17} color={theme.ink2} />
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+      <View style={[styles.flex, styles.fila, nocturnoWeb && styles.nocturnoFila]}>
         <KeyboardAvoidingView
           style={styles.flex}
           behavior="padding"
-          keyboardVerticalOffset={headerHeight}>
+          keyboardVerticalOffset={nocturnoDesign ? 0 : headerHeight}>
           <ScrollView
             ref={scrollRef}
             style={styles.flex}
-            contentContainerStyle={[styles.contenido, vacio && !sinClave && styles.contenidoVacio]}
+            contentContainerStyle={[
+              styles.contenido,
+              nocturnoWeb && styles.nocturnoContenido,
+              nocturnoMovil && styles.nocturnoMobileContent,
+              vacio && !sinClave && styles.contenidoVacio,
+            ]}
             keyboardShouldPersistTaps="handled"
             onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}>
             {sinClave ? (
@@ -204,12 +301,45 @@ function Chat({ e }: { e: Entrega }) {
                 <IASettings onCambio={chat.recargarAjustes} />
               </>
             ) : vacio ? (
-              <View style={styles.intro}>
-                <Vacio
-                  icono="ia"
-                  titulo="Pregúntale lo que quieras"
-                  texto={`La IA ya conoce el enunciado y la fecha. Marca abajo los archivos que quieras pasarle. Si le pides el trabajo, te lo da como documento para verlo y ${puede ? 'entregarlo desde aquí' : 'descargarlo'}.`}
-                />
+              <View
+                style={[
+                  styles.intro,
+                  nocturnoWeb && styles.nocturnoIntro,
+                  nocturnoMovil && styles.nocturnoMobileIntro,
+                ]}>
+                {nocturnoDesign ? (
+                  <View
+                    style={[
+                      styles.nocturnoWelcome,
+                      { backgroundColor: theme.surface, borderColor: theme.line },
+                    ]}>
+                    <View
+                      style={[
+                        styles.nocturnoWelcomeIcon,
+                        { backgroundColor: theme.brandWash },
+                      ]}>
+                      <IconoIA size={22} color={theme.brand} />
+                    </View>
+                    <ThemedText type="heading" style={styles.nocturnoWelcomeTitle}>
+                      Empecemos con tu tarea
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="ink2" style={styles.nocturnoWelcomeText}>
+                      Ya tengo el enunciado y las fechas de entrega. Puedes pedirme que te explique
+                      el ejercicio, que prepare un esquema o que revise tus ideas.
+                    </ThemedText>
+                  </View>
+                ) : (
+                  <Vacio
+                    icono="ia"
+                    titulo="Pregúntale lo que quieras"
+                    texto={`La IA ya conoce el enunciado y la fecha. Marca abajo los archivos que quieras pasarle. Si le pides el trabajo, te lo da como documento para verlo y ${puede ? 'entregarlo desde aquí' : 'descargarlo'}.`}
+                  />
+                )}
+                {nocturnoDesign ? (
+                  <ThemedText type="label" themeColor="ink2">
+                    EMPIEZA CON UNA IDEA
+                  </ThemedText>
+                ) : null}
                 {SUGERENCIAS.map((s) => (
                   <Pressable
                     key={s}
@@ -217,6 +347,7 @@ function Chat({ e }: { e: Entrega }) {
                     accessibilityRole="button"
                     style={({ pressed }) => [
                       styles.sugerencia,
+                      nocturnoDesign && styles.nocturnoSugerencia,
                       {
                         borderColor: theme.line2,
                         backgroundColor: pressed ? theme.paper2 : theme.surface,
@@ -229,7 +360,9 @@ function Chat({ e }: { e: Entrega }) {
                   </Pressable>
                 ))}
                 <ThemedText type="meta" themeColor="ink3" style={styles.nota}>
-                  Cada mensaje gasta cuota del proveedor que elijas en Ajustes.
+                  {nocturnoDesign
+                    ? `La tarea y sus archivos se usarán como contexto · ${proveedor || 'Configura tu proveedor en Perfil'}${modelo ? ` · ${modelo}` : ''}`
+                    : 'Cada mensaje gasta cuota del proveedor que elijas en Ajustes.'}
                 </ThemedText>
               </View>
             ) : null}
@@ -260,13 +393,20 @@ function Chat({ e }: { e: Entrega }) {
           <View
             style={[
               styles.barra,
+              nocturnoWeb && styles.nocturnoBarra,
+              nocturnoMovil && styles.nocturnoMobileBarra,
               {
                 borderTopColor: theme.line,
                 backgroundColor: theme.paper,
                 paddingBottom: Math.max(bottom, Spacing.two + 2),
               },
             ]}>
-            <View style={styles.barraDentro}>
+            <View
+              style={[
+                styles.barraDentro,
+                nocturnoWeb && styles.nocturnoBarraDentro,
+                nocturnoMovil && styles.nocturnoMobileBarraDentro,
+              ]}>
               {adjuntables.length ? (
                 <ScrollView
                   horizontal
@@ -303,14 +443,21 @@ function Chat({ e }: { e: Entrega }) {
                   })}
                 </ScrollView>
               ) : null}
-              <View style={styles.entrada}>
+              <View
+                style={[
+                  styles.entrada,
+                  nocturnoDesign && [
+                    styles.nocturnoEntrada,
+                    { backgroundColor: theme.surface, borderColor: theme.line2 },
+                  ],
+                ]}>
                 <Campo
                   value={texto}
                   onChangeText={setTexto}
                   placeholder={sinClave ? 'Configura la IA arriba' : 'Pregunta o pide el trabajo…'}
                   editable={!sinClave}
                   multiline
-                  style={styles.input}
+                  style={[styles.input, nocturnoDesign && styles.nocturnoInput]}
                 />
                 {chat.pensando ? (
                   <Pressable
@@ -320,6 +467,8 @@ function Chat({ e }: { e: Entrega }) {
                     hitSlop={6}
                     style={[
                       styles.enviar,
+                      nocturnoWeb && styles.nocturnoEnviar,
+                      nocturnoMovil && styles.nocturnoEnviar,
                       { backgroundColor: theme.surface, borderColor: theme.line2, borderWidth: 1 },
                     ]}>
                     <Feather name="square" size={16} color={theme.ink} />
@@ -333,6 +482,8 @@ function Chat({ e }: { e: Entrega }) {
                     disabled={!puedeEnviar}
                     style={[
                       styles.enviar,
+                      nocturnoWeb && styles.nocturnoEnviar,
+                      nocturnoMovil && styles.nocturnoEnviar,
                       { backgroundColor: theme.brand, opacity: puedeEnviar ? 1 : 0.4 },
                     ]}>
                     <Feather name="send" size={18} color={theme.brandInk} />
@@ -344,7 +495,12 @@ function Chat({ e }: { e: Entrega }) {
         </KeyboardAvoidingView>
 
         {conPanel ? (
-          <View style={[styles.panel, { borderLeftColor: theme.line, backgroundColor: theme.surface2 }]}>
+          <View
+            style={[
+              styles.panel,
+              nocturnoWeb && styles.nocturnoPanel,
+              { borderLeftColor: theme.line, backgroundColor: nocturnoWeb ? theme.paper2 : theme.surface2 },
+            ]}>
             <ScrollView contentContainerStyle={styles.panelContenido}>
               <View style={styles.panelBloque}>
                 <Seccion titulo="Tarea" sinRegla />
@@ -515,6 +671,50 @@ const styles = StyleSheet.create({
   cabecera: {},
   cabeceraTitulo: { fontSize: 14.5, lineHeight: 19, fontWeight: 600 },
   cabeceraDerecha: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingRight: 4 },
+  nocturnoChatHeader: {
+    minHeight: 76,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+  },
+  nocturnoMobileChatHeader: {
+    minHeight: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: MARGEN,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+  },
+  nocturnoBack: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: Radii.control,
+  },
+  nocturnoChatMark: { flexDirection: 'row', alignItems: 'center', gap: 10, width: 205 },
+  nocturnoChatIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nocturnoTaskBadge: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: Radii.control,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  nocturnoDelete: { width: 34, alignItems: 'center' },
+  nocturnoFila: { minHeight: 0 },
   marcaIA: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -531,8 +731,34 @@ const styles = StyleSheet.create({
     maxWidth: ANCHO_CHAT,
     alignSelf: 'center',
   },
+  nocturnoContenido: { maxWidth: 900, paddingHorizontal: 32, paddingVertical: 28 },
+  nocturnoMobileContent: {
+    paddingHorizontal: MARGEN,
+    paddingVertical: Spacing.three,
+    paddingBottom: Spacing.four,
+  },
   contenidoVacio: { flexGrow: 1, justifyContent: 'center' },
   intro: { gap: 10, maxWidth: 440, width: '100%', alignSelf: 'center' },
+  nocturnoIntro: { maxWidth: 620, gap: 14 },
+  nocturnoMobileIntro: { maxWidth: 520, gap: 12, paddingVertical: 8 },
+  nocturnoWelcome: {
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 28,
+    paddingVertical: 24,
+    marginBottom: 8,
+  },
+  nocturnoWelcomeIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  nocturnoWelcomeTitle: { fontSize: 20, textAlign: 'center' },
+  nocturnoWelcomeText: { maxWidth: 430, textAlign: 'center', marginTop: 6 },
   sugerencia: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -542,6 +768,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
+  nocturnoSugerencia: { borderRadius: Radii.pastilla, paddingVertical: 10 },
   nota: { textAlign: 'center', marginTop: 4 },
   burbuja: { borderRadius: Radii.superficie, paddingHorizontal: 13, paddingVertical: 11, gap: 8 },
   mia: { alignSelf: 'flex-end', maxWidth: '86%', borderBottomRightRadius: 4 },
@@ -558,7 +785,11 @@ const styles = StyleSheet.create({
   },
   pensando: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   barra: { borderTopWidth: 1, paddingTop: 10, paddingHorizontal: MARGEN },
+  nocturnoBarra: { paddingTop: 12, paddingBottom: 12, paddingHorizontal: 24 },
+  nocturnoMobileBarra: { paddingTop: 10, paddingHorizontal: MARGEN },
   barraDentro: { gap: 8, width: '100%', maxWidth: ANCHO_CHAT, alignSelf: 'center' },
+  nocturnoBarraDentro: { maxWidth: 900, gap: 10 },
+  nocturnoMobileBarraDentro: { maxWidth: 560, gap: 8 },
   chips: { gap: 6 },
   chip: {
     flexDirection: 'row',
@@ -572,7 +803,15 @@ const styles = StyleSheet.create({
   },
   chipTexto: { fontSize: 12, lineHeight: 16, fontWeight: 500, flexShrink: 1 },
   entrada: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  nocturnoEntrada: {
+    alignItems: 'flex-end',
+    borderWidth: 1,
+    borderRadius: 14,
+    gap: 8,
+    padding: 6,
+  },
   input: { flex: 1, maxHeight: 140, minHeight: 46 },
+  nocturnoInput: { borderWidth: 0, backgroundColor: 'transparent', paddingVertical: 10 },
   enviar: {
     width: 46,
     height: 46,
@@ -580,7 +819,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  nocturnoEnviar: { width: 40, height: 40, borderRadius: 12 },
   panel: { width: 300, borderLeftWidth: 1 },
+  nocturnoPanel: { width: 340 },
   panelContenido: { padding: 22, gap: Spacing.four },
   panelBloque: { gap: 6 },
   panelTitulo: { fontSize: 15, lineHeight: 20 },

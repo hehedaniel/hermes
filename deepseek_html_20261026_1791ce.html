@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hermes — Diseño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E1116; --surface:#161B22; --surface-2:#1C232C; --border:#232A33;
+    --text:#F2F3F5; --text-2:#8B949E; --text-3:#5B626B;
+    --gold:#E8B14C; --gold-soft:#F2C86B;
+    --danger:#F0563F; --warn:#F2A03D; --ok:#3FB77A; --info:#5B9DF9;
+    --ia-a:#E8B14C; --ia-b:#C77DFF;
+    --radius:12px; --radius-sm:10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg); color:var(--text);
+    font-size:15px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums;}
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+
+  /* ---------- LAYOUT ---------- */
+  .app{
+    display:grid;
+    grid-template-columns: 240px 1fr 340px;
+    min-height:100vh;
+  }
+  .sidebar{
+    border-right:1px solid var(--border);
+    padding:20px 16px;
+    display:flex; flex-direction:column; gap:24px;
+    position:sticky; top:0; height:100vh;
+    background:var(--bg);
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:4px 8px;}
+  .brand-mark{
+    width:32px; height:32px; border-radius:9px;
+    background:linear-gradient(135deg,var(--ia-a),var(--ia-b));
+    display:grid; place-items:center; color:#0E1116; font-weight:700;
+    font-family:'Space Grotesk'; font-size:18px;
+  }
+  .brand-name{font-family:'Space Grotesk'; font-weight:700; font-size:18px; letter-spacing:-.01em;}
+
+  .nav{display:flex; flex-direction:column; gap:2px;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:10px;
+    color:var(--text-2); font-size:14px; font-weight:500;
+    text-align:left; width:100%;
+  }
+  .nav-item:hover{background:var(--surface); color:var(--text);}
+  .nav-item.active{background:var(--surface); color:var(--text);}
+  .nav-item.active .nav-dot{background:var(--gold);}
+  .nav-dot{width:6px; height:6px; border-radius:50%; background:var(--text-3);}
+  .nav-badge{
+    margin-left:auto; background:var(--danger); color:#fff;
+    font-size:11px; font-weight:600; padding:1px 7px; border-radius:999px;
+    font-family:'JetBrains Mono';
+  }
+  .nav-badge.info{background:var(--info);}
+
+  .next-card{
+    margin-top:auto;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:14px;
+  }
+  .next-card .label{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-2); margin-bottom:6px;}
+  .next-card .title{font-weight:600; font-size:14px; margin-bottom:4px;}
+  .next-card .time{font-family:'JetBrains Mono'; font-size:13px; color:var(--warn);}
+
+  .ask-ia{
+    margin-top:8px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; padding:10px; border-radius:10px;
+    background:linear-gradient(135deg, rgba(232,177,76,.15), rgba(199,125,255,.15));
+    border:1px solid rgba(232,177,76,.35);
+    color:var(--gold-soft); font-weight:600; font-size:14px;
+  }
+  .ask-ia:hover{background:linear-gradient(135deg, rgba(232,177,76,.25), rgba(199,125,255,.25));}
+
+  /* ---------- MAIN ---------- */
+  .main{
+    padding:28px 36px 120px;
+    max-width:820px;
+    margin:0 auto;
+    width:100%;
+  }
+  .screen{display:none;}
+  .screen.active{display:block; animation:fade .2s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  .page-head{display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:24px; gap:16px;}
+  .greeting{font-size:13px; color:var(--text-2); margin-bottom:2px;}
+  .page-title{font-family:'Space Grotesk'; font-weight:700; font-size:30px; letter-spacing:-.02em;}
+  .page-date{font-family:'JetBrains Mono'; font-size:13px; color:var(--text-2);}
+  .avatar{
+    width:40px; height:40px; border-radius:50%;
+    background:linear-gradient(135deg,#C77DFF,#5B9DF9);
+    display:grid; place-items:center; font-weight:600; color:#0E1116; flex-shrink:0;
+  }
+
+  /* Hero */
+  .hero{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:20px 22px; margin-bottom:20px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .hero-num{font-family:'Space Grotesk'; font-size:32px; font-weight:700; line-height:1;}
+  .hero-num span{color:var(--gold);}
+  .hero-label{color:var(--text-2); font-size:14px; margin-top:4px;}
+  .hero-alert{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(240,86,63,.1); border:1px solid rgba(240,86,63,.35);
+    color:var(--danger); padding:8px 12px; border-radius:10px;
+    font-size:13px; font-weight:500; white-space:nowrap;
+  }
+  .dot-live{width:8px; height:8px; border-radius:50%; background:var(--danger); box-shadow:0 0 0 0 rgba(240,86,63,.6); animation:pulse 2s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(240,86,63,.5);} 70%{box-shadow:0 0 0 8px rgba(240,86,63,0);} 100%{box-shadow:0 0 0 0 rgba(240,86,63,0);}}
+
+  /* Chips */
+  .chips{display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;}
+  .chip{
+    padding:7px 14px; border-radius:999px; font-size:13px; font-weight:500;
+    border:1px solid var(--border); color:var(--text-2); background:transparent;
+  }
+  .chip:hover{color:var(--text); border-color:#2f3844;}
+  .chip.active{background:var(--text); color:var(--bg); border-color:var(--text); font-weight:600;}
+
+  /* Section */
+  .section{margin-bottom:24px;}
+  .section-head{display:flex; align-items:center; gap:8px; margin-bottom:10px; padding-left:2px;}
+  .section-title{font-family:'Space Grotesk'; font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-2);}
+  .section-count{font-family:'JetBrains Mono'; font-size:11px; color:var(--text-3);}
+  .sec-dot{width:8px; height:8px; border-radius:50%;}
+  .sec-dot.red{background:var(--danger);} .sec-dot.amber{background:var(--warn);} .sec-dot.gray{background:var(--text-3);}
+
+  /* Task card */
+  .task{
+    display:flex; gap:14px; align-items:center;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:14px 16px;
+    margin-bottom:8px; cursor:pointer; position:relative; overflow:hidden;
+    transition:border-color .15s, transform .1s;
+  }
+  .task:hover{border-color:#2f3844;}
+  .task:active{transform:scale(.995);}
+  .task::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px;}
+  .task.overdue::before{background:var(--danger);}
+  .task.urgent::before{background:var(--warn);}
+  .task.later::before{background:var(--text-3);}
+  .task.done::before{background:var(--ok);}
+  .task-body{flex:1; min-width:0;}
+  .task-title{font-weight:600; font-size:15px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .task-meta{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:12px; color:var(--text-2);}
+  .tag{
+    padding:2px 8px; border-radius:6px; font-size:11px; font-weight:500;
+    background:var(--surface-2); color:var(--text-2);
+  }
+  .task-when{font-family:'JetBrains Mono'; font-size:12px; white-space:nowrap;}
+  .task-when.red{color:var(--danger);} .task-when.amber{color:var(--warn);} .task-when.gray{color:var(--text-2);} .task-when.green{color:var(--ok);}
+  .task-check{
+    width:24px; height:24px; border-radius:50%; border:1.5px solid var(--border);
+    display:grid; place-items:center; flex-shrink:0; color:var(--text-3);
+  }
+  .task-check.done{background:var(--ok); border-color:var(--ok); color:#0E1116;}
+  .chev{color:var(--text-3); flex-shrink:0;}
+
+  /* Schedule */
+  .day-chips{display:flex; gap:6px; margin-bottom:20px; overflow-x:auto;}
+  .day-chip{
+    flex:1; min-width:64px; padding:10px 4px; border-radius:10px;
+    border:1px solid var(--border); background:transparent; text-align:center;
+    color:var(--text-2); font-size:12px;
+  }
+  .day-chip .d-num{font-family:'Space Grotesk'; font-weight:600; font-size:16px; color:var(--text); display:block; margin-top:2px;}
+  .day-chip.active{background:var(--surface); border-color:var(--gold);}
+  .day-chip.active .d-label{color:var(--gold-soft);}
+  .timeline{position:relative;}
+  .class-block{
+    display:grid; grid-template-columns:56px 1fr; gap:14px; margin-bottom:10px;
+  }
+  .class-time{font-family:'JetBrains Mono'; font-size:12px; color:var(--text-2); padding-top:14px;}
+  .class-time.now{color:var(--gold);}
+  .class-card{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:12px 14px; position:relative; overflow:hidden;
+  }
+  .class-card.now{border-color:rgba(232,177,76,.5); box-shadow:0 0 0 3px rgba(232,177,76,.08);}
+  .class-card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px;}
+  .class-card.c1::before{background:#5B9DF9;} .class-card.c2::before{background:#C77DFF;}
+  .class-card.c3::before{background:#3FB77A;} .class-card.c4::before{background:#F2A03D;}
+  .class-name{font-weight:600; font-size:14px; margin-bottom:2px;}
+  .class-info{font-size:12px; color:var(--text-2);}
+  .now-flag{
+    font-family:'JetBrains Mono'; font-size:10px; color:var(--gold);
+    background:rgba(232,177,76,.12); padding:2px 6px; border-radius:4px;
+    margin-left:8px; vertical-align:middle;
+  }
+
+  /* Subjects grid */
+  .subjects-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px;}
+  .subject-card{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:16px; position:relative; overflow:hidden; cursor:pointer;
+  }
+  .subject-card::before{content:""; position:absolute; left:0; top:0; right:0; height:3px;}
+  .subject-card.s1::before{background:#5B9DF9;} .subject-card.s2::before{background:#C77DFF;}
+  .subject-card.s3::before{background:#3FB77A;} .subject-card.s4::before{background:#F2A03D;}
+  .subject-name{font-family:'Space Grotesk'; font-weight:600; font-size:16px; margin-bottom:4px;}
+  .subject-teacher{font-size:12px; color:var(--text-2); margin-bottom:14px;}
+  .subject-metrics{display:flex; gap:14px; font-size:12px;}
+  .subject-metrics .m-num{font-family:'JetBrains Mono'; font-weight:600; color:var(--text); display:block; font-size:14px;}
+  .subject-metrics .m-label{color:var(--text-2);}
+  .subject-metrics .danger .m-num{color:var(--danger);}
+
+  /* Novedades */
+  .news-item{
+    display:flex; gap:12px; padding:14px 16px; background:var(--surface);
+    border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px;
+  }
+  .news-icon{
+    width:32px; height:32px; border-radius:8px; flex-shrink:0;
+    display:grid; place-items:center; font-size:14px;
+  }
+  .news-icon.new{background:rgba(91,157,249,.15); color:var(--info);}
+  .news-icon.file{background:rgba(63,183,122,.15); color:var(--ok);}
+  .news-icon.ann{background:rgba(242,160,61,.15); color:var(--warn);}
+  .news-body{flex:1; min-width:0;}
+  .news-text{font-size:14px; margin-bottom:2px;}
+  .news-text b{font-weight:600;}
+  .news-sub{font-size:12px; color:var(--text-2);}
+  .news-time{font-family:'JetBrains Mono'; font-size:11px; color:var(--text-3); white-space:nowrap;}
+  .unread{width:7px; height:7px; border-radius:50%; background:var(--info); margin-top:6px; flex-shrink:0;}
+
+  /* Task detail */
+  .back-btn{display:inline-flex; align-items:center; gap:6px; color:var(--text-2); font-size:13px; margin-bottom:16px;}
+  .back-btn:hover{color:var(--text);}
+  .detail-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; margin-bottom:14px;}
+  .detail-deadline{
+    display:flex; align-items:center; justify-content:space-between;
+    background:rgba(242,160,61,.08); border:1px solid rgba(242,160,61,.3);
+    border-radius:10px; padding:12px 14px; margin-bottom:14px;
+  }
+  .detail-deadline .lbl{font-size:12px; color:var(--text-2);}
+  .detail-deadline .val{font-family:'JetBrains Mono'; font-weight:600; color:var(--warn); font-size:15px;}
+  .prose{font-size:14px; color:#C9CDD3; line-height:1.7;}
+  .prose p{margin-bottom:10px;}
+  .prose strong{color:var(--text);}
+  .attachment{display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface-2); border-radius:8px; margin-top:8px; font-size:13px;}
+  .attachment .ext{font-family:'JetBrains Mono'; font-size:11px; color:var(--text-2); margin-left:auto;}
+
+  .ia-panel{
+    background:linear-gradient(135deg, rgba(232,177,76,.08), rgba(199,125,255,.08));
+    border:1px solid rgba(232,177,76,.3);
+    border-radius:var(--radius); padding:16px; margin-bottom:14px;
+  }
+  .ia-head{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+  .ia-avatar{
+    width:28px; height:28px; border-radius:8px;
+    background:linear-gradient(135deg,var(--ia-a),var(--ia-b));
+    display:grid; place-items:center; color:#0E1116; font-weight:700; font-family:'Space Grotesk'; font-size:14px;
+  }
+  .ia-title{font-weight:600; font-size:14px; color:var(--gold-soft);}
+  .ia-suggests{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+  .ia-suggest{
+    font-size:12px; padding:6px 10px; border-radius:999px;
+    background:rgba(232,177,76,.1); border:1px solid rgba(232,177,76,.25);
+    color:var(--gold-soft);
+  }
+  .ia-suggest:hover{background:rgba(232,177,76,.2);}
+  .ia-note{font-size:11px; color:var(--text-3); line-height:1.5;}
+
+  .deliver{border:1.5px dashed var(--border); border-radius:var(--radius); padding:24px; text-align:center; margin-bottom:12px; color:var(--text-2); font-size:13px;}
+  .deliver .big{font-size:24px; margin-bottom:6px; color:var(--text-3);}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:11px 18px; border-radius:10px; font-weight:600; font-size:14px;
+  }
+  .btn-primary{background:var(--gold); color:#0E1116; width:100%;}
+  .btn-primary:hover{background:var(--gold-soft);}
+  .btn-ghost{background:transparent; border:1px solid var(--border); color:var(--text);}
+  .btn-ghost:hover{border-color:#2f3844;}
+
+  /* Perfil */
+  .profile-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:12px; display:flex; gap:16px; align-items:center;}
+  .profile-avatar{width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#C77DFF,#5B9DF9); display:grid; place-items:center; font-weight:700; font-size:22px; color:#0E1116; font-family:'Space Grotesk';}
+  .profile-name{font-family:'Space Grotesk'; font-weight:600; font-size:18px;}
+  .profile-sub{font-size:13px; color:var(--text-2);}
+  .setting-row{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; font-size:14px;}
+  .setting-row .lbl{color:var(--text);}
+  .setting-row .sub{font-size:12px; color:var(--text-2); margin-top:2px;}
+  .switch{width:40px; height:22px; border-radius:999px; background:var(--surface-2); position:relative; flex-shrink:0; border:1px solid var(--border);}
+  .switch.on{background:var(--gold); border-color:var(--gold);}
+  .switch::after{content:""; position:absolute; width:16px; height:16px; border-radius:50%; background:#fff; top:2px; left:2px; transition:.15s;}
+  .switch.on::after{left:20px;}
+  .sync-status{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ok); font-family:'JetBrains Mono';}
+  .dot-ok{width:7px; height:7px; border-radius:50%; background:var(--ok);}
+
+  /* Bottom nav (mobile) */
+  .bottom-nav{display:none;}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 980px){
+    .app{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+    .main{padding:20px 16px 96px;}
+    .page-title{font-size:24px;}
+    .hero{flex-direction:column; align-items:flex-start;}
+    .hero-alert{white-space:normal;}
+    .bottom-nav{
+      display:flex; position:fixed; bottom:0; left:0; right:0;
+      background:rgba(14,17,22,.95); backdrop-filter:blur(12px);
+      border-top:1px solid var(--border);
+      padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+      z-index:50;
+    }
+    .bn-item{
+      flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+      padding:6px 2px; font-size:10px; color:var(--text-2); position:relative;
+    }
+    .bn-item.active{color:var(--gold-soft);}
+    .bn-icon{width:20px; height:20px; display:grid; place-items:center;}
+    .bn-badge{position:absolute; top:2px; right:22%; background:var(--danger); color:#fff; font-size:9px; padding:0 5px; border-radius:999px; font-family:'JetBrains Mono'; font-weight:600;}
+    .fab{
+      position:fixed; bottom:84px; right:16px; z-index:51;
+      width:52px; height:52px; border-radius:16px;
+      background:linear-gradient(135deg,var(--ia-a),var(--ia-b));
+      display:grid; place-items:center; color:#0E1116; font-weight:700;
+      font-family:'Space Grotesk'; font-size:22px;
+      box-shadow:0 8px 24px rgba(232,177,76,.3);
+    }
+    .detail-card, .hero{ border-radius:14px; }
+  }
+  @media (min-width: 981px){
+    .fab{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR (web) -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">H</div>
+      <span class="brand-name">Hermes</span>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" onclick="show('pendientes', this)"><span class="nav-dot"></span>Pendientes<span class="nav-badge">2</span></button>
+      <button class="nav-item" onclick="show('horario', this)"><span class="nav-dot"></span>Horario</button>
+      <button class="nav-item" onclick="show('asignaturas', this)"><span class="nav-dot"></span>Asignaturas</button>
+      <button class="nav-item" onclick="show('novedades', this)"><span class="nav-dot"></span>Novedades<span class="nav-badge info">3</span></button>
+      <button class="nav-item" onclick="show('perfil', this)"><span class="nav-dot"></span>Perfil</button>
+    </nav>
+    <div class="next-card">
+      <div class="label">Próxima entrega</div>
+      <div class="title">Práctica 3 · Regresión</div>
+      <div class="time mono">En 14 h</div>
+    </div>
+    <button class="ask-ia">✦ Preguntar a Hermes</button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- 1. PENDIENTES -->
+    <section class="screen active" id="pendientes">
+      <div class="page-head">
+        <div>
+          <div class="greeting">Buenas tardes,</div>
+          <div class="page-title display">Lo que te queda</div>
+          <div class="page-date">MARTES · 21 OCT</div>
+        </div>
+        <div class="avatar">L</div>
+      </div>
+
+      <div class="hero">
+        <div>
+          <div class="hero-num display"><span>3</span> entregas esta semana</div>
+          <div class="hero-label">Y 2 vencidas sin resolver</div>
+        </div>
+        <div class="hero-alert"><span class="dot-live"></span> 2 vencidas</div>
+      </div>
+
+      <div class="chips">
+        <button class="chip active">Todas</button>
+        <button class="chip">Vencidas</button>
+        <button class="chip">Esta semana</button>
+        <button class="chip">Más adelante</button>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="sec-dot red"></span><span class="section-title">Vencidas</span><span class="section-count">2</span></div>
+        <div class="task overdue" onclick="show('detalle', null)">
+          <div class="task-body">
+            <div class="task-title">Práctica 2 · Clasificación con árboles</div>
+            <div class="task-meta"><span class="tag">Machine Learning</span><span class="task-when red">Venció hace 2 días</span></div>
+          </div>
+          <div class="task-check">○</div>
+        </div>
+        <div class="task overdue" onclick="show('detalle', null)">
+          <div class="task-body">
+            <div class="task-title">Cuestionario Big Data · Tema 4</div>
+            <div class="task-meta"><span class="tag">Big Data</span><span class="task-when red">Venció hace 5 días</span></div>
+          </div>
+          <div class="task-check">○</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="sec-dot amber"></span><span class="section-title">Próximas · 48h</span><span class="section-count">1</span></div>
+        <div class="task urgent" onclick="show('detalle', null)">
+          <div class="task-body">
+            <div class="task-title">Práctica 3 · Regresión lineal</div>
+            <div class="task-meta"><span class="tag">Machine Learning</span><span class="task-when amber">En 14 h</span></div>
+          </div>
+          <div class="task-check">○</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="sec-dot gray"></span><span class="section-title">Más adelante</span><span class="section-count">2</span></div>
+        <div class="task later" onclick="show('detalle', null)">
+          <div class="task-body">
+            <div class="task-title">Proyecto final · Propuesta</div>
+            <div class="task-meta"><span class="tag">Proyecto</span><span class="task-when gray">Vie 24 oct</span></div>
+          </div>
+          <div class="task-check">○</div>
+        </div>
+        <div class="task done">
+          <div class="task-body">
+            <div class="task-title">Foro · Introducción a la IA ética</div>
+            <div class="task-meta"><span class="tag">Ética IA</span><span class="task-when green">Entregado</span></div>
+          </div>
+          <div class="task-check done">✓</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. HORARIO -->
+    <section class="screen" id="horario">
+      <div class="page-head">
+        <div>
+          <div class="greeting">Tu día</div>
+          <div class="page-title display">Horario</div>
+          <div class="page-date">MARTES · 4 clases</div>
+        </div>
+        <div class="avatar">L</div>
+      </div>
+
+      <div class="day-chips">
+        <div class="day-chip"><span class="d-label">LUN</span><span class="d-num">20</span></div>
+        <div class="day-chip active"><span class="d-label">MAR</span><span class="d-num">21</span></div>
+        <div class="day-chip"><span class="d-label">MIÉ</span><span class="d-num">22</span></div>
+        <div class="day-chip"><span class="d-label">JUE</span><span class="d-num">23</span></div>
+        <div class="day-chip"><span class="d-label">VIE</span><span class="d-num">24</span></div>
+      </div>
+
+      <div class="timeline">
+        <div class="class-block">
+          <div class="class-time">08:00</div>
+          <div class="class-card c1"><div class="class-name">Machine Learning</div><div class="class-info">Aula 2.4 · J. Ruiz</div></div>
+        </div>
+        <div class="class-block">
+          <div class="class-time">10:15</div>
+          <div class="class-card c2"><div class="class-name">Big Data<span class="now-flag mono">AHORA</span></div><div class="class-info">Aula 1.1 · M. Ortega</div></div>
+        </div>
+        <div class="class-block">
+          <div class="class-time">12:30</div>
+          <div class="class-card c3"><div class="class-name">Ética de la IA</div><div class="class-info">Aula 3.2 · L. Prieto</div></div>
+        </div>
+        <div class="class-block">
+          <div class="class-time">15:00</div>
+          <div class="class-card c4"><div class="class-name">Taller de Proyecto</div><div class="class-info">Lab. · Equipo docente</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. ASIGNATURAS -->
+    <section class="screen" id="asignaturas">
+      <div class="page-head">
+        <div>
+          <div class="greeting">Este cuatrimestre</div>
+          <div class="page-title display">Asignaturas</div>
+        </div>
+        <div class="avatar">L</div>
+      </div>
+      <div class="subjects-grid">
+        <div class="subject-card s1">
+          <div class="subject-name">Machine Learning</div>
+          <div class="subject-teacher">J. Ruiz · 2 pendientes</div>
+          <div class="subject-metrics"><div><span class="m-num">2</span><span class="m-label">tareas</span></div><div class="danger"><span class="m-num">1</span><span class="m-label">vencida</span></div></div>
+        </div>
+        <div class="subject-card s

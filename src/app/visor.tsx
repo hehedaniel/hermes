@@ -59,7 +59,7 @@ export default function VisorScreen() {
     <ThemedView style={styles.flex}>
       <Stack.Screen
         options={{
-          title: visor?.nombre ?? 'Visor',
+          title: visor?.nombre ?? 'Visor de documentos',
           headerRight: visor
             ? () => (
                 <Pressable
@@ -91,16 +91,26 @@ export default function VisorScreen() {
       ) : null}
       {estado.cargando || estado.error ? (
         <View style={styles.overlay} pointerEvents="none">
-          {estado.error ? (
-            <ThemedText type="small" style={{ color: theme.urgent, textAlign: 'center' }}>
-              {estado.error}
-              {visor
-                ? '\nPrueba con el botón de arriba a la derecha para abrirlo con otra app.'
-                : ''}
-            </ThemedText>
-          ) : (
-            <ActivityIndicator color={theme.brand} size="large" />
-          )}
+          <View style={[styles.estado, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+            {estado.error ? (
+              <>
+                <Feather name="alert-circle" size={22} color={theme.urgent} />
+                <ThemedText type="small" style={{ color: theme.urgent, textAlign: 'center' }}>
+                  {estado.error}
+                  {visor
+                    ? '\nPrueba con el botón de arriba a la derecha para abrirlo con otra app.'
+                    : ''}
+                </ThemedText>
+              </>
+            ) : (
+              <>
+                <ActivityIndicator color={theme.brand} size="large" />
+                <ThemedText type="meta" themeColor="ink2">
+                  Abriendo documento…
+                </ThemedText>
+              </>
+            )}
+          </View>
         </View>
       ) : null}
     </ThemedView>
@@ -123,5 +133,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
+  },
+  estado: {
+    alignItems: 'center',
+    gap: 12,
+    maxWidth: 420,
+    padding: 20,
+    borderWidth: 1,
+    borderRadius: 16,
   },
 });
