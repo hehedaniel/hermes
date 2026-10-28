@@ -1,10 +1,25 @@
-/** Las marcas de faltas y de horas sin clase, guardadas en el dispositivo. */
+/** Las marcas de faltas y de horas sin clase, guardadas en el dispositivo (y sincronizadas con Moodle). */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { CLAVES } from './claves';
 import { conMarca, LIMITE_FALTAS, LIMITES, type Marca, type Marcas } from './faltas';
+import { anotarLimite, anotarMarcas, suscribirRemoto } from './sync-reg';
+
+async function leerTodo() {
+  const raw = await AsyncStorage.getItem(CLAVES.faltas).catch(() => null);
+  let marcas: Marcas = {};
+  try {
+    const d = raw ? JSON.parse(raw) : {};
+    if (d && typeof d === 'object') marcas = d as Marcas;
+  } catch {
+    // dato ilegible: se empieza de cero
+  }
+  const n = Number(await AsyncStorage.getItem(CLAVES.faltasLimite).catch(() => null));
+  const limite = (LIMITES as readonly number[]).includes(n) ? n : null;
+  return { marcas, limite };
+}
 
 export function useFaltas() {
   const [marcas, setMarcas] = useState<Marcas>({});
@@ -12,37 +27,38 @@ export function useFaltas() {
   const [limite, setLimiteEstado] = useState<number>(LIMITE_FALTAS);
   const ref = useRef<Marcas>({});
 
+  const cargar = useCallback(async () => {
+    const d = await leerTodo();
+    ref.current = d.marcas;
+    setMarcas(d.marcas);
+    if (d.limite !== null) setLimiteEstado(d.limite);
+    setListo(true);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       let vivo = true;
-      AsyncStorage.getItem(CLAVES.faltas)
-        .then((raw) => {
-          const d = raw ? JSON.parse(raw) : {};
-          return d && typeof d === 'object' ? (d as Marcas) : {};
-        })
-        .catch(() => ({}) as Marcas)
-        .then((d) => {
-          if (!vivo) return;
-          ref.current = d;
-          setMarcas(d);
-          setListo(true);
-        });
-      AsyncStorage.getItem(CLAVES.faltasLimite)
-        .then((raw) => {
-          const n = Number(raw);
-          if (vivo && (LIMITES as readonly number[]).includes(n)) setLimiteEstado(n);
-        })
-        .catch(() => {});
+      leerTodo().then((d) => {
+        if (!vivo) return;
+        ref.current = d.marcas;
+        setMarcas(d.marcas);
+        if (d.limite !== null) setLimiteEstado(d.limite);
+        setListo(true);
+      });
       return () => {
         vivo = false;
       };
     }, []),
   );
 
+  // Cuando la sincronización trae cambios de otro dispositivo
+  useEffect(() => suscribirRemoto(() => void cargar()), [cargar]);
+
   /** Qué límite se mira: 10 % o 20 % */
   const setLimite = useCallback((n: number) => {
     setLimiteEstado(n);
     AsyncStorage.setItem(CLAVES.faltasLimite, String(n)).catch(() => {});
+    anotarLimite(n);
   }, []);
 
   const marcar = useCallback((fecha: string, franja: number, marca: Marca | null) => {
@@ -50,6 +66,7 @@ export function useFaltas() {
     ref.current = nuevo;
     setMarcas(nuevo);
     AsyncStorage.setItem(CLAVES.faltas, JSON.stringify(nuevo)).catch(() => {});
+    anotarMarcas(fecha, [franja], marca);
   }, []);
 
   /** Marca (o desmarca) varias franjas de golpe */
@@ -59,6 +76,7 @@ export function useFaltas() {
     ref.current = nuevo;
     setMarcas(nuevo);
     AsyncStorage.setItem(CLAVES.faltas, JSON.stringify(nuevo)).catch(() => {});
+    anotarMarcas(fecha, franjas, marca);
   }, []);
 
   return { marcas, listo, limite, setLimite, marcar, marcarVarias };

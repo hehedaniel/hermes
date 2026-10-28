@@ -6,7 +6,8 @@ import { formatoTamano } from '../downloads';
 import { entregarEnMoodle, subirBorrador, tipoAdmitido } from '../entregar';
 import { useMoodle } from '../store';
 import { archivoParaSubir } from './archivos-ia';
-import { type DocumentoIA, esPdf, markdownAHtml } from './documentos';
+import { separarCabecera } from './docx-plantilla';
+import { type DocumentoIA, esDocx, esPdf, markdownAHtml } from './documentos';
 
 /** ¿Se puede entregar esta tarea desde la app? (tareas con entrega de archivos o de texto) */
 export const sePuedeEntregar = (e: Entrega) => !!e.entregable && e.tipo === 'assign';
@@ -84,8 +85,10 @@ export function useEntregar(e: Entrega | undefined) {
               itemid = await subirBorrador(client, [archivo]);
             } else {
               textoHtml =
-                esPdf(doc) || /\.(md|txt)$/i.test(doc.nombre)
-                  ? markdownAHtml(doc.contenido)
+                esPdf(doc) || esDocx(doc) || /\.(md|txt)$/i.test(doc.nombre)
+                  ? markdownAHtml(
+                      esDocx(doc) ? separarCabecera(doc.contenido).cuerpo : doc.contenido,
+                    )
                   : `<pre>${doc.contenido.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)}</pre>`;
             }
             await entregarEnMoodle(client, cfg, { itemid, textoHtml });

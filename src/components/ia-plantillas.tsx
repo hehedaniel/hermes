@@ -34,7 +34,8 @@ export function IAPlantillas() {
     try {
       const doc = await elegirDocumento();
       if (!doc) return;
-      if (para === 'plantilla') p.anadir(doc.nombre.replace(/\.[^.]+$/, ''), doc.texto, doc.nombre);
+      if (para === 'plantilla')
+        p.anadir(doc.nombre.replace(/\.[^.]+$/, ''), doc.texto, doc.nombre, doc.docx);
       else p.cambiarEstilo({ archivo: doc.nombre, texto: doc.texto });
     } catch (e) {
       avisar('No se pudo leer el documento', (e as Error).message);
@@ -55,7 +56,7 @@ export function IAPlantillas() {
   function quitar(id: string, nombre: string) {
     confirmar({
       titulo: 'Quitar plantilla',
-      texto: `Se borrará «${nombre}» de este dispositivo.`,
+      texto: `Se borrará «${nombre}» de todos tus dispositivos.`,
       boton: 'Quitar',
       destructivo: true,
       onOk: () => p.borrar(id),
@@ -98,9 +99,10 @@ export function IAPlantillas() {
       <View style={styles.bloque}>
         <Etiqueta>Plantillas de entrega</Etiqueta>
         <ThemedText type="small" themeColor="ink2">
-          Sube el documento con el formato que quieres (portada, apartados, estilo) y la IA lo
-          seguirá al preparar tus trabajos. Admite PDF, Word (.docx) y texto. Puedes elegir otra
-          distinta en cada tarea.
+          Sube el documento con el formato que quieres. Si es un Word (.docx) hecho con estilos
+          (Título 1, Título 2…), la app rellena tu propio documento: portada, índice, tipografías,
+          pies de página… y la IA solo escribe el contenido. Un PDF o un texto sirven de guía de
+          apartados, pero no conservan el formato. Puedes elegir otra distinta en cada tarea.
         </ThemedText>
         {p.datos.plantillas.length ? (
           <Caja style={styles.lista}>
@@ -127,6 +129,7 @@ export function IAPlantillas() {
                     </ThemedText>
                     <ThemedText type="meta" themeColor="ink2" numberOfLines={1}>
                       {sel ? 'Por defecto · ' : ''}
+                      {pl.docx ? 'Word con tu formato · ' : ''}
                       {pl.archivo ? `${pl.archivo} · ` : ''}
                       {kb(pl.texto.length)}
                       {pl.texto.length > MAX_PLANTILLA ? ' (se usará el principio)' : ''}
@@ -173,8 +176,8 @@ export function IAPlantillas() {
         <Etiqueta>Mi estilo de escritura</Etiqueta>
         <ThemedText type="small" themeColor="ink2">
           Sube algo que hayas escrito tú (un trabajo, un resumen) y la IA copiará tu forma de
-          escribir: tono, frases y vocabulario. Cuanto más texto, mejor. Se guarda solo en este
-          dispositivo.
+          escribir: tono, frases y vocabulario. Cuanto más texto, mejor. Se guarda en tus Archivos
+          privados de Moodle para verlo en todos tus dispositivos.
         </ThemedText>
         {p.datos.estilo ? (
           <Caja style={styles.lista}>

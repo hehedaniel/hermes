@@ -11,12 +11,30 @@ import type { ArchivoParaSubir } from '../entregar';
 import type { MoodleClient } from '../moodle';
 import { mimeDe } from '../open-file';
 import { setDocumentoActual } from './documento-actual';
-import { type DocumentoIA, esPdf, htmlParaPdf, mimeDocumento } from './documentos';
+import { docxDeDocumento } from './docx-generar';
+import { type DocumentoIA, esDocx, esPdf, htmlParaPdf, mimeDocumento } from './documentos';
 import { type AdjuntoIA, IAError } from './proveedores';
 
 export const CREA_PDF = false;
 
+function descargar(blob: Blob, nombre: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 export async function verDocumento(doc: DocumentoIA) {
+  if (esDocx(doc)) {
+    // Un Word no se ve en el navegador: se descarga para abrirlo con Word
+    const bytes = await docxDeDocumento(doc);
+    descargar(new Blob([bytes as BlobPart], { type: mimeDocumento(doc) }), doc.nombre);
+    return;
+  }
   if (esPdf(doc)) {
     const w = window.open('', '_blank');
     if (w) {
@@ -36,7 +54,9 @@ export async function archivoParaSubir(doc: DocumentoIA): Promise<ArchivoParaSub
       'Desde la web no se pueden crear PDF. Entrégalo desde la app de Android, o ábrelo, guárdalo como PDF y súbelo en Moodle.',
     );
   }
-  const blob = new Blob([doc.contenido], { type: mimeDocumento(doc) });
+  const blob = esDocx(doc)
+    ? new Blob([(await docxDeDocumento(doc)) as BlobPart], { type: mimeDocumento(doc) })
+    : new Blob([doc.contenido], { type: mimeDocumento(doc) });
   return {
     nombre: doc.nombre,
     tamano: blob.size,

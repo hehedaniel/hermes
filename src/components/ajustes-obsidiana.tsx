@@ -28,6 +28,7 @@ import {
 } from '@/lib/avisos';
 import { confirmar } from '@/lib/dialogo';
 import { IAPlantillas } from '@/components/ia-plantillas';
+import { useSyncDatos } from '@/lib/use-sync-datos';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
 import { haceCuanto } from '@/lib/format';
 import { useGoogleCal } from '@/lib/google-cal';
@@ -852,6 +853,7 @@ function Cuenta() {
   const { snapshot, syncing, refresh, disconnect } = useMoodle();
   const { guardaArchivos, resumen, borrarTodo } = useDownloads();
   const { enabled: updatesEnabled, checking, checkNow } = useAppUpdates();
+  const sync = useSyncDatos();
   const nombre = snapshot?.site.fullname ?? 'Cuenta de Moodle';
   const iniciales = nombre
     .split(/\s+/)
@@ -956,6 +958,53 @@ function Cuenta() {
               </Pressable>
             ) : null}
           </View>
+        </View>
+        <View
+          style={{
+            paddingTop: 16,
+            borderTopWidth: 1,
+            borderTopColor: '#1D1D23',
+            gap: 10,
+          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+            }}>
+            <View style={{ flex: 1, minWidth: 220 }}>
+              <T w={500} s={14} lh={20} c={Z.z200}>
+                Datos en tu Moodle
+              </T>
+              <T s={12} lh={16} c={Z.z500} style={{ marginTop: 2 }}>
+                Faltas, plantillas y tu estilo se guardan en tus Archivos privados de Moodle para
+                verlos igual en el móvil y en la web.
+              </T>
+            </View>
+            <View style={{ alignItems: 'flex-end', gap: 8 }}>
+              <T k="mono" up s={10} ls={0.05} c={sync.estado === 'error' ? '#FB7185' : Z.z500}>
+                {sync.estado === 'sincronizando'
+                  ? 'Guardando…'
+                  : sync.estado === 'error'
+                    ? 'No sincronizado'
+                    : sync.ultima
+                      ? `Sincronizado ${haceCuanto(sync.ultima)}`
+                      : 'Sin sincronizar'}
+              </T>
+              <Boton
+                texto="Sincronizar datos"
+                onPress={() => sync.sincronizar()}
+                disabled={sync.estado === 'sincronizando'}
+              />
+            </View>
+          </View>
+          {sync.estado === 'error' && sync.error ? (
+            <T s={12} lh={16} c="#FB7185">
+              {sync.error}
+            </T>
+          ) : null}
         </View>
       </View>
     </Tarjeta>

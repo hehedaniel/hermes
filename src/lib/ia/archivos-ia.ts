@@ -6,6 +6,7 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import * as Print from 'expo-print';
 import { router } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 
 import type { Archivo } from '../data';
 import type { DownloadsCtx } from '../downloads';
@@ -14,7 +15,8 @@ import type { MoodleClient } from '../moodle';
 import { mimeDe } from '../open-file';
 import { setVisorActual } from '../visor-actual';
 import { setDocumentoActual } from './documento-actual';
-import { type DocumentoIA, esPdf, htmlParaPdf, mimeDocumento } from './documentos';
+import { docxDeDocumento } from './docx-generar';
+import { type DocumentoIA, esDocx, esPdf, htmlParaPdf, mimeDocumento } from './documentos';
 import type { AdjuntoIA } from './proveedores';
 
 /** En el móvil se pueden crear PDF; en la web no. */
@@ -30,7 +32,10 @@ function carpeta() {
 export async function archivoDeDocumento(doc: DocumentoIA): Promise<File> {
   const destino = new File(carpeta(), doc.nombre);
   if (destino.exists) destino.delete();
-  if (esPdf(doc)) {
+  if (esDocx(doc)) {
+    destino.create();
+    destino.write(await docxDeDocumento(doc));
+  } else if (esPdf(doc)) {
     const { uri } = await Print.printToFileAsync({ html: htmlParaPdf(doc) });
     await new File(uri).move(destino, { overwrite: true });
   } else {
@@ -42,6 +47,12 @@ export async function archivoDeDocumento(doc: DocumentoIA): Promise<File> {
 
 /** Abre el documento: los PDF en el visor de la app; el resto, como texto. */
 export async function verDocumento(doc: DocumentoIA) {
+  if (esDocx(doc)) {
+    // Un Word no se ve dentro de la app: se abre con Word (o la app que tenga el móvil)
+    const file = await archivoDeDocumento(doc);
+    await Sharing.shareAsync(file.uri, { mimeType: mimeDocumento(doc) });
+    return;
+  }
   if (esPdf(doc)) {
     const file = await archivoDeDocumento(doc);
     setVisorActual({ file, nombre: doc.nombre, tipo: 'pdf', mime: 'application/pdf' });
@@ -57,13 +68,8 @@ export async function archivoParaSubir(doc: DocumentoIA): Promise<ArchivoParaSub
   return {
     nombre: doc.nombre,
     tamano: file.size,
-    // En React Native un archivo se manda en el FormData como { uri, name, type }
-    anadir: (form, campo) =>
-      form.append(campo, {
-        uri: file.uri,
-        name: doc.nombre,
-        type: mimeDocumento(doc),
-      } as unknown as Blob),
+    // El fetch de Expo no admite { uri }: se manda el propio File, que sabe leerse (bytes)
+    anadir: (form, campo) => form.append(campo, file as unknown as Blob, doc.nombre),
   };
 }
 

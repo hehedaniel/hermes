@@ -1,5 +1,7 @@
 /** Versión web de leer-documento.ts: el selector de archivos es el del navegador. */
 import { extensionDe, textoDeBytes } from './docx-texto';
+import { bytesABase64 } from './base64';
+import { docxRellenable } from './docx-plantilla';
 import type { DocumentoLeido } from './leer-documento';
 import { extraerTextoPdf } from './pdf-texto';
 import { pdfSinTexto } from './proveedores';
@@ -19,12 +21,7 @@ function elegirArchivo(): Promise<File | null> {
   });
 }
 
-const aBase64 = (bytes: Uint8Array) => {
-  let bin = '';
-  for (let i = 0; i < bytes.length; i += 0x8000)
-    bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  return btoa(bin);
-};
+const aBase64 = bytesABase64;
 
 export async function elegirDocumento(): Promise<DocumentoLeido | null> {
   const f = await elegirArchivo();
@@ -37,5 +34,5 @@ export async function elegirDocumento(): Promise<DocumentoLeido | null> {
       `«${f.name}» no tiene texto que se pueda leer (¿es un PDF escaneado?). Sube otro o pega el texto.`,
     );
   }
-  return { nombre: f.name, texto };
+  return { nombre: f.name, texto, docx: docxRellenable(f.name, bytes) };
 }

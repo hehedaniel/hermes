@@ -52,6 +52,11 @@ En la FP todo pasa por el aula virtual: cada módulo tiene sus unidades, sus PDF
 - **Visor integrado.** Los PDF e imágenes se ven dentro de la app, con zoom; Word, PowerPoint o ZIP se abren con la app del móvil que corresponda.
 - **Detalle de entrega.** Enunciado, fechas de apertura, entrega y cierre, estado, nota y archivos adjuntos.
 - **Hacer tareas con IA.** En cada tarea, un chat con la IA que ya conoce el enunciado: le pasas los archivos de la tarea, le pides lo que quieras y, si te genera el trabajo, lo ves como PDF y lo **entregas en Moodle** desde ahí. Eliges la IA en Ajustes, con tu propia clave: **Gemini**, **OpenRouter**, **ChatGPT**, **Claude**, **DeepSeek**, **Mistral** o **Groq**.
+- **Plantillas y tu estilo de escritura.** En Ajustes subes la plantilla de entrega (Word, PDF o texto). Con un Word hecho con estilos, la app rellena tu propio documento (portada, índice, formato) y la IA solo escribe el contenido; con un PDF o un texto sirve de guía de apartados. Se sincroniza con tu Moodle entre móvil y web; también un texto tuyo para que escriba como tú. En cada tarea eliges la plantilla y si usa tu estilo.
+- **Buscador.** Archivos y tareas de todas las asignaturas por nombre, sin conexión (en escritorio y web).
+- **Notas.** Tus calificaciones por asignatura; si el profesor no publica cuánto vale cada tarea, Hermes calcula una nota aproximada y lo indica.
+- **Faltas.** Cuántas horas has faltado en cada módulo y cuántas te quedan, por trimestre o en todo el curso, con límite del 10 % o del 20 %. Las horas sin clase (festivos o falta del profesor) no cuentan y bajan el total. Se marca por días: «Asistí», «Falté» o «Sin clase».
+- **Diseño Obsidiana.** El diseño por defecto, oscuro y editorial, con barra lateral en escritorio y un botón central en abanico en el móvil.
 - **Login desde el móvil.** Inicias sesión con tu usuario de la Junta (CAS) y la app recibe el token sola.
 - **Sin servidor propio.** Habla directamente con Moodle y funciona sin conexión con lo último que descargó.
 
@@ -225,13 +230,20 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Notificaciones y sincronización en segundo plano (Android)
 - [x] Detalle de la corrección: nota, fecha, comentario y archivos del profesor
 - [x] Rediseño de la app (versión 2.0)
-- [ ] Compilar el APK en GitHub Actions, sin la cola de EAS
+- [x] Compilar el APK en GitHub Actions, sin la cola de EAS
 - [x] Hacer tareas con IA (Gemini / OpenRouter) y entregarlas desde la app
-- [ ] Plantillas para las entregas con IA: elegir en Ajustes una plantilla (portada, estructura, estilo) que la IA use al generar el documento
+- [x] Plantillas para las entregas con IA y estilo de escritura del alumno
+- [x] Sincronización de faltas, plantillas y estilo entre móvil y web (Archivos privados de Moodle)
+- [x] Plantillas Word que se rellenan conservando el formato
 - [ ] Notificaciones en iPhone a través del script de Google (correo o ntfy), sin servidor propio
 - [ ] Visor de PDF sin conexión (pdf.js dentro de la app)
 - [ ] Menos datos en segundo plano: solo lo que puede cambiar; los temas cada pocas horas
-- [ ] Buscador en todas las asignaturas
+- [x] Buscador de archivos y tareas (escritorio y web)
+- [x] Diseño Obsidiana por defecto y pantalla de Notas
+- [x] Calculadora de faltas por módulo y trimestre
+- [ ] Buscador también en el móvil
+- [ ] Faltas: confirmar el límite real (10 % o 20 %) y avisar al acercarte al límite
+- [ ] Datos sincronizados entre móvil y web (faltas, plantillas, marcas)
 - [ ] Calculadora de nota por asignatura
 - [ ] Notas personales y checklist por entrega
 - [ ] Copia de seguridad de los datos

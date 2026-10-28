@@ -33,6 +33,7 @@ import { GoogleCalProvider } from '@/lib/google-cal';
 import { ExtractorPdf } from '@/lib/ia/pdf-texto';
 import { BusquedaProvider } from '@/lib/busqueda-estado';
 import { MoodleProvider } from '@/lib/store';
+import { SyncDatosProvider } from '@/lib/use-sync-datos';
 
 /**
  * Las pestañas siempre quedan debajo: si la app se abre directamente en una entrega
@@ -105,39 +106,44 @@ function RootLayoutContent() {
 
   return (
     <MoodleProvider>
-      <BusquedaProvider>
-        <DownloadsProvider>
-          <GoogleCalProvider>
-            <ThemeProvider value={temaNavegacion}>
-              <AppUpdateProvider enabled={comprobarActualizaciones && fuentes && listo}>
-                <StatusBar style={oscuro ? 'light' : 'dark'} />
-                <ExtractorPdf />
-                <Stack
-                  screenOptions={{
-                    headerBackButtonDisplayMode: 'minimal',
-                    headerShadowVisible: false,
-                    headerStyle: { backgroundColor: c.paper },
-                    headerTintColor: c.ink,
-                    headerTitleStyle: {
-                      fontFamily: tema === 'cuaderno' ? undefined : FAMILIA[600],
-                      fontSize: 15,
-                    },
-                    contentStyle: { backgroundColor: c.paper },
-                  }}>
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen name="curso/[id]" options={{ headerShown: false }} />
-                  <Stack.Screen name="tarea/[key]" options={{ title: 'Detalle de la tarea' }} />
-                  <Stack.Screen name="visor" options={{ title: '' }} />
-                  <Stack.Screen name="ia/[key]" options={{ title: 'IA' }} />
-                  <Stack.Screen name="documento" options={{ title: '' }} />
-                  <Stack.Screen name="ajustes-ia" options={{ title: 'Inteligencia artificial' }} />
-                  <Stack.Screen name="buscar" options={{ headerShown: false }} />
-                </Stack>
-              </AppUpdateProvider>
-            </ThemeProvider>
-          </GoogleCalProvider>
-        </DownloadsProvider>
-      </BusquedaProvider>
+      <SyncDatosProvider>
+        <BusquedaProvider>
+          <DownloadsProvider>
+            <GoogleCalProvider>
+              <ThemeProvider value={temaNavegacion}>
+                <AppUpdateProvider enabled={comprobarActualizaciones && fuentes && listo}>
+                  <StatusBar style={oscuro ? 'light' : 'dark'} />
+                  <ExtractorPdf />
+                  <Stack
+                    screenOptions={{
+                      headerBackButtonDisplayMode: 'minimal',
+                      headerShadowVisible: false,
+                      headerStyle: { backgroundColor: c.paper },
+                      headerTintColor: c.ink,
+                      headerTitleStyle: {
+                        fontFamily: tema === 'cuaderno' ? undefined : FAMILIA[600],
+                        fontSize: 15,
+                      },
+                      contentStyle: { backgroundColor: c.paper },
+                    }}>
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="curso/[id]" options={{ headerShown: false }} />
+                    <Stack.Screen name="tarea/[key]" options={{ title: 'Detalle de la tarea' }} />
+                    <Stack.Screen name="visor" options={{ title: '' }} />
+                    <Stack.Screen name="ia/[key]" options={{ title: 'IA' }} />
+                    <Stack.Screen name="documento" options={{ title: '' }} />
+                    <Stack.Screen
+                      name="ajustes-ia"
+                      options={{ title: 'Inteligencia artificial' }}
+                    />
+                    <Stack.Screen name="buscar" options={{ headerShown: false }} />
+                  </Stack>
+                </AppUpdateProvider>
+              </ThemeProvider>
+            </GoogleCalProvider>
+          </DownloadsProvider>
+        </BusquedaProvider>
+      </SyncDatosProvider>
     </MoodleProvider>
   );
 }

@@ -1,9 +1,11 @@
 /** Plantillas de entrega y estilo del alumno: se guardan en el dispositivo y se editan desde Ajustes. */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { CLAVES } from '../claves';
+import { leerPlantillas } from './plantillas-almacen';
+import { anotarPlantillas, suscribirRemoto } from '../sync-reg';
 import {
   type EstiloIA,
   MAX_ESTILO,
@@ -13,19 +15,7 @@ import {
   type PlantillasIA,
 } from './plantillas-datos';
 
-export async function leerPlantillas(): Promise<PlantillasIA> {
-  try {
-    const raw = await AsyncStorage.getItem(CLAVES.iaPlantillas);
-    const d = raw ? JSON.parse(raw) : {};
-    return {
-      ...PLANTILLAS_POR_DEFECTO,
-      ...d,
-      plantillas: Array.isArray(d.plantillas) ? d.plantillas : [],
-    };
-  } catch {
-    return PLANTILLAS_POR_DEFECTO;
-  }
-}
+export { leerPlantillas };
 
 const guardar = (d: PlantillasIA) =>
   AsyncStorage.setItem(CLAVES.iaPlantillas, JSON.stringify(d)).catch(() => {});
@@ -54,18 +44,33 @@ export function usePlantillas() {
     }, []),
   );
 
+  // Cuando la sincronización trae cambios de otro dispositivo
+  useEffect(
+    () =>
+      suscribirRemoto(() => {
+        leerPlantillas().then((d) => {
+          ref.current = d;
+          setDatos(d);
+        });
+      }),
+    [],
+  );
+
   const poner = useCallback((d: PlantillasIA) => {
+    const antes = ref.current;
     ref.current = d;
     setDatos(d);
     guardar(d);
+    anotarPlantillas(antes, d);
   }, []);
 
   const anadir = useCallback(
-    (nombre: string, texto: string, archivo?: string) => {
+    (nombre: string, texto: string, archivo?: string, docx?: string) => {
       const p: PlantillaIA = {
         id: nuevoId(),
         nombre: nombre.trim() || archivo || 'Plantilla',
         archivo,
+        docx,
         texto: texto.trim().slice(0, MAX_PLANTILLA * 2),
         creada: Date.now(),
       };

@@ -6,6 +6,18 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.4.0] - 2026-10-29
+
+### Añadido
+- **Sincronización móvil ↔ web.** Tus faltas, el límite 10/20 %, las plantillas y tu estilo de escritura se guardan en tus Archivos privados de Moodle (`hermes-datos.json`) y se ven en todos tus dispositivos. Sincroniza al abrir la app, al volver a ella y poco después de cada cambio; funciona sin conexión y los errores solo salen en Ajustes → Cuenta, donde hay un botón «Sincronizar datos». Las claves de API no se sincronizan.
+- **Plantillas Word con tu formato.** Si subes una plantilla .docx hecha con estilos (Título 1, Título 2…), la app guarda el Word y, al pedir un trabajo, la IA solo escribe el contenido: la app lo vuelca en tu documento con su portada, índice, tipografías, pies de página y estilos. El documento sale como .docx (botón «Abrir»), que también se puede entregar en Moodle. Las capturas quedan como hueco con su «Figura n.». Los PDF y los textos siguen sirviendo como guía de apartados.
+
+### Corregido
+- Subir archivos desde el móvil (entregas con IA y sincronización) fallaba con «unsupported formdatapart implementation».
+
+### Nota
+- Las plantillas que ya tenías guardadas solo conservan el texto: vuelve a subir el Word para que se use con su formato.
+
 ## [2.3.0] - 2026-10-28
 
 ### Añadido

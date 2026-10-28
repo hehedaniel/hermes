@@ -15,5 +15,8 @@ export const CLAVES = {
   iaChatEleccion: (entregaKey: string) => `ia_chat_eleccion_v1_${entregaKey}`,
   faltas: 'faltas_v1',
   faltasLimite: 'faltas_limite_v1',
+  syncReg: 'sync_reg_v1',
+  syncCtx: 'sync_ctx_v1',
+  syncUltima: 'sync_ultima_v1',
   iaChat: (entregaKey: string) => `ia_chat_v1_${entregaKey}`,
 } as const;

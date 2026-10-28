@@ -4,11 +4,13 @@
  */
 import { File } from 'expo-file-system';
 
+import { docxRellenable } from './docx-plantilla';
 import { extensionDe, textoDeBytes } from './docx-texto';
 import { extraerTextoPdf } from './pdf-texto';
 import { pdfSinTexto } from './proveedores';
 
-export type DocumentoLeido = { nombre: string; texto: string };
+/** `docx`: el Word original en base64, si es una plantilla que se puede rellenar */
+export type DocumentoLeido = { nombre: string; texto: string; docx?: string };
 
 type Selector = {
   getDocumentAsync: (o: {
@@ -37,14 +39,12 @@ export async function elegirDocumento(): Promise<DocumentoLeido | null> {
   const a = r.assets?.[0];
   if (r.canceled || !a) return null;
   const file = new File(a.uri);
-  const texto =
-    extensionDe(a.name) === 'pdf'
-      ? await extraerTextoPdf(await file.base64())
-      : textoDeBytes(a.name, await file.bytes());
+  const bytes = extensionDe(a.name) === 'pdf' ? null : await file.bytes();
+  const texto = bytes ? textoDeBytes(a.name, bytes) : await extraerTextoPdf(await file.base64());
   if (!texto.trim() || (extensionDe(a.name) === 'pdf' && pdfSinTexto(texto))) {
     throw new Error(
       `«${a.name}» no tiene texto que se pueda leer (¿es un PDF escaneado?). Sube otro o pega el texto.`,
     );
   }
-  return { nombre: a.name, texto };
+  return { nombre: a.name, texto, docx: docxRellenable(a.name, bytes) };
 }

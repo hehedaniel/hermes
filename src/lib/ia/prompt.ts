@@ -59,19 +59,49 @@ export function construirSistema(e: Entrega, instruccionesUsuario?: string, extr
       ? `Ojo: esta tarea no admite PDF (${cfg.tipos.join(', ')}). Genera el archivo en uno de los tipos admitidos que puedas escribir como texto, o avisa al alumno.`
       : null,
     plantilla
-      ? [
-          '',
-          '## Plantilla del trabajo',
-          `El alumno ha elegido la plantilla «${extras!.plantilla!.nombre}». Cuando le prepares el documento, síguela: mismos apartados, mismo orden, mismos títulos, la misma portada y el mismo formato. Sustituye el contenido de ejemplo por el de esta tarea y no añadas apartados que no estén en la plantilla, salvo que el enunciado los pida. Si la plantilla y el enunciado se contradicen, avisa al alumno.`,
-          plantilla.recortado
-            ? '(La plantilla es muy larga y aquí aparece recortada: pídele al alumno el resto si lo necesitas.)'
-            : null,
-          '<plantilla>',
-          plantilla.texto,
-          '</plantilla>',
-        ]
-          .filter((l) => l !== null)
-          .join('\n')
+      ? extras!.plantilla!.docx
+        ? [
+            '',
+            '## Plantilla del trabajo (documento Word)',
+            `El alumno ha elegido la plantilla Word «${extras!.plantilla!.nombre}». Cuando te pida el trabajo, entrégalo como un archivo .docx: la app volcará tu contenido en el Word del alumno y se encargará de TODO el formato (portada, índice, tipografías, colores, márgenes, pies de página). Tú solo escribes el contenido en Markdown, así:`,
+            '',
+            '<<<ARCHIVO nombre="trabajo.docx">>>',
+            '---',
+            ...extras!.plantilla!.docx.campos.map((c) => `${c}: (rellénalo)`),
+            `plantilla: ${extras!.plantilla!.nombre}`,
+            '---',
+            '(contenido en Markdown)',
+            '<<<FIN>>>',
+            '',
+            '- Empieza siempre con esa cabecera entre «---», con los campos de la portada tal cual (no pongas la fecha si no la sabes: se rellena sola).',
+            '- Títulos: «# Título» (nivel 1 numerado), «## Título» (nivel 2), «### Título» (nivel 3). Para apartados sin número, como Descripción, Bibliografía o Anexos, usa «#! Título» (y «##! Título» para un subapartado sin número, como «Anexo A»). Los números los pone la plantilla: no los escribas tú.',
+            '- Texto normal en párrafos; negrita con **así**, cursiva con *así*, código en línea con `así`. Listas con «- » o «1. ». Tablas en Markdown con «|». Bloques de código entre ``` (se ven con el estilo de código de la plantilla).',
+            '- Si hace falta una captura o imagen, pon una línea sola «[Captura: descripción de lo que debe mostrar]»: la app deja el hueco con su «Figura n.» y el alumno pega la imagen. No intentes crear imágenes.',
+            '- Bajo «#! Bibliografía» escribe una referencia por párrafo, en el formato que pida la plantilla o el enunciado.',
+            '- No escribas portada ni índice: ya los pone la plantilla. Sigue los apartados, el orden y los títulos que se ven en la estructura de abajo, sin añadir otros salvo que el enunciado los pida.',
+            '- Tu texto de ejemplo («Lorem ipsum»…) sustitúyelo por el contenido real de esta tarea.',
+            plantilla.recortado
+              ? '(La estructura es muy larga y aquí aparece recortada: pídele al alumno el resto si lo necesitas.)'
+              : null,
+            '<estructura-de-la-plantilla>',
+            plantilla.texto,
+            '</estructura-de-la-plantilla>',
+          ]
+            .filter((l) => l !== null)
+            .join('\n')
+        : [
+            '',
+            '## Plantilla del trabajo',
+            `El alumno ha elegido la plantilla «${extras!.plantilla!.nombre}». Cuando le prepares el documento, síguela: mismos apartados, mismo orden, mismos títulos, la misma portada y el mismo formato. Sustituye el contenido de ejemplo por el de esta tarea y no añadas apartados que no estén en la plantilla, salvo que el enunciado los pida. Si la plantilla y el enunciado se contradicen, avisa al alumno.`,
+            plantilla.recortado
+              ? '(La plantilla es muy larga y aquí aparece recortada: pídele al alumno el resto si lo necesitas.)'
+              : null,
+            '<plantilla>',
+            plantilla.texto,
+            '</plantilla>',
+          ]
+            .filter((l) => l !== null)
+            .join('\n')
       : null,
     estilo
       ? [

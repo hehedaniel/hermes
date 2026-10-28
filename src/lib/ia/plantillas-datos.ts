@@ -1,4 +1,6 @@
 /** Plantillas de entrega y muestra de estilo del alumno: tipos y utilidades sin dependencias. */
+import { base64ABytes } from './base64';
+import { analizarPlantillaDocx } from './docx-plantilla';
 
 export type PlantillaIA = {
   id: string;
@@ -7,6 +9,8 @@ export type PlantillaIA = {
   archivo?: string;
   /** Texto de la plantilla: portada, apartados, formato… */
   texto: string;
+  /** El .docx original en base64: si lo hay, los trabajos se montan sobre él (formato incluido) */
+  docx?: string;
   creada: number;
 };
 
@@ -44,7 +48,12 @@ export function recortar(texto: string, max: number) {
 
 /** Lo que se pasa a la IA en cada tarea: la plantilla y el estilo ya elegidos. */
 export type ExtrasIA = {
-  plantilla?: { nombre: string; texto: string } | null;
+  plantilla?: {
+    nombre: string;
+    texto: string;
+    /** Plantilla Word que la app rellena: campos de su portada */
+    docx?: { campos: string[] };
+  } | null;
   estilo?: { texto: string } | null;
 };
 
@@ -63,8 +72,11 @@ export function extrasDe(
 ): ExtrasIA {
   const p = plantillaActiva(datos, opciones.plantillaId);
   const usar = opciones.usarEstilo ?? datos.usarEstilo;
+  const info = p?.docx ? analizarPlantillaDocx(base64ABytes(p.docx)) : null;
   return {
-    plantilla: p ? { nombre: p.nombre, texto: p.texto } : null,
+    plantilla: p
+      ? { nombre: p.nombre, texto: p.texto, docx: info ? { campos: info.campos } : undefined }
+      : null,
     estilo: usar && datos.estilo?.texto.trim() ? { texto: datos.estilo.texto } : null,
   };
 }

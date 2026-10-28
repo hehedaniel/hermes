@@ -89,10 +89,13 @@ export function nombreSeguro(nombre: string) {
 export const extensionDe = (nombre: string) =>
   nombre.includes('.') ? nombre.split('.').pop()!.toLowerCase() : '';
 
+export const esDocx = (d: Pick<DocumentoIA, 'nombre'>) => extensionDe(d.nombre) === 'docx';
+
 export const esPdf = (d: Pick<DocumentoIA, 'nombre'>) => extensionDe(d.nombre) === 'pdf';
 
 const MIMES: Record<string, string> = {
   pdf: 'application/pdf',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   md: 'text/markdown',
   txt: 'text/plain',
   csv: 'text/csv',

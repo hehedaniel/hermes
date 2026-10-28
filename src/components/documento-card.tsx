@@ -5,7 +5,7 @@ import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { Radii } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { type DocumentoIA, esPdf } from '@/lib/ia/documentos';
+import { type DocumentoIA, esDocx, esPdf } from '@/lib/ia/documentos';
 
 type Props = {
   doc: DocumentoIA;
@@ -20,15 +20,18 @@ type Props = {
 export function DocumentoCard({ doc, onVer, onEntregar, entregando, viendo }: Props) {
   const theme = useTheme();
   const pdf = esPdf(doc);
+  const word = esDocx(doc);
   const palabras = doc.contenido.split(/\s+/).filter(Boolean).length;
   const paginas = Math.max(1, Math.round(palabras / 450));
   const lineas = doc.contenido.split('\n').length;
   const ext = pdf ? 'pdf' : (doc.nombre.split('.').pop() ?? 'txt').toLowerCase();
-  const detalle = pdf
-    ? paginas === 1
-      ? 'PDF · 1 página'
-      : `PDF · unas ${paginas} páginas`
-    : `${lineas} ${lineas === 1 ? 'línea' : 'líneas'}`;
+  const detalle = word
+    ? `Word · unas ${paginas} ${paginas === 1 ? 'página' : 'páginas'}`
+    : pdf
+      ? paginas === 1
+        ? 'PDF · 1 página'
+        : `PDF · unas ${paginas} páginas`
+      : `${lineas} ${lineas === 1 ? 'línea' : 'líneas'}`;
   return (
     <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line2 }]}>
       <View style={styles.cabecera}>
@@ -45,11 +48,24 @@ export function DocumentoCard({ doc, onVer, onEntregar, entregando, viendo }: Pr
       </View>
       <View style={styles.botones}>
         <View style={styles.boton}>
-          <Button title="Ver" icono="eye" variant="secondary" compacto onPress={onVer} loading={viendo} />
+          <Button
+            title={word ? 'Abrir' : 'Ver'}
+            icono={word ? 'file-text' : 'eye'}
+            variant="secondary"
+            compacto
+            onPress={onVer}
+            loading={viendo}
+          />
         </View>
         {onEntregar ? (
           <View style={styles.boton}>
-            <Button title="Entregar" icono="send" compacto onPress={onEntregar} loading={entregando} />
+            <Button
+              title="Entregar"
+              icono="send"
+              compacto
+              onPress={onEntregar}
+              loading={entregando}
+            />
           </View>
         ) : null}
       </View>
