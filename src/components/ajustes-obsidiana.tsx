@@ -9,6 +9,7 @@ import * as Linking from 'expo-linking';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
 
+import { AvatarUsuario } from '@/components/avatar-usuario';
 import { T, useArriba, useMovil } from '@/components/obs';
 import { TEMAS, type TemaId } from '@/constants/colors';
 import { VERSION } from '@/constants/version';
@@ -49,7 +50,15 @@ import {
 } from '@/lib/ia/proveedores';
 import { useMoodle } from '@/lib/store';
 
-const Z = { z100: '#F4F4F5', z200: '#E4E4E7', z300: '#D4D4D8', z400: '#A1A1AA', z500: '#71717A', z600: '#52525B', z800: '#27272A' };
+const Z = {
+  z100: '#F4F4F5',
+  z200: '#E4E4E7',
+  z300: '#D4D4D8',
+  z400: '#A1A1AA',
+  z500: '#71717A',
+  z600: '#52525B',
+  z800: '#27272A',
+};
 const CAMBIOS_URL = 'https://github.com/hehedaniel/hermes/blob/main/CHANGELOG.md';
 const ANTELACIONES = [48, 24, 12, 3, 2, 1];
 
@@ -59,7 +68,13 @@ export function AjustesObsidiana() {
   const arriba = useArriba();
   const padX = width < 500 ? 20 : movil ? 28 : width >= 1280 ? 80 : width >= 900 ? 56 : 32;
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#0A0A0C' }} contentContainerStyle={{ paddingHorizontal: padX, paddingTop: (movil ? 28 : 40) + arriba, paddingBottom: 40 }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: '#0A0A0C' }}
+      contentContainerStyle={{
+        paddingHorizontal: padX,
+        paddingTop: (movil ? 28 : 40) + arriba,
+        paddingBottom: 40,
+      }}>
       <View style={{ width: '100%', maxWidth: 896, alignSelf: 'center', gap: movil ? 24 : 40 }}>
         <View style={{ borderBottomWidth: 1, borderBottomColor: '#1C1C22', paddingBottom: 32 }}>
           <T k="mono" w={600} up s={11} ls={0.24} c={Z.z500} style={{ marginBottom: 6 }}>
@@ -78,7 +93,9 @@ export function AjustesObsidiana() {
         <Asistente />
         <Cuenta />
         <Apariencia />
-        <Pressable onPress={() => WebBrowser.openBrowserAsync(CAMBIOS_URL)} style={{ alignItems: 'center', paddingBottom: 24 }}>
+        <Pressable
+          onPress={() => WebBrowser.openBrowserAsync(CAMBIOS_URL)}
+          style={{ alignItems: 'center', paddingBottom: 24 }}>
           <T k="mono" s={11} c={Z.z600}>
             Hermes {VERSION} · Ver cambios
           </T>
@@ -90,11 +107,34 @@ export function AjustesObsidiana() {
 
 // ——— piezas ———
 
-function Tarjeta({ n, titulo, texto, children }: { n: number; titulo: string; texto?: string; children: React.ReactNode }) {
+function Tarjeta({
+  n,
+  titulo,
+  texto,
+  children,
+}: {
+  n: number;
+  titulo: string;
+  texto?: string;
+  children: React.ReactNode;
+}) {
   const movil = useMovil();
   return (
-    <View style={{ backgroundColor: '#121215', borderWidth: 1, borderColor: '#202026', borderRadius: 16, padding: movil ? 20 : 28 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: texto ? 8 : 24 }}>
+    <View
+      style={{
+        backgroundColor: '#121215',
+        borderWidth: 1,
+        borderColor: '#202026',
+        borderRadius: 16,
+        padding: movil ? 20 : 28,
+      }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          marginBottom: texto ? 8 : 24,
+        }}>
         <T k="mono" s={12} c={Z.z600}>
           {String(n).padStart(2, '0')}
         </T>
@@ -112,7 +152,15 @@ function Tarjeta({ n, titulo, texto, children }: { n: number; titulo: string; te
   );
 }
 
-function Interruptor({ value, onChange, disabled }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+function Interruptor({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+}) {
   return (
     <Pressable
       onPress={() => !disabled && onChange(!value)}
@@ -177,7 +225,17 @@ function Fila({
   );
 }
 
-function Chip({ texto, activo, onPress, ancho = 16 }: { texto: string; activo?: boolean; onPress?: () => void; ancho?: number }) {
+function Chip({
+  texto,
+  activo,
+  onPress,
+  ancho = 16,
+}: {
+  texto: string;
+  activo?: boolean;
+  onPress?: () => void;
+  ancho?: number;
+}) {
   return (
     <Pressable
       onPress={onPress}
@@ -271,7 +329,10 @@ function Recordatorios() {
     cambiar({ antelacion: nuevas.sort((a, b) => b - a) });
   };
   return (
-    <Tarjeta n={1} titulo="Recordatorios de entrega" texto="Avisar antes del vencimiento de cada tarea.">
+    <Tarjeta
+      n={1}
+      titulo="Recordatorios de entrega"
+      texto="Avisar antes del vencimiento de cada tarea.">
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
         {ANTELACIONES.map((h) => (
           <Chip key={h} texto={`${h} H`} activo={horas.includes(h)} onPress={() => alternar(h)} />
@@ -322,7 +383,8 @@ function Notificaciones() {
       {permiso === false && !off ? (
         <View style={{ marginBottom: 20, gap: 10 }}>
           <T s={12} lh={18} c="#F59E0B">
-            Las notificaciones están desactivadas para Hermes. Actívalas para que te avise de notas, novedades y entregas.
+            Las notificaciones están desactivadas para Hermes. Actívalas para que te avise de notas,
+            novedades y entregas.
           </T>
           <View style={{ alignSelf: 'flex-start' }}>
             <Boton texto="Activar notificaciones" onPress={activar} />
@@ -332,16 +394,33 @@ function Notificaciones() {
       <Fila
         titulo="Correcciones publicadas"
         texto="Cuando se publica una nota o un PDF corregido."
-        derecha={<Interruptor value={prefs.notas} disabled={off} onChange={(v) => cambiar({ notas: v })} />}
+        derecha={
+          <Interruptor value={prefs.notas} disabled={off} onChange={(v) => cambiar({ notas: v })} />
+        }
       />
       <Fila
         borde
         titulo="Novedades del campus"
         texto="Material nuevo o actualizado, tareas nuevas y cambios de fecha."
-        derecha={<Interruptor value={prefs.novedades} disabled={off} onChange={(v) => cambiar({ novedades: v })} />}
+        derecha={
+          <Interruptor
+            value={prefs.novedades}
+            disabled={off}
+            onChange={(v) => cambiar({ novedades: v })}
+          />
+        }
       />
       {!off ? (
-        <View style={{ marginTop: 20, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#1D1D23', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View
+          style={{
+            marginTop: 20,
+            paddingTop: 20,
+            borderTopWidth: 1,
+            borderTopColor: '#1D1D23',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
           <Boton texto="Probar una notificación" onPress={probar} />
           {msg ? (
             <T k="mono" up s={11} ls={0.05} c={Z.z500}>
@@ -406,7 +485,13 @@ function GoogleCalendar() {
                 onOk: () => quitar(),
               })
             }
-            style={{ paddingHorizontal: 16, paddingVertical: 6, borderRadius: 99, borderWidth: 1, borderColor: Z.z800 }}>
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 6,
+              borderRadius: 99,
+              borderWidth: 1,
+              borderColor: Z.z800,
+            }}>
             <T k="mono" up s={11} ls={0.05} c={Z.z400}>
               Desconectar
             </T>
@@ -415,7 +500,8 @@ function GoogleCalendar() {
       ) : (
         <View style={{ gap: 12 }}>
           <T s={12} lh={18} c={Z.z500}>
-            Pega el enlace que da la función crearClaveApp del script de Google (ver google-apps-script/README.md).
+            Pega el enlace que da la función crearClaveApp del script de Google (ver
+            google-apps-script/README.md).
           </T>
           <TextInput
             value={texto}
@@ -431,7 +517,11 @@ function GoogleCalendar() {
               texto="Pegar"
               onPress={async () => setTexto((await Clipboard.getStringAsync()).trim())}
             />
-            <Boton texto={busy ? 'Conectando…' : 'Conectar'} onPress={() => guardar(texto)} disabled={busy || !texto.trim()} />
+            <Boton
+              texto={busy ? 'Conectando…' : 'Conectar'}
+              onPress={() => guardar(texto)}
+              disabled={busy || !texto.trim()}
+            />
           </View>
         </View>
       )}
@@ -565,7 +655,13 @@ function Asistente() {
       <View style={{ gap: 24 }}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {LISTA_PROVEEDORES.map((p) => (
-            <Chip key={p} texto={PROVEEDORES[p].nombre} ancho={20} activo={p === config.proveedor} onPress={() => elegirProveedor(p)} />
+            <Chip
+              key={p}
+              texto={PROVEEDORES[p].nombre}
+              ancho={20}
+              activo={p === config.proveedor}
+              onPress={() => elegirProveedor(p)}
+            />
           ))}
         </View>
 
@@ -573,7 +669,14 @@ function Asistente() {
           <T w={500} s={14} c={Z.z200}>
             Clave de API
           </T>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
+              flexWrap: 'wrap',
+            }}>
             <View style={{ flex: 1, minWidth: 200 }}>
               <T s={12} lh={16} c={Z.z500}>
                 Se guarda solo en este dispositivo.
@@ -596,7 +699,12 @@ function Asistente() {
                   autoCorrect={false}
                   style={[campo, { minWidth: 240 }]}
                 />
-                <Boton texto={ocupado === 'clave' ? 'Guardando…' : 'Guardar'} onPress={guardarClave} disabled={!clave.trim() || ocupado === 'clave'} ancho={12} />
+                <Boton
+                  texto={ocupado === 'clave' ? 'Guardando…' : 'Guardar'}
+                  onPress={guardarClave}
+                  disabled={!clave.trim() || ocupado === 'clave'}
+                  ancho={12}
+                />
               </View>
             ) : (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -605,7 +713,15 @@ function Asistente() {
                     {oculta(claveGuardada!)}
                   </T>
                 </View>
-                <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99, backgroundColor: '#202715', borderWidth: 1, borderColor: 'rgba(63,98,18,0.8)' }}>
+                <View
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 99,
+                    backgroundColor: '#202715',
+                    borderWidth: 1,
+                    borderColor: 'rgba(63,98,18,0.8)',
+                  }}>
                   <T k="mono" s={10} w={500} c="#BEF264">
                     GUARDADA
                   </T>
@@ -627,7 +743,14 @@ function Asistente() {
 
         {!mostrarCampo ? (
           <View style={{ gap: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 16,
+                flexWrap: 'wrap',
+              }}>
               <View>
                 <T w={500} s={14} c={Z.z200}>
                   Modelo
@@ -636,7 +759,12 @@ function Asistente() {
                   Se usa en las respuestas del asistente.
                 </T>
               </View>
-              <Pressable onPress={abrirModelos} style={[campo, { width: 240, flexDirection: 'row', justifyContent: 'space-between' }]}>
+              <Pressable
+                onPress={abrirModelos}
+                style={[
+                  campo,
+                  { width: 240, flexDirection: 'row', justifyContent: 'space-between' },
+                ]}>
                 <T k="mono" s={12} c={Z.z200} numberOfLines={1} style={{ flex: 1 }}>
                   {modeloDe(config)}
                 </T>
@@ -646,14 +774,34 @@ function Asistente() {
               </Pressable>
             </View>
             {verModelos ? (
-              <View style={{ alignSelf: 'flex-end', width: 240, borderWidth: 1, borderColor: Z.z800, borderRadius: 12, backgroundColor: '#17171D', overflow: 'hidden', maxHeight: 260 }}>
+              <View
+                style={{
+                  alignSelf: 'flex-end',
+                  width: 240,
+                  borderWidth: 1,
+                  borderColor: Z.z800,
+                  borderRadius: 12,
+                  backgroundColor: '#17171D',
+                  overflow: 'hidden',
+                  maxHeight: 260,
+                }}>
                 <ScrollView>
                   {lista.map((m, i) => (
                     <Pressable
                       key={m.id}
                       onPress={() => elegirModelo(m.id)}
-                      style={{ paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: i ? 1 : 0, borderTopColor: '#1D1D23', backgroundColor: m.id === modeloDe(config) ? '#202715' : 'transparent' }}>
-                      <T k="mono" s={12} c={m.id === modeloDe(config) ? '#BEF264' : Z.z200} numberOfLines={1}>
+                      style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 9,
+                        borderTopWidth: i ? 1 : 0,
+                        borderTopColor: '#1D1D23',
+                        backgroundColor: m.id === modeloDe(config) ? '#202715' : 'transparent',
+                      }}>
+                      <T
+                        k="mono"
+                        s={12}
+                        c={m.id === modeloDe(config) ? '#BEF264' : Z.z200}
+                        numberOfLines={1}>
                         {m.id}
                       </T>
                     </Pressable>
@@ -665,8 +813,20 @@ function Asistente() {
         ) : null}
 
         {!mostrarCampo ? (
-          <View style={{ paddingTop: 12, borderTopWidth: 1, borderTopColor: '#1D1D23', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Boton texto={ocupado === 'probar' ? 'Probando…' : 'Probar conexión'} onPress={probar} disabled={ocupado === 'probar'} />
+          <View
+            style={{
+              paddingTop: 12,
+              borderTopWidth: 1,
+              borderTopColor: '#1D1D23',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+            <Boton
+              texto={ocupado === 'probar' ? 'Probando…' : 'Probar conexión'}
+              onPress={probar}
+              disabled={ocupado === 'probar'}
+            />
           </View>
         ) : null}
         {msg ? (
@@ -686,7 +846,12 @@ function Cuenta() {
   const { guardaArchivos, resumen, borrarTodo } = useDownloads();
   const { enabled: updatesEnabled, checking, checkNow } = useAppUpdates();
   const nombre = snapshot?.site.fullname ?? 'Cuenta de Moodle';
-  const iniciales = nombre.split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+  const iniciales = nombre
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join('')
+    .toUpperCase();
   function cerrar() {
     confirmar({
       titulo: 'Cerrar sesión',
@@ -704,29 +869,59 @@ function Cuenta() {
   return (
     <Tarjeta n={5} titulo="Cuenta">
       <View style={{ gap: 24 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 16,
+          }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-            <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#1B1B22', borderWidth: 1, borderColor: 'rgba(63,63,70,0.8)', alignItems: 'center', justifyContent: 'center' }}>
-              <T w={600} s={14} ls={0.05} c={Z.z200}>
-                {iniciales}
-              </T>
-            </View>
+            <AvatarUsuario
+              size={44}
+              iniciales={iniciales}
+              fontSize={14}
+              fondo="#1B1B22"
+              borde="rgba(63,63,70,0.8)"
+              color={Z.z200}
+            />
             <View>
               <T w={500} s={14} c={Z.z100}>
                 {nombre}
               </T>
               <T k="mono" up s={12} ls={0.05} c={Z.z500} style={{ marginTop: 2 }}>
-                {snapshot ? `${snapshot.site.sitename} · ${snapshot.courses.length} asignaturas` : 'Moodle'}
+                {snapshot
+                  ? `${snapshot.site.sitename} · ${snapshot.courses.length} asignaturas`
+                  : 'Moodle'}
               </T>
             </View>
           </View>
           <T k="mono" up s={10} ls={0.05} c={Z.z500}>
-            {syncing ? 'Sincronizando…' : snapshot ? `Sincronizado ${haceCuanto(snapshot.syncedAt)}` : 'Sin sincronizar'}
+            {syncing
+              ? 'Sincronizando…'
+              : snapshot
+                ? `Sincronizado ${haceCuanto(snapshot.syncedAt)}`
+                : 'Sin sincronizar'}
           </T>
         </View>
-        <View style={{ paddingTop: 16, borderTopWidth: 1, borderTopColor: '#1D1D23', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <View
+          style={{
+            paddingTop: 16,
+            borderTopWidth: 1,
+            borderTopColor: '#1D1D23',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
+          }}>
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <Boton texto={syncing ? 'Sincronizando…' : 'Sincronizar ahora'} onPress={() => refresh()} disabled={syncing} />
+            <Boton
+              texto={syncing ? 'Sincronizando…' : 'Sincronizar ahora'}
+              onPress={() => refresh()}
+              disabled={syncing}
+            />
             <Boton texto="Cerrar sesión" peligro onPress={cerrar} />
           </View>
           <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
@@ -765,13 +960,20 @@ function Cuenta() {
 function Apariencia() {
   const { tema, cambiarTema, listo } = useThemePreference();
   return (
-    <Tarjeta n={6} titulo="Apariencia" texto="Elige el diseño de Hermes. Obsidiana solo existe en oscuro.">
+    <Tarjeta
+      n={6}
+      titulo="Apariencia"
+      texto="Elige el diseño de Hermes. Obsidiana solo existe en oscuro.">
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {(Object.keys(TEMAS) as TemaId[]).map((id) => (
-          <Chip key={id} texto={TEMAS[id].nombre} activo={tema === id} onPress={() => listo && cambiarTema(id)} />
+          <Chip
+            key={id}
+            texto={TEMAS[id].nombre}
+            activo={tema === id}
+            onPress={() => listo && cambiarTema(id)}
+          />
         ))}
       </View>
     </Tarjeta>
   );
 }
-

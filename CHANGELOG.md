@@ -6,6 +6,18 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.1.1] - 2026-10-28
+
+### Añadido
+- Tu foto de perfil de Moodle en la barra lateral y en Ajustes → Cuenta (si no tienes, tus iniciales).
+- El logo de Hermes en la cabecera de la barra lateral y como icono de la pestaña del navegador en la versión web.
+
+### Arreglado
+- Calendario en móvil (iPhone y web móvil): ahora se puede deslizar la pantalla para ver lo que hay en el día seleccionado.
+- Los índices de unidad («UD 1», «UD 2»…) de cada asignatura ya no se parten ni se montan sobre el nombre.
+- Pendientes: los filtros por asignatura ya no salen cortados por arriba en la web.
+- Un poco más de espacio entre las asignaturas de la barra lateral.
+
 ## [2.1.0] - 2026-10-28
 
 ### Añadido

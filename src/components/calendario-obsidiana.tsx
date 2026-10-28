@@ -6,7 +6,8 @@
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { Pressable, ScrollView, type StyleProp, View, type ViewStyle } from 'react-native';
 
 import { fechaEditorial, O, Punto, T, useArriba, useMovil, usePadX } from '@/components/obs';
 import { useNow } from '@/hooks/use-now';
@@ -155,11 +156,10 @@ export function CalendarioObsidiana() {
             minHeight: 0,
           }}>
           {/* Mes */}
-          <ScrollView
-            scrollEnabled={!movil}
+          <Desliza
+            movil={movil}
             style={movil ? { flexGrow: 0 } : { flex: 1 }}
-            contentContainerStyle={{ padding: movil ? padX : 32 }}
-            nestedScrollEnabled>
+            contentContainerStyle={{ padding: movil ? padX : 32 }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -343,7 +343,7 @@ export function CalendarioObsidiana() {
                 </View>
               ))}
             </View>
-          </ScrollView>
+          </Desliza>
 
           <PanelDia
             dia={deClave(elegido)}
@@ -379,8 +379,8 @@ function PanelDia({
   );
 
   return (
-    <ScrollView
-      scrollEnabled={!movil}
+    <Desliza
+      movil={movil}
       style={
         movil
           ? { flexGrow: 0 }
@@ -392,8 +392,7 @@ function PanelDia({
               flexGrow: 0,
             }
       }
-      contentContainerStyle={{ padding: movil ? padX : 24, paddingTop: movil ? 0 : 24, gap: 24 }}
-      nestedScrollEnabled>
+      contentContainerStyle={{ padding: movil ? padX : 24, paddingTop: movil ? 0 : 24, gap: 24 }}>
       <View
         style={{
           borderWidth: 1,
@@ -613,6 +612,30 @@ function PanelDia({
           </T>
         )}
       </View>
+    </Desliza>
+  );
+}
+
+/**
+ * En móvil los bloques anidados no son ScrollView: un ScrollView con scroll desactivado se come
+ * el gesto (en iPhone y en la web móvil) y no deja deslizar la pantalla entera.
+ * Solo en escritorio, donde la columna del día tiene su propio scroll, se usa ScrollView.
+ */
+function Desliza({
+  movil,
+  style,
+  contentContainerStyle,
+  children,
+}: {
+  movil: boolean;
+  style?: StyleProp<ViewStyle>;
+  contentContainerStyle?: StyleProp<ViewStyle>;
+  children: ReactNode;
+}) {
+  if (movil) return <View style={[style, contentContainerStyle]}>{children}</View>;
+  return (
+    <ScrollView style={style} contentContainerStyle={contentContainerStyle} nestedScrollEnabled>
+      {children}
     </ScrollView>
   );
 }

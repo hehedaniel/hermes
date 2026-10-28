@@ -8,7 +8,17 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
-import { Etiqueta, fechaEditorial, O, Punto, T, Tarjeta, useArriba, useMovil, usePadX } from '@/components/obs';
+import {
+  Etiqueta,
+  fechaEditorial,
+  O,
+  Punto,
+  T,
+  Tarjeta,
+  useArriba,
+  useMovil,
+  usePadX,
+} from '@/components/obs';
 import { useNow } from '@/hooks/use-now';
 import type { Entrega } from '@/lib/data';
 import { haceCuanto, hora, MESES, quedan } from '@/lib/format';
@@ -91,10 +101,20 @@ export function PendientesObsidiana() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: O.bg }}
-      contentContainerStyle={{ paddingHorizontal: padX, paddingTop: 32 + arriba, paddingBottom: 32 }}>
+      contentContainerStyle={{
+        paddingHorizontal: padX,
+        paddingTop: 32 + arriba,
+        paddingBottom: 32,
+      }}>
       <View style={{ width: '100%', maxWidth: 1240, alignSelf: 'center', gap: 28 }}>
         {/* Cabecera */}
-        <View style={{ flexDirection: movil ? 'column' : 'row', alignItems: movil ? 'flex-start' : 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+        <View
+          style={{
+            flexDirection: movil ? 'column' : 'row',
+            alignItems: movil ? 'flex-start' : 'flex-start',
+            justifyContent: 'space-between',
+            gap: 16,
+          }}>
           <View style={{ flex: movil ? undefined : 1 }}>
             <Etiqueta s={10.5} ls={0.25} c="#686875" style={{ marginBottom: 4 }}>
               {fechaEditorial(hoy)}
@@ -103,8 +123,10 @@ export function PendientesObsidiana() {
               Pendientes
             </T>
             <T s={13} c="#7D7D8A" style={{ marginTop: 4, maxWidth: 576 }}>
-              {nCursos === 1 ? 'Una asignatura sincronizada' : `${numero(nCursos)} asignaturas sincronizadas`} con
-              el campus. Aquí tienes lo que hay que entregar, por orden de plazo.
+              {nCursos === 1
+                ? 'Una asignatura sincronizada'
+                : `${numero(nCursos)} asignaturas sincronizadas`}{' '}
+              con el campus. Aquí tienes lo que hay que entregar, por orden de plazo.
             </T>
           </View>
           <Pressable
@@ -123,7 +145,11 @@ export function PendientesObsidiana() {
             }}>
             <Feather name="refresh-cw" size={12} color="#7E7E8B" />
             <T k="mono" up s={10} ls={0.05} c="#7E7E8B">
-              {syncing ? 'Sincronizando…' : sincronizado ? `Sincronizado ${sincronizado}` : 'Sin sincronizar'}
+              {syncing
+                ? 'Sincronizando…'
+                : sincronizado
+                  ? `Sincronizado ${sincronizado}`
+                  : 'Sin sincronizar'}
             </T>
           </Pressable>
         </View>
@@ -131,7 +157,12 @@ export function PendientesObsidiana() {
         {/* Cifras */}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: movil ? 10 : 14 }}>
           <Cifra etiqueta="Por entregar" n={abiertas.length} unidad="abiertas" />
-          <Cifra etiqueta="Urgentes" n={urgentes.length} unidad="< 48 h" color={urgentes.length ? O.lime : O.white} />
+          <Cifra
+            etiqueta="Urgentes"
+            n={urgentes.length}
+            unidad="< 48 h"
+            color={urgentes.length ? O.lime : O.white}
+          />
           <Cifra etiqueta="Vencidas" n={vencidas.length} unidad="sin entregar" />
           <Cifra etiqueta="Cerradas" n={cerradas.length} unidad="entregadas" />
         </View>
@@ -141,7 +172,14 @@ export function PendientesObsidiana() {
           horizontal={movil}
           showsHorizontalScrollIndicator={false}
           style={{ flexGrow: 0, marginHorizontal: movil ? -padX : 0 }}
-          contentContainerStyle={{ flexDirection: 'row', flexWrap: movil ? 'nowrap' : 'wrap', alignItems: 'center', gap: 8, paddingTop: 4, paddingHorizontal: movil ? padX : 0, marginTop: movil ? 0 : -8 }}>
+          contentContainerStyle={{
+            flexDirection: 'row',
+            flexWrap: movil ? 'nowrap' : 'wrap',
+            alignItems: 'center',
+            gap: 8,
+            paddingVertical: 4,
+            paddingHorizontal: movil ? padX : 0,
+          }}>
           <Pressable
             onPress={() => setFiltro('todas')}
             style={{
@@ -183,19 +221,39 @@ export function PendientesObsidiana() {
         </ScrollView>
 
         {/* Listas + columna derecha */}
-        <View style={{ flexDirection: movil ? 'column' : 'row', gap: 28, alignItems: movil ? 'stretch' : 'flex-start', paddingTop: 8 }}>
+        <View
+          style={{
+            flexDirection: movil ? 'column' : 'row',
+            gap: 28,
+            alignItems: movil ? 'stretch' : 'flex-start',
+            paddingTop: 8,
+          }}>
           <View style={{ flex: movil ? undefined : 2, minWidth: 0, gap: 24 }}>
             {vencidas.length ? (
               <Lista titulo="Vencidas" n={vencidas.length}>
                 {vencidas.map((e) => (
-                  <Fila key={e.key} e={e} info={info} ahora={ahora} nowMs={nowMs} onPress={() => abrir(e)} />
+                  <Fila
+                    key={e.key}
+                    e={e}
+                    info={info}
+                    ahora={ahora}
+                    nowMs={nowMs}
+                    onPress={() => abrir(e)}
+                  />
                 ))}
               </Lista>
             ) : null}
             <Lista titulo="Por entregar" n={abiertas.length}>
               {abiertas.length ? (
                 abiertas.map((e) => (
-                  <Fila key={e.key} e={e} info={info} ahora={ahora} nowMs={nowMs} onPress={() => abrir(e)} />
+                  <Fila
+                    key={e.key}
+                    e={e}
+                    info={info}
+                    ahora={ahora}
+                    nowMs={nowMs}
+                    onPress={() => abrir(e)}
+                  />
                 ))
               ) : (
                 <T s={12.5} c={O.t3}>
@@ -206,7 +264,15 @@ export function PendientesObsidiana() {
             {cerradas.length ? (
               <Lista titulo="Cerradas" n={cerradas.length}>
                 {cerradas.slice(0, 6).map((e) => (
-                  <Fila key={e.key} e={e} info={info} ahora={ahora} nowMs={nowMs} cerrada onPress={() => abrir(e)} />
+                  <Fila
+                    key={e.key}
+                    e={e}
+                    info={info}
+                    ahora={ahora}
+                    nowMs={nowMs}
+                    cerrada
+                    onPress={() => abrir(e)}
+                  />
                 ))}
               </Lista>
             ) : null}
@@ -264,8 +330,21 @@ export function PendientesObsidiana() {
               </Etiqueta>
               <View style={{ gap: 12 }}>
                 {cursos.map((x) => (
-                  <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                  <View
+                    key={x.id}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 10,
+                        flex: 1,
+                        minWidth: 0,
+                      }}>
                       <Punto color={x.a.color} />
                       <T s={12.5} c="#8E8E9C" numberOfLines={1} style={{ flex: 1 }}>
                         {x.a.nombre}
@@ -288,10 +367,27 @@ export function PendientesObsidiana() {
 const NUMEROS = ['Cero', 'Una', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho', 'Nueve'];
 const numero = (n: number) => NUMEROS[n] ?? String(n);
 
-function Cifra({ etiqueta, n, unidad, color = O.white }: { etiqueta: string; n: number; unidad: string; color?: string }) {
+function Cifra({
+  etiqueta,
+  n,
+  unidad,
+  color = O.white,
+}: {
+  etiqueta: string;
+  n: number;
+  unidad: string;
+  color?: string;
+}) {
   const movil = useMovil();
   return (
-    <Tarjeta radius={12} borde={O.line} style={movil ? { flexGrow: 1, flexBasis: '45%', paddingHorizontal: 16, paddingVertical: 14 } : { flex: 1, paddingHorizontal: 20, paddingVertical: 16 }}>
+    <Tarjeta
+      radius={12}
+      borde={O.line}
+      style={
+        movil
+          ? { flexGrow: 1, flexBasis: '45%', paddingHorizontal: 16, paddingVertical: 14 }
+          : { flex: 1, paddingHorizontal: 20, paddingVertical: 16 }
+      }>
       <Etiqueta s={9.5} ls={0.2} c="#6B6B77" style={{ marginBottom: 8 }}>
         {etiqueta}
       </Etiqueta>
@@ -310,7 +406,13 @@ function Cifra({ etiqueta, n, unidad, color = O.white }: { etiqueta: string; n: 
 function Lista({ titulo, n, children }: { titulo: string; n: number; children: React.ReactNode }) {
   return (
     <View style={{ gap: 10 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 4 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingBottom: 4,
+        }}>
         <Etiqueta s={10} ls={0.2} c="#61616C">
           {titulo}
         </Etiqueta>
@@ -384,7 +486,13 @@ function Fila({
           backgroundColor: cerrada ? O.green : a.color,
         }}
       />
-      <View style={{ paddingLeft: 14, flex: movil ? undefined : 1, minWidth: 0, maxWidth: movil ? undefined : 340 }}>
+      <View
+        style={{
+          paddingLeft: 14,
+          flex: movil ? undefined : 1,
+          minWidth: 0,
+          maxWidth: movil ? undefined : 340,
+        }}>
         <T s={13.5} w={cerrada ? 500 : 600} c={cerrada ? '#8F8F9E' : O.white} numberOfLines={1}>
           {e.nombre}
         </T>
@@ -395,7 +503,14 @@ function Fila({
           </Etiqueta>
         ) : null}
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: movil ? 'space-between' : undefined, gap: 20, paddingLeft: movil ? 14 : 0 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: movil ? 'space-between' : undefined,
+          gap: 20,
+          paddingLeft: movil ? 14 : 0,
+        }}>
         <View style={{ alignItems: movil ? 'flex-start' : 'flex-end' }}>
           {e.fecha ? (
             <T k="mono" s={11} w={cerrada ? 400 : 500} c={cerrada ? '#686873' : '#E0E0E8'}>

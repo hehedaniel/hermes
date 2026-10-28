@@ -28,7 +28,7 @@ function parecido(buscado: string, candidato: string) {
 }
 
 /** La foto por defecto de Moodle (la silueta) no cuenta como foto. */
-function urlFoto(client: MoodleClient, url?: string) {
+export function urlFoto(client: MoodleClient, url?: string) {
   if (!url) return undefined;
   if (url.includes('theme/image.php')) return undefined;
   // pluginfile.php exige sesión; webservice/pluginfile.php acepta el token

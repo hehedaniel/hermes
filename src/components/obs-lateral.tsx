@@ -1,9 +1,10 @@
 /** Barra lateral del diseño Obsidiana (270 px). Medidas del HTML de «Pendientes». */
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
 
 import type { IconoFeather } from '@/components/anden';
+import { AvatarUsuario } from '@/components/avatar-usuario';
 import { Etiqueta, O, Punto, T } from '@/components/obs';
 import { useNow } from '@/hooks/use-now';
 import { haceCuanto } from '@/lib/format';
@@ -63,13 +64,33 @@ export function LateralObsidiana({
         justifyContent: 'space-between',
       }}>
       <View style={{ flex: 1, minHeight: 0 }}>
-        <View style={{ paddingHorizontal: 12, marginBottom: 32 }}>
-          <T k="serif" s={30} lh={36} c={O.white} ls={0.025}>
-            Hermes
-          </T>
-          <Etiqueta s={9.5} ls={0.25} c="#63636E" w={500} style={{ marginTop: 6 }}>
-            Campus IA & Big Data
-          </Etiqueta>
+        <View
+          style={{
+            paddingHorizontal: 12,
+            marginBottom: 32,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+          <Image
+            source={require('../../assets/images/icon.png')}
+            style={{ width: 44, height: 44, borderRadius: 11 }}
+            accessibilityLabel="Hermes"
+          />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <T k="serif" s={28} lh={32} c={O.white} ls={0.025}>
+              Hermes
+            </T>
+            <Etiqueta
+              s={8.5}
+              ls={0.2}
+              c="#63636E"
+              w={500}
+              style={{ marginTop: 2 }}
+              numberOfLines={1}>
+              Campus IA & Big Data
+            </Etiqueta>
+          </View>
         </View>
 
         <View style={{ gap: 4, marginBottom: 32 }}>
@@ -140,7 +161,7 @@ export function LateralObsidiana({
           <Etiqueta s={10} ls={0.2} c="#565660" style={{ marginBottom: 12 }}>
             Asignaturas
           </Etiqueta>
-          <ScrollView contentContainerStyle={{ gap: 10 }} showsVerticalScrollIndicator={false}>
+          <ScrollView contentContainerStyle={{ gap: 8 }} showsVerticalScrollIndicator={false}>
             {cursos.map((c) => {
               const a = info(c.id, c.fullname);
               return (
@@ -153,9 +174,19 @@ export function LateralObsidiana({
                     })
                   }
                   accessibilityRole="link"
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
+                    paddingVertical: 5,
+                  }}>
                   <Punto color={a.color} />
-                  <T s={12.5} c={cursoActivo === c.id ? O.white : '#868692'} w={cursoActivo === c.id ? 600 : 400} numberOfLines={1} style={{ flex: 1 }}>
+                  <T
+                    s={12.5}
+                    c={cursoActivo === c.id ? O.white : '#868692'}
+                    w={cursoActivo === c.id ? 600 : 400}
+                    numberOfLines={1}
+                    style={{ flex: 1 }}>
                     {a.nombre}
                   </T>
                 </Pressable>
@@ -166,7 +197,12 @@ export function LateralObsidiana({
       </View>
 
       <View
-        style={{ paddingHorizontal: 8, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#19191D' }}>
+        style={{
+          paddingHorizontal: 8,
+          paddingTop: 16,
+          borderTopWidth: 1,
+          borderTopColor: '#19191D',
+        }}>
         {ajustes ? (
           <Pressable
             onPress={() => ir(ajustes.name, ajustes.key, ajustes.activa)}
@@ -198,22 +234,9 @@ export function LateralObsidiana({
             borderRadius: 8,
             backgroundColor: '#111114',
           }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-            <View
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
-                backgroundColor: '#1E1E24',
-                borderWidth: 1,
-                borderColor: '#2B2B34',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-              <T s={11} w={600} c="#A4A4B2">
-                {iniciales}
-              </T>
-            </View>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+            <AvatarUsuario size={28} iniciales={iniciales} fontSize={11} />
             <View style={{ flex: 1, minWidth: 0 }}>
               <T s={12} w={600} c={O.white} numberOfLines={1} lh={16}>
                 {nombre}
@@ -240,11 +263,31 @@ export function LateralObsidiana({
 }
 
 const RUTAS: Ruta[] = [
-  { key: 'index', name: 'index', activa: false, info: { titulo: 'Pendientes', icono: 'clipboard' } },
-  { key: 'calendario', name: 'calendario', activa: false, info: { titulo: 'Calendario', icono: 'calendar' } },
+  {
+    key: 'index',
+    name: 'index',
+    activa: false,
+    info: { titulo: 'Pendientes', icono: 'clipboard' },
+  },
+  {
+    key: 'calendario',
+    name: 'calendario',
+    activa: false,
+    info: { titulo: 'Calendario', icono: 'calendar' },
+  },
   { key: 'notas', name: 'notas', activa: false, info: { titulo: 'Notas', icono: 'award' } },
-  { key: 'novedades', name: 'novedades', activa: false, info: { titulo: 'Novedades', icono: 'bell' } },
-  { key: 'ajustes', name: 'ajustes', activa: false, info: { titulo: 'Ajustes', icono: 'settings' } },
+  {
+    key: 'novedades',
+    name: 'novedades',
+    activa: false,
+    info: { titulo: 'Novedades', icono: 'bell' },
+  },
+  {
+    key: 'ajustes',
+    name: 'ajustes',
+    activa: false,
+    info: { titulo: 'Ajustes', icono: 'settings' },
+  },
 ];
 
 /** La barra lateral fuera de las pestañas (en la pantalla de una asignatura o de una tarea). */

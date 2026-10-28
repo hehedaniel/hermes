@@ -451,7 +451,14 @@ function BloqueFila({
             flexBasis: movil ? '100%' : undefined,
             minWidth: 0,
           }}>
-          <T k="mono" up s={10} ls={0.05} c="#63636E">
+          <T
+            k="mono"
+            up
+            s={10}
+            ls={0.05}
+            c="#63636E"
+            numberOfLines={1}
+            style={{ minWidth: bloque.numero > 0 ? 40 : undefined, flexShrink: 0 }}>
             {bloque.numero > 0 ? `UD ${bloque.numero}` : 'General'}
           </T>
           <T w={600} s={14} c={O.white} numberOfLines={2} style={{ flexShrink: 1 }}>

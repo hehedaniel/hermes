@@ -15,6 +15,7 @@ const PAPEL = '#F7F4ED';
 const PAPEL_OSCURO = '#0E1112';
 
 const head = `
+    <link rel="icon" type="image/png" sizes="96x96" href="${base}/favicon-96.png" />
     <link rel="manifest" href="${base}/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="${base}/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
