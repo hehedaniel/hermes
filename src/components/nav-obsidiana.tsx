@@ -20,7 +20,7 @@ type Ruta = {
 };
 
 const BOTON = 56;
-const RADIO = 140;
+const RADIO = 156;
 const ITEM = 52;
 
 export function BarraInferiorObsidiana({
@@ -273,10 +273,8 @@ export function BarraInferiorObsidiana({
                     />
                   </Pressable>
                   <T
-                    k="mono"
-                    up
-                    s={9.5}
-                    ls={0.08}
+                    w={500}
+                    s={10}
                     c="#C3C7D2"
                     style={{ marginTop: 6, width: 84, textAlign: 'center' }}>
                     {o.texto}

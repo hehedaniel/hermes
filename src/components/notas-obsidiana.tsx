@@ -42,7 +42,12 @@ type Grupo = {
   total?: { nota: number; max: number };
   conPesos: boolean;
   sinCorregir: number;
+  /** La media la calcula Hermes (Moodle no da total o no hay pesos): es aproximada */
+  estimada?: boolean;
 };
+
+/** Las evaluaciones iniciales son diagnósticos: no puntúan para la nota del módulo. */
+const esInicial = (nombre: string) => /\binicial/.test(norm(nombre));
 
 export function NotasObsidiana() {
   const { snapshot, client } = useMoodle();
@@ -70,10 +75,29 @@ export function NotasObsidiana() {
           fecha: porNombre.get(norm(i.nombre))?.fecha || i.fecha,
         }));
         const conPesos = items.some((i) => i.peso);
+        // Si Moodle no da total del curso, se aproxima con las notas ya puestas (ponderada si
+        // hay pesos y, si no, media simple), sin contar las evaluaciones iniciales.
+        let total = moodle.total;
+        let estimada = false;
+        if (!total) {
+          const corregidas = items.filter((i) => i.nota !== undefined && !esInicial(i.nombre));
+          const peso = (i: ItemNota) => parseFloat((i.peso ?? '').replace(',', '.')) || 0;
+          const sumaPesos = corregidas.reduce((a, i) => a + peso(i), 0);
+          if (corregidas.length) {
+            const ponderar = conPesos && sumaPesos > 0;
+            const num = corregidas.reduce(
+              (a, i) => a + ((i.nota as number) / i.max) * (ponderar ? peso(i) : 1),
+              0,
+            );
+            total = { nota: (num / (ponderar ? sumaPesos : corregidas.length)) * 10, max: 10 };
+            estimada = !ponderar;
+          }
+        }
         return {
           cursoId: c.id,
           items,
-          total: moodle.total,
+          total,
+          estimada,
           conPesos,
           sinCorregir: items.filter((i) => i.nota === undefined).length,
         };
@@ -92,7 +116,7 @@ export function NotasObsidiana() {
             fecha: e.fecha,
           };
         });
-      const corregidas = items.filter((i) => i.nota !== undefined);
+      const corregidas = items.filter((i) => i.nota !== undefined && !esInicial(i.nombre));
       const total = corregidas.length
         ? {
             nota:
@@ -105,6 +129,7 @@ export function NotasObsidiana() {
         cursoId: c.id,
         items,
         total,
+        estimada: true,
         conPesos: false,
         sinCorregir: items.length - corregidas.length,
       };
@@ -168,7 +193,7 @@ export function NotasObsidiana() {
           {grupos.map((g) => {
             const a = info(g.cursoId);
             const total = g.total;
-            const oficial = !!total && g.sinCorregir === 0 && g.items.length > 0;
+            const oficial = !!total && !g.estimada && g.sinCorregir === 0 && g.items.length > 0;
             const abiertaG = abierta(g);
             return (
               <View
@@ -216,9 +241,9 @@ export function NotasObsidiana() {
                       </T>
                       {!oficial && total ? (
                         <T s={13} lh={21} c={N.n400} style={{ marginTop: 14 }}>
-                          {g.conPesos
-                            ? 'La media es una estimación con los pesos actuales y puede variar cuando se corrijan las actividades pendientes.'
-                            : 'Moodle no da aquí los pesos de esta asignatura: la media es una estimación simple de las notas que ya tienes.'}
+                          {g.estimada
+                            ? 'Nota aproximada: el profesor no ha publicado cuánto vale cada actividad, así que es una media simple y puede no coincidir con la nota real. No cuentan las evaluaciones iniciales.'
+                            : 'La media es una estimación con los pesos actuales y puede variar cuando se corrijan las actividades pendientes.'}
                         </T>
                       ) : null}
                       {g.items.length ? (

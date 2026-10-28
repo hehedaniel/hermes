@@ -6,6 +6,17 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.2.0] - 2026-10-28
+
+### Añadido
+- **Plantillas de entrega con IA.** En Ajustes → Inteligencia artificial subes tu plantilla (Word, PDF, texto) o pegas el texto, y la IA hace el trabajo siguiendo ese formato. Puedes dejar una por defecto y, en el chat de cada tarea, elegir otra o ninguna.
+- **Tu estilo de escritura.** Sube un texto tuyo y la IA imitará tu forma de escribir; se activa o desactiva en Ajustes y por tarea («Mi estilo»).
+- **Buscador** de archivos y tareas por nombre, sin conexión, en la barra lateral de la versión de escritorio y la web (el campo lateral y el de la pantalla Buscar muestran siempre lo mismo).
+- Notas: si el profesor no publica cuánto vale cada tarea, se muestra una **nota aproximada** (indicada como tal); el test de evaluación inicial no cuenta.
+
+### Nota
+- Para subir archivos desde el móvil hace falta esta versión de la app (usa un componente nuevo).
+
 ## [2.1.1] - 2026-10-28
 
 ### Añadido

@@ -33,6 +33,8 @@ import { verDocumento } from '@/lib/ia/archivos-ia';
 import type { MensajeChat } from '@/lib/ia/chats';
 import { type DocumentoIA, extraerDocumentos } from '@/lib/ia/documentos';
 import { adjuntoCompatible, PROVEEDORES } from '@/lib/ia/proveedores';
+import { plantillaActiva } from '@/lib/ia/plantillas-datos';
+import { usePlantillas } from '@/lib/ia/plantillas';
 import { useChatIA } from '@/lib/ia/use-chat';
 import { useEntregar } from '@/lib/ia/use-entregar';
 import { useAsignaturas } from '@/lib/store';
@@ -58,6 +60,10 @@ export function ChatIAObsidiana({ e }: { e: Entrega }) {
   const info = useAsignaturas()(e.cursoId, e.curso);
   const nowMs = useNow();
   const chat = useChatIA(e);
+  const plantillas = usePlantillas();
+  const plantilla = plantillaActiva(plantillas.datos, chat.eleccion.plantillaId);
+  const conEstilo =
+    !!plantillas.datos.estilo && (chat.eleccion.usarEstilo ?? plantillas.datos.usarEstilo);
   const { entregar, entregando, puede } = useEntregar(e);
   const scrollRef = useRef<ScrollView>(null);
   const [texto, setTexto] = useState('');
@@ -263,6 +269,47 @@ export function ChatIAObsidiana({ e }: { e: Entrega }) {
               backgroundColor: '#0D0E11',
             }}>
             <View style={{ width: '100%', maxWidth: 760, alignSelf: 'center', gap: 10 }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8, alignItems: 'center' }}
+                keyboardShouldPersistTaps="handled">
+                <T k="mono" up s={9.5} ls={0.14} c="#676B77">
+                  Formato
+                </T>
+                {plantillas.datos.plantillas.length ? (
+                  <>
+                    <ChipFormato
+                      texto="Sin plantilla"
+                      activo={!plantilla}
+                      alPulsar={() => chat.elegir({ plantillaId: null })}
+                    />
+                    {plantillas.datos.plantillas.map((p) => (
+                      <ChipFormato
+                        key={p.id}
+                        texto={p.nombre}
+                        icono="file-text"
+                        activo={plantilla?.id === p.id}
+                        alPulsar={() => chat.elegir({ plantillaId: p.id })}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <ChipFormato
+                    texto="Añadir plantilla"
+                    icono="plus"
+                    alPulsar={() => router.push('/ajustes-ia')}
+                  />
+                )}
+                {plantillas.datos.estilo ? (
+                  <ChipFormato
+                    texto="Mi estilo"
+                    icono="edit-3"
+                    activo={conEstilo}
+                    alPulsar={() => chat.elegir({ usarEstilo: !conEstilo })}
+                  />
+                ) : null}
+              </ScrollView>
               {adjuntables.length ? (
                 <ScrollView
                   horizontal
@@ -431,6 +478,8 @@ export function ChatIAObsidiana({ e }: { e: Entrega }) {
                 Contexto para la IA
               </Etiqueta>
               <Contexto texto="Enunciado y fechas" />
+              {plantilla ? <Contexto texto={`Plantilla: ${plantilla.nombre}`} /> : null}
+              {conEstilo ? <Contexto texto="Tu estilo de escritura" /> : null}
               {adjuntables.map((a) => (
                 <Contexto
                   key={a.fileurl}
@@ -604,5 +653,46 @@ function Mensaje({
         )}
       </View>
     </View>
+  );
+}
+
+function ChipFormato({
+  texto,
+  icono,
+  activo,
+  alPulsar,
+}: {
+  texto: string;
+  icono?: React.ComponentProps<typeof Feather>['name'];
+  activo?: boolean;
+  alPulsar: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={alPulsar}
+      accessibilityRole="button"
+      accessibilityState={{ selected: !!activo }}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        maxWidth: 220,
+        paddingHorizontal: 12,
+        paddingVertical: 5,
+        borderRadius: 999,
+        borderWidth: 1,
+        backgroundColor: activo ? '#1B2311' : '#121317',
+        borderColor: activo ? '#43561B' : '#26262E',
+      }}>
+      {icono ? <Feather name={icono} size={12} color={activo ? O.lime : '#9393A2'} /> : null}
+      <T
+        k="mono"
+        s={11}
+        c={activo ? O.lime : '#C3C7D2'}
+        numberOfLines={1}
+        style={{ flexShrink: 1 }}>
+        {texto}
+      </T>
+    </Pressable>
   );
 }

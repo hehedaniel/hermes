@@ -1,12 +1,16 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { CLAVES } from '../claves';
 import type { Archivo, Entrega } from '../data';
 import { useDownloads } from '../downloads';
 import { useMoodle } from '../store';
 import { leerAdjunto } from './archivos-ia';
 import { guardarChat, leerChat, type MensajeChat, nuevoId } from './chats';
 import { ajustesIA } from './config';
+import { extrasDe } from './plantillas-datos';
+import { leerPlantillas } from './plantillas';
 import { construirSistema } from './prompt';
 import { extraerTextoPdf } from './pdf-texto';
 import {
@@ -23,6 +27,9 @@ import {
 
 type Ajustes = Awaited<ReturnType<typeof ajustesIA>>;
 
+/** Lo que se eligió en esta tarea: sin tocar (undefined) se usa lo de Ajustes. */
+export type EleccionTarea = { plantillaId?: string | null; usarEstilo?: boolean };
+
 /** La conversación con la IA de una tarea: se guarda en el móvil y se retoma al volver. */
 export function useChatIA(entrega: Entrega | undefined) {
   const { client } = useMoodle();
@@ -35,6 +42,8 @@ export function useChatIA(entrega: Entrega | undefined) {
   const mensajesRef = useRef<MensajeChat[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const cacheAdjuntos = useRef(new Map<string, AdjuntoIA>());
+  const [eleccion, setEleccion] = useState<EleccionTarea>({});
+  const eleccionRef = useRef<EleccionTarea>({});
 
   useEffect(() => {
     if (!key) return;
@@ -44,6 +53,28 @@ export function useChatIA(entrega: Entrega | undefined) {
       setCargado(true);
     });
   }, [key]);
+
+  useEffect(() => {
+    if (!key) return;
+    AsyncStorage.getItem(CLAVES.iaChatEleccion(key))
+      .then((raw) => {
+        const e: EleccionTarea = raw ? JSON.parse(raw) : {};
+        eleccionRef.current = e;
+        setEleccion(e);
+      })
+      .catch(() => {});
+  }, [key]);
+
+  /** Cambia la plantilla o el estilo de esta tarea (se recuerda al volver). */
+  const elegir = useCallback(
+    (cambio: EleccionTarea) => {
+      const e = { ...eleccionRef.current, ...cambio };
+      eleccionRef.current = e;
+      setEleccion(e);
+      if (key) AsyncStorage.setItem(CLAVES.iaChatEleccion(key), JSON.stringify(e)).catch(() => {});
+    },
+    [key],
+  );
 
   // Al volver de Ajustes, con la clave o el modelo ya cambiados
   useFocusEffect(
@@ -133,7 +164,11 @@ export function useChatIA(entrega: Entrega | undefined) {
           proveedor: a.config.proveedor,
           clave: a.clave,
           modelo: a.modelo,
-          sistema: construirSistema(entrega, a.config.instrucciones),
+          sistema: construirSistema(
+            entrega,
+            a.config.instrucciones,
+            extrasDe(await leerPlantillas(), eleccionRef.current),
+          ),
           mensajes: historial,
           signal: ctrl.signal,
         });
@@ -202,6 +237,8 @@ export function useChatIA(entrega: Entrega | undefined) {
     cargado,
     pensando,
     ajustes,
+    eleccion,
+    elegir,
     recargarAjustes,
     enviar,
     reintentar,

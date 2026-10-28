@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Campo, Etiqueta } from '@/components/ajustes-ui';
 import { Caja, Marca } from '@/components/anden';
 import { Button } from '@/components/button';
+import { IAPlantillas } from '@/components/ia-plantillas';
 import { ThemedText } from '@/components/themed-text';
 import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -226,16 +227,16 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
                 <View style={styles.filaNombre}>
                   <ThemedText style={styles.nombre}>{pi.nombre}</ThemedText>
                   <Marca texto={pi.etiqueta} color={t.color} fondo={t.fondo} />
-                  {conClave.has(p) ? (
-                    <Feather name="key" size={11} color={theme.brand} />
-                  ) : null}
+                  {conClave.has(p) ? <Feather name="key" size={11} color={theme.brand} /> : null}
                 </View>
                 <ThemedText type="meta" themeColor="ink2" numberOfLines={2}>
                   {pi.resumen}
                 </ThemedText>
               </View>
               <View style={[styles.radio, { borderColor: sel ? theme.brand : theme.line2 }]}>
-                {sel ? <View style={[styles.radioDentro, { backgroundColor: theme.brand }]} /> : null}
+                {sel ? (
+                  <View style={[styles.radioDentro, { backgroundColor: theme.brand }]} />
+                ) : null}
               </View>
             </Pressable>
           );
@@ -245,7 +246,11 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
       <Caja style={styles.detalle}>
         <View style={styles.filaNombre}>
           <ThemedText type="smallBold">{info.nombre} · lo que puede</ThemedText>
-          <Marca texto={info.etiqueta} color={tono(config.proveedor).color} fondo={tono(config.proveedor).fondo} />
+          <Marca
+            texto={info.etiqueta}
+            color={tono(config.proveedor).color}
+            fondo={tono(config.proveedor).fondo}
+          />
         </View>
         {info.puede.map((t) => (
           <View key={t} style={styles.punto}>
@@ -309,7 +314,11 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
             </View>
           </>
         ) : (
-          <View style={[styles.campoFijo, { borderColor: theme.line2, backgroundColor: theme.surface }]}>
+          <View
+            style={[
+              styles.campoFijo,
+              { borderColor: theme.line2, backgroundColor: theme.surface },
+            ]}>
             <Feather name="key" size={14} color={theme.ink3} />
             <ThemedText type="cifra" style={styles.flex} numberOfLines={1}>
               {oculta(claveGuardada!)}
@@ -333,7 +342,10 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
             <Pressable
               onPress={onVerModelos}
               accessibilityRole="button"
-              style={[styles.campoFijo, { borderColor: theme.line2, backgroundColor: theme.surface }]}>
+              style={[
+                styles.campoFijo,
+                { borderColor: theme.line2, backgroundColor: theme.surface },
+              ]}>
               <ThemedText style={styles.flex} numberOfLines={1}>
                 {modeloDe(config)}
               </ThemedText>
@@ -342,7 +354,11 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
                   Cargando…
                 </ThemedText>
               ) : (
-                <Feather name={modelos ? 'chevron-up' : 'chevron-down'} size={16} color={theme.ink2} />
+                <Feather
+                  name={modelos ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={theme.ink2}
+                />
               )}
             </Pressable>
             {modelos ? (
@@ -356,7 +372,11 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
                     autoCorrect={false}
                   />
                 ) : null}
-                <View style={[styles.modelos, { borderColor: theme.line, backgroundColor: theme.surface }]}>
+                <View
+                  style={[
+                    styles.modelos,
+                    { borderColor: theme.line, backgroundColor: theme.surface },
+                  ]}>
                   {visibles.map((m, i) => {
                     const actual = m.id === modeloDe(config);
                     return (
@@ -377,7 +397,9 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
                             {m.id}
                           </ThemedText>
                         </View>
-                        {m.gratis ? <Marca texto="Gratis" color={theme.stDone} fondo={theme.stDoneW} /> : null}
+                        {m.gratis ? (
+                          <Marca texto="Gratis" color={theme.stDone} fondo={theme.stDoneW} />
+                        ) : null}
                         {actual ? <Feather name="check" size={15} color={theme.brand} /> : null}
                       </Pressable>
                     );
@@ -402,17 +424,16 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
         ) : null}
         {msg ? (
           <View
-            style={[
-              styles.msg,
-              { backgroundColor: msg.ok ? theme.stDoneW : theme.urgentWash },
-            ]}>
+            style={[styles.msg, { backgroundColor: msg.ok ? theme.stDoneW : theme.urgentWash }]}>
             <Feather
               name={msg.ok ? 'check-circle' : 'alert-circle'}
               size={14}
               color={msg.ok ? theme.stDone : theme.urgent}
               style={styles.puntoIcono}
             />
-            <ThemedText type="small" style={[styles.flex, { color: msg.ok ? theme.stDone : theme.urgent }]}>
+            <ThemedText
+              type="small"
+              style={[styles.flex, { color: msg.ok ? theme.stDone : theme.urgent }]}>
               {msg.texto}
             </ThemedText>
           </View>
@@ -430,6 +451,8 @@ export function IASettings({ onCambio }: { onCambio?: () => void }) {
           multiline
         />
       </View>
+
+      <IAPlantillas />
     </View>
   );
 }

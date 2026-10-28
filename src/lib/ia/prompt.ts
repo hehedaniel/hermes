@@ -1,6 +1,7 @@
 import type { Entrega } from '../data';
 import { htmlATexto } from '../html-texto';
 import { FORMATO_DOCUMENTOS } from './documentos';
+import { type ExtrasIA, MAX_ESTILO, MAX_PLANTILLA, recortar } from './plantillas-datos';
 
 const fecha = (ts?: number) =>
   ts
@@ -15,7 +16,11 @@ const fecha = (ts?: number) =>
     : undefined;
 
 /** Instrucciones de sistema: quién es la IA, la tarea con su enunciado y cómo devolver documentos. */
-export function construirSistema(e: Entrega, instruccionesUsuario?: string) {
+export function construirSistema(e: Entrega, instruccionesUsuario?: string, extras?: ExtrasIA) {
+  const plantilla = extras?.plantilla?.texto.trim()
+    ? recortar(extras.plantilla.texto, MAX_PLANTILLA)
+    : null;
+  const estilo = extras?.estilo?.texto.trim() ? recortar(extras.estilo.texto, MAX_ESTILO) : null;
   const enunciado = htmlATexto(e.enunciado);
   const cfg = e.entregable;
   const comoSeEntrega = !cfg
@@ -52,6 +57,31 @@ export function construirSistema(e: Entrega, instruccionesUsuario?: string) {
     FORMATO_DOCUMENTOS,
     cfg?.archivos && cfg.tipos.length && !cfg.tipos.some((t) => /pdf/i.test(t))
       ? `Ojo: esta tarea no admite PDF (${cfg.tipos.join(', ')}). Genera el archivo en uno de los tipos admitidos que puedas escribir como texto, o avisa al alumno.`
+      : null,
+    plantilla
+      ? [
+          '',
+          '## Plantilla del trabajo',
+          `El alumno ha elegido la plantilla «${extras!.plantilla!.nombre}». Cuando le prepares el documento, síguela: mismos apartados, mismo orden, mismos títulos, la misma portada y el mismo formato. Sustituye el contenido de ejemplo por el de esta tarea y no añadas apartados que no estén en la plantilla, salvo que el enunciado los pida. Si la plantilla y el enunciado se contradicen, avisa al alumno.`,
+          plantilla.recortado
+            ? '(La plantilla es muy larga y aquí aparece recortada: pídele al alumno el resto si lo necesitas.)'
+            : null,
+          '<plantilla>',
+          plantilla.texto,
+          '</plantilla>',
+        ]
+          .filter((l) => l !== null)
+          .join('\n')
+      : null,
+    estilo
+      ? [
+          '',
+          '## Estilo de escritura del alumno',
+          'Debajo hay un texto escrito por el propio alumno. Escribe los textos de sus entregas con su estilo: el mismo tono, la longitud de sus frases y párrafos, su vocabulario y su nivel de formalidad. No copies frases suyas ni repitas su contenido, y no imites sus faltas de ortografía.',
+          '<muestra-de-estilo>',
+          estilo.texto,
+          '</muestra-de-estilo>',
+        ].join('\n')
       : null,
     instruccionesUsuario?.trim()
       ? `\n## Indicaciones del alumno para todas sus tareas\n${instruccionesUsuario.trim()}`

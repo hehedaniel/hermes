@@ -10,10 +10,7 @@ import {
   JetBrainsMono_500Medium,
   JetBrainsMono_600SemiBold,
 } from '@expo-google-fonts/jetbrains-mono';
-import {
-  Newsreader_400Regular,
-  Newsreader_500Medium,
-} from '@expo-google-fonts/newsreader';
+import { Newsreader_400Regular, Newsreader_500Medium } from '@expo-google-fonts/newsreader';
 import {
   Inter_300Light,
   Inter_400Regular,
@@ -34,6 +31,7 @@ import { ThemePreferenceProvider, useTheme, useThemePreference } from '@/hooks/u
 import { DownloadsProvider } from '@/lib/downloads';
 import { GoogleCalProvider } from '@/lib/google-cal';
 import { ExtractorPdf } from '@/lib/ia/pdf-texto';
+import { BusquedaProvider } from '@/lib/busqueda-estado';
 import { MoodleProvider } from '@/lib/store';
 
 /**
@@ -107,36 +105,39 @@ function RootLayoutContent() {
 
   return (
     <MoodleProvider>
-      <DownloadsProvider>
-        <GoogleCalProvider>
-          <ThemeProvider value={temaNavegacion}>
-            <AppUpdateProvider enabled={comprobarActualizaciones && fuentes && listo}>
-              <StatusBar style={oscuro ? 'light' : 'dark'} />
-              <ExtractorPdf />
-              <Stack
-                screenOptions={{
-                  headerBackButtonDisplayMode: 'minimal',
-                  headerShadowVisible: false,
-                  headerStyle: { backgroundColor: c.paper },
-                  headerTintColor: c.ink,
-                  headerTitleStyle: {
-                    fontFamily: tema === 'cuaderno' ? undefined : FAMILIA[600],
-                    fontSize: 15,
-                  },
-                  contentStyle: { backgroundColor: c.paper },
-                }}>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="curso/[id]" options={{ headerShown: false }} />
-                <Stack.Screen name="tarea/[key]" options={{ title: 'Detalle de la tarea' }} />
-                <Stack.Screen name="visor" options={{ title: '' }} />
-                <Stack.Screen name="ia/[key]" options={{ title: 'IA' }} />
-                <Stack.Screen name="documento" options={{ title: '' }} />
-                <Stack.Screen name="ajustes-ia" options={{ title: 'Inteligencia artificial' }} />
-              </Stack>
-            </AppUpdateProvider>
-          </ThemeProvider>
-        </GoogleCalProvider>
-      </DownloadsProvider>
+      <BusquedaProvider>
+        <DownloadsProvider>
+          <GoogleCalProvider>
+            <ThemeProvider value={temaNavegacion}>
+              <AppUpdateProvider enabled={comprobarActualizaciones && fuentes && listo}>
+                <StatusBar style={oscuro ? 'light' : 'dark'} />
+                <ExtractorPdf />
+                <Stack
+                  screenOptions={{
+                    headerBackButtonDisplayMode: 'minimal',
+                    headerShadowVisible: false,
+                    headerStyle: { backgroundColor: c.paper },
+                    headerTintColor: c.ink,
+                    headerTitleStyle: {
+                      fontFamily: tema === 'cuaderno' ? undefined : FAMILIA[600],
+                      fontSize: 15,
+                    },
+                    contentStyle: { backgroundColor: c.paper },
+                  }}>
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="curso/[id]" options={{ headerShown: false }} />
+                  <Stack.Screen name="tarea/[key]" options={{ title: 'Detalle de la tarea' }} />
+                  <Stack.Screen name="visor" options={{ title: '' }} />
+                  <Stack.Screen name="ia/[key]" options={{ title: 'IA' }} />
+                  <Stack.Screen name="documento" options={{ title: '' }} />
+                  <Stack.Screen name="ajustes-ia" options={{ title: 'Inteligencia artificial' }} />
+                  <Stack.Screen name="buscar" options={{ headerShown: false }} />
+                </Stack>
+              </AppUpdateProvider>
+            </ThemeProvider>
+          </GoogleCalProvider>
+        </DownloadsProvider>
+      </BusquedaProvider>
     </MoodleProvider>
   );
 }

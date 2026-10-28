@@ -1,11 +1,13 @@
 /** Barra lateral del diseño Obsidiana (270 px). Medidas del HTML de «Pendientes». */
 import Feather from '@expo/vector-icons/Feather';
-import { router } from 'expo-router';
-import { Image, Pressable, ScrollView, View } from 'react-native';
+import { router, usePathname } from 'expo-router';
+import { useEffect, useRef } from 'react';
+import { Image, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 import type { IconoFeather } from '@/components/anden';
 import { AvatarUsuario } from '@/components/avatar-usuario';
 import { Etiqueta, O, Punto, T } from '@/components/obs';
+import { useBusquedaEstado } from '@/lib/busqueda-estado';
 import { useNow } from '@/hooks/use-now';
 import { haceCuanto } from '@/lib/format';
 import { useAsignaturas, useMoodle } from '@/lib/store';
@@ -157,6 +159,8 @@ export function LateralObsidiana({
           })}
         </View>
 
+        <CampoBuscar />
+
         <View style={{ paddingHorizontal: 12, flex: 1, minHeight: 0 }}>
           <Etiqueta s={10} ls={0.2} c="#565660" style={{ marginBottom: 12 }}>
             Asignaturas
@@ -300,5 +304,70 @@ export function LateralObsidianaFuera({ cursoActivo }: { cursoActivo?: number })
       cursoActivo={cursoActivo}
       ir={(name) => router.navigate(name === 'index' ? '/' : (`/${name}` as '/ajustes'))}
     />
+  );
+}
+
+/**
+ * Campo de búsqueda de la barra lateral. Al empezar a escribir abre la pantalla Buscar, donde hay
+ * otro campo con el mismo texto: los dos se mantienen iguales mientras escribes.
+ */
+function CampoBuscar() {
+  const { consulta, setConsulta, pedirFoco, focoPendiente } = useBusquedaEstado();
+  const enBuscar = usePathname() === '/buscar';
+  const ref = useRef<TextInput>(null);
+
+  // Al saltar a Buscar la barra lateral es otra, así que el foco se devuelve al campo nuevo
+  useEffect(() => {
+    if (enBuscar && focoPendiente(true)) {
+      const t = setTimeout(() => ref.current?.focus(), 0);
+      return () => clearTimeout(t);
+    }
+  }, [enBuscar, focoPendiente]);
+
+  function cambiar(texto: string) {
+    setConsulta(texto);
+    if (texto.trim() && !enBuscar) {
+      pedirFoco();
+      router.push('/buscar' as never);
+    }
+  }
+
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginHorizontal: 12,
+        marginBottom: 28,
+        paddingHorizontal: 12,
+        height: 38,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: enBuscar && consulta ? O.limeLine : '#23232A',
+        backgroundColor: '#111114',
+      }}>
+      <Feather name="search" size={14} color={enBuscar && consulta ? O.lime : '#656573'} />
+      <TextInput
+        ref={ref}
+        value={enBuscar ? consulta : ''}
+        onChangeText={cambiar}
+        placeholder="Buscar"
+        placeholderTextColor="#6B6B77"
+        autoCapitalize="none"
+        autoCorrect={false}
+        returnKeyType="search"
+        accessibilityLabel="Buscar archivos y tareas"
+        style={[
+          { flex: 1, minWidth: 0, color: O.white, fontSize: 12.5, fontFamily: 'Inter_400Regular' },
+          { outlineStyle: 'none' } as object,
+        ]}
+      />
+      {enBuscar && consulta ? (
+        <Pressable onPress={() => setConsulta('')} hitSlop={8} accessibilityLabel="Borrar búsqueda">
+          <Feather name="x" size={13} color="#868694" />
+        </Pressable>
+      ) : null}
+    </View>
   );
 }

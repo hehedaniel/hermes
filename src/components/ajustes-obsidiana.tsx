@@ -11,7 +11,7 @@ import { Pressable, ScrollView, TextInput, useWindowDimensions, View } from 'rea
 
 import { AvatarUsuario } from '@/components/avatar-usuario';
 import { T, useArriba, useMovil } from '@/components/obs';
-import { TEMAS, type TemaId } from '@/constants/colors';
+import { TEMAS } from '@/constants/colors';
 import { VERSION } from '@/constants/version';
 import { useAppUpdates } from '@/hooks/app-updates';
 import { useThemePreference } from '@/hooks/use-theme';
@@ -27,6 +27,7 @@ import {
   programarRecordatorios,
 } from '@/lib/avisos';
 import { confirmar } from '@/lib/dialogo';
+import { IAPlantillas } from '@/components/ia-plantillas';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
 import { haceCuanto } from '@/lib/format';
 import { useGoogleCal } from '@/lib/google-cal';
@@ -91,6 +92,12 @@ export function AjustesObsidiana() {
         <Notificaciones />
         <GoogleCalendar />
         <Asistente />
+        <Tarjeta
+          n={5}
+          titulo="Plantillas y estilo"
+          texto="Sube tu plantilla de entrega y un texto tuyo para que la IA siga el formato y escriba como tú.">
+          <IAPlantillas />
+        </Tarjeta>
         <Cuenta />
         <Apariencia />
         <Pressable
@@ -867,7 +874,7 @@ function Cuenta() {
     });
   }
   return (
-    <Tarjeta n={5} titulo="Cuenta">
+    <Tarjeta n={6} titulo="Cuenta">
       <View style={{ gap: 24 }}>
         <View
           style={{
@@ -958,22 +965,18 @@ function Cuenta() {
 // ——— 06: apariencia (el selector de tema) ———
 
 function Apariencia() {
-  const { tema, cambiarTema, listo } = useThemePreference();
+  const { tema } = useThemePreference();
   return (
     <Tarjeta
-      n={6}
+      n={7}
       titulo="Apariencia"
-      texto="Elige el diseño de Hermes. Obsidiana solo existe en oscuro.">
+      texto="Obsidiana es el diseño completo de Hermes, con todas las funciones.">
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {(Object.keys(TEMAS) as TemaId[]).map((id) => (
-          <Chip
-            key={id}
-            texto={TEMAS[id].nombre}
-            activo={tema === id}
-            onPress={() => listo && cambiarTema(id)}
-          />
-        ))}
+        <Chip texto={TEMAS.obsidiana.nombre} activo={tema === 'obsidiana'} onPress={() => {}} />
       </View>
+      <T k="mono" s={11} lh={16} c={Z.z500} style={{ marginTop: 14 }}>
+        Más diseños vendrán en el futuro.
+      </T>
     </Tarjeta>
   );
 }

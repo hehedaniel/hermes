@@ -11,5 +11,7 @@ export const CLAVES = {
   iaConfig: 'ia_config_v1',
   /** SecureStore solo admite letras, números, ".", "-" y "_" en las claves */
   iaClave: (proveedor: string) => `ia_clave_${proveedor}`,
+  iaPlantillas: 'ia_plantillas_v1',
+  iaChatEleccion: (entregaKey: string) => `ia_chat_eleccion_v1_${entregaKey}`,
   iaChat: (entregaKey: string) => `ia_chat_v1_${entregaKey}`,
 } as const;
