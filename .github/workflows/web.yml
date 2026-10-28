@@ -27,11 +27,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # hacen falta las etiquetas para saber la versión
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Versión = última etiqueta vX.Y.Z (como el APK)
+        run: |
+          v=$(git describe --tags --abbrev=0 --match 'v*' | sed 's/^v//')
+          node -e "const fs=require('fs');const a=JSON.parse(fs.readFileSync('app.json','utf8'));a.expo.version='$v';fs.writeFileSync('app.json',JSON.stringify(a,null,2)+'\n');console.log('versión',a.expo.version)"
       - name: Exportar la web
         run: npm run build:web
         env:
