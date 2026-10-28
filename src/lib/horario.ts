@@ -65,11 +65,12 @@ export const HORARIO: Record<number, ModuloId[]> = {
   5: ['SBD', 'SBD', 'PIA', 'PIA'],
 };
 
-export const INICIO_CURSO = '2026-09-15';
+export const INICIO_CURSO = '2026-09-28';
 export const FIN_CURSO = '2027-06-22';
 
 /** Días sin clase (fechas "YYYY-MM-DD", ambos extremos incluidos). */
 export const DIAS_SIN_CLASE: { desde: string; hasta?: string; motivo: string }[] = [
+  { desde: '2026-10-12', motivo: 'Fiesta Nacional de España' },
   { desde: '2026-11-02', motivo: 'Lunes siguiente al Día de Todos los Santos' },
   { desde: '2026-12-07', motivo: 'Lunes siguiente al Día de la Constitución' },
   { desde: '2026-12-08', motivo: 'Día de la Inmaculada Concepción' },
@@ -84,6 +85,18 @@ export const DIAS_SIN_CLASE: { desde: string; hasta?: string; motivo: string }[]
   { desde: '2027-05-13', hasta: '2027-05-14', motivo: 'Romería del Rocío (fiesta local)' },
   { desde: '2027-05-17', motivo: 'Romería del Rocío (fiesta local)' },
 ];
+
+/** Días en que un módulo concreto no tuvo clase (falta del profesor u otro motivo). */
+export const SIN_CLASE_MODULO: { fecha: string; modulo: ModuloId; motivo: string }[] = [
+  { fecha: '2026-10-13', modulo: 'SAA', motivo: 'Sin clase de Aprendizaje Automático' },
+  { fecha: '2026-10-19', modulo: 'SAA', motivo: 'Sin clase de Aprendizaje Automático' },
+  { fecha: '2026-10-20', modulo: 'SAA', motivo: 'Sin clase de Aprendizaje Automático' },
+];
+
+/** Motivo por el que ese módulo no tuvo clase ese día (fecha «YYYY-MM-DD»), o null si sí la tuvo. */
+export function sinClaseDeModulo(fecha: string, modulo: ModuloId): string | null {
+  return SIN_CLASE_MODULO.find((x) => x.fecha === fecha && x.modulo === modulo)?.motivo ?? null;
+}
 
 const pad = (n: number) => String(n).padStart(2, '0');
 export const claveDia = (d: Date) =>
@@ -124,18 +137,20 @@ export function horarioDelDia(d: Date): DiaHorario {
   const dow = d.getDay(); // 0 = domingo
   if (dow === 0 || dow === 6) return { tipo: 'fin-de-semana' };
   if (k < INICIO_CURSO)
-    return { tipo: 'fuera-de-curso', motivo: 'Las clases empiezan el 15 de septiembre' };
+    return { tipo: 'fuera-de-curso', motivo: 'Las clases empiezan el 28 de septiembre' };
   if (k > FIN_CURSO) return { tipo: 'fuera-de-curso', motivo: 'Fin de curso: ¡vacaciones!' };
   const motivo = motivoSinClase(d);
   if (motivo) return { tipo: 'sin-clase', motivo };
 
   const clases: Clase[] = [];
   HORARIO[dow].forEach((modulo, i) => {
+    if (sinClaseDeModulo(k, modulo)) return;
     const f = FRANJAS[i];
     const ultima = clases[clases.length - 1];
     if (ultima && ultima.modulo === modulo && ultima.fin === f.inicio) ultima.fin = f.fin;
     else clases.push({ modulo, inicio: f.inicio, fin: f.fin });
   });
+  if (!clases.length) return { tipo: 'sin-clase', motivo: 'Sin clase' };
   return { tipo: 'clases', clases, descanso: { inicio: '17:45', fin: '18:15' } };
 }
 

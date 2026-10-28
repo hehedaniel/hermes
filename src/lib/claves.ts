@@ -13,5 +13,7 @@ export const CLAVES = {
   iaClave: (proveedor: string) => `ia_clave_${proveedor}`,
   iaPlantillas: 'ia_plantillas_v1',
   iaChatEleccion: (entregaKey: string) => `ia_chat_eleccion_v1_${entregaKey}`,
+  faltas: 'faltas_v1',
+  faltasLimite: 'faltas_limite_v1',
   iaChat: (entregaKey: string) => `ia_chat_v1_${entregaKey}`,
 } as const;

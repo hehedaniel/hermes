@@ -43,7 +43,7 @@ export function LateralObsidiana({
     .map((p) => p[0])
     .join('')
     .toUpperCase();
-  const principales = ['index', 'calendario', 'notas', 'novedades']
+  const principales = ['index', 'calendario', 'notas', 'faltas', 'novedades']
     .map((n) => rutas.find((r) => r.name === n))
     .filter((r): r is Ruta => !!r);
   const ajustes = rutas.find((r) => r.name === 'ajustes');
@@ -280,6 +280,7 @@ const RUTAS: Ruta[] = [
     info: { titulo: 'Calendario', icono: 'calendar' },
   },
   { key: 'notas', name: 'notas', activa: false, info: { titulo: 'Notas', icono: 'award' } },
+  { key: 'faltas', name: 'faltas', activa: false, info: { titulo: 'Faltas', icono: 'user-x' } },
   {
     key: 'novedades',
     name: 'novedades',

@@ -83,6 +83,7 @@ export function BarraInferiorObsidiana({
       alPulsar: () => router.push(`/ia/${encodeURIComponent(proxima.key)}`),
     });
   ruta('notas', 'award', 'Notas');
+  ruta('faltas', 'user-x', 'Faltas');
   ruta('ajustes', 'settings', 'Ajustes');
 
   useEffect(() => {

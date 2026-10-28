@@ -27,6 +27,7 @@ const PESTANAS: Pestana[] = [
   { name: 'index', titulo: 'Pendientes', icono: 'clipboard' },
   { name: 'calendario', titulo: 'Calendario', icono: 'calendar' },
   { name: 'notas', titulo: 'Notas', icono: 'award' },
+  { name: 'faltas', titulo: 'Faltas', icono: 'user-x' },
   { name: 'novedades', titulo: 'Novedades', icono: 'bell' },
   { name: 'cursos', titulo: 'Asignaturas', icono: 'book-open' },
   { name: 'ajustes', titulo: 'Ajustes', icono: 'settings' },
@@ -87,6 +88,7 @@ function BarraNavegacion({ state, navigation }: BottomTabBarProps) {
       activa: state.index === i,
       info: PESTANAS.find((p) => p.name === r.name) ?? PESTANAS[0],
     }))
+    .filter((r) => r.name !== 'faltas' || tema === 'obsidiana')
     .filter(
       (r) =>
         !(

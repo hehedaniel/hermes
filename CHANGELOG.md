@@ -6,6 +6,17 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.3.0] - 2026-10-28
+
+### Añadido
+- **Calculadora de faltas** (diseño Obsidiana): una pantalla «Faltas» con una tarjeta por asignatura que dice cuántas horas has faltado, cuántas te quedan y el porcentaje sobre el total, con barra y color. Se calcula por trimestre o sobre el curso completo, y puedes elegir si el límite es el 10 % o el 20 %.
+- Registro por días para marcar cada hora como «Asistí», «Falté» o «Sin clase» (o «Falté todo el día»). Las horas sin clase no cuentan y bajan el total y, con él, las faltas permitidas.
+- El 12 de octubre y los días 13, 19 y 20 de octubre sin clase de Aprendizaje Automático, ya en el calendario y el horario.
+
+### Cambiado
+- El curso empieza el 28 de septiembre: antes de esa fecha ya no hay clases en el horario.
+- Ajustes → Apariencia solo muestra Obsidiana, el diseño completo; «más diseños vendrán en el futuro».
+
 ## [2.2.0] - 2026-10-28
 
 ### Añadido
