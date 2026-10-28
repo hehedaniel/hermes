@@ -17,7 +17,6 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import {
   ANCHO_ESCRITORIO,
-  ANCHO_TABLETA,
   MARGEN,
   MaxContentWidth,
   Spacing,
@@ -66,11 +65,11 @@ export function Screen({
   const { tema } = useThemePreference();
   const { width } = useWindowDimensions();
   const nocturnoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
-  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
+  const nocturnoMovil = width < ANCHO_ESCRITORIO && tema === 'nocturno';
   const nocturno = nocturnoWeb || nocturnoMovil;
-  const cuadernoMovil = width < ANCHO_TABLETA && tema === 'cuaderno';
+  const cuadernoMovil = width < ANCHO_ESCRITORIO && tema === 'cuaderno';
   const cuaderno = tema === 'cuaderno';
-  const contentWidth = maxWidth ?? (nocturnoWeb || (cuaderno && width >= ANCHO_TABLETA) ? 960 : MaxContentWidth);
+  const contentWidth = maxWidth ?? (nocturnoWeb || (cuaderno && width >= ANCHO_ESCRITORIO) ? 960 : MaxContentWidth);
   const sync = !client
     ? undefined
     : syncing

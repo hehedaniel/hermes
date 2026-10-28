@@ -6,6 +6,19 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.1.0] - 2026-10-28
+
+### Añadido
+- **Tema «Obsidiana»** (Ajustes → Apariencia), ahora el tema por defecto: oscuro, editorial, con letra serif en los títulos y el verde lima como acento. Disponible en todas las pantallas, también en móvil.
+- Nueva pantalla de **Notas** con tus calificaciones por asignatura.
+- Foto del profesor, tal y como la tiene en Moodle, en el detalle de cada asignatura.
+- Asignaturas con su propia lista y detalle de tarea rediseñado, y el asistente de IA, los ajustes de IA y los documentos generados con el mismo estilo.
+- En móvil, la barra de abajo deja Pendientes y Calendario y reúne el resto (Novedades, Asignaturas, Asistente, Notas y Ajustes) en un botón central que se abre en abanico.
+
+### Cambiado
+- Se elimina el diseño de tableta: ahora solo hay móvil y escritorio.
+- Si falta el módulo de notificaciones en una versión antigua de la app, esta arranca igualmente, sin avisos.
+
 ## [2.0.0] - 2026-10-26
 
 ### Cambiado

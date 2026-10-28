@@ -12,8 +12,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { IconoFeather } from '@/components/anden';
+import { BarraInferiorObsidiana } from '@/components/nav-obsidiana';
+import { LateralObsidiana } from '@/components/obs-lateral';
 import { ThemedText } from '@/components/themed-text';
-import { ANCHO_ESCRITORIO, ANCHO_TABLETA, Radii } from '@/constants/theme';
+import { ANCHO_ESCRITORIO, Radii } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import { haceCuanto, quedan } from '@/lib/format';
@@ -23,21 +25,27 @@ type Pestana = { name: string; titulo: string; icono: IconoFeather };
 
 const PESTANAS: Pestana[] = [
   { name: 'index', titulo: 'Pendientes', icono: 'clipboard' },
-  { name: 'novedades', titulo: 'Novedades', icono: 'bell' },
   { name: 'calendario', titulo: 'Calendario', icono: 'calendar' },
+  { name: 'notas', titulo: 'Notas', icono: 'award' },
+  { name: 'novedades', titulo: 'Novedades', icono: 'bell' },
   { name: 'cursos', titulo: 'Asignaturas', icono: 'book-open' },
   { name: 'ajustes', titulo: 'Ajustes', icono: 'settings' },
 ];
 
 /**
- * Navegación principal. La misma en móvil, tableta y web:
- *  - estrecho: barra inferior de 5 pestañas
- *  - tableta (≥ 768): rail de iconos a la izquierda
+ * Obsidiana prefiere las asignaturas en la barra lateral (no como pestaña), así que su
+ * navegación no incluye «Asignaturas»: se llega desde la lista de asignaturas.
+ */
+const SIN_ASIGNATURAS_EN_NAV = ['cursos'];
+
+/**
+ * Navegación principal:
+ *  - móvil (< 1100): barra inferior de 5 pestañas
  *  - escritorio (≥ 1100): barra lateral con contadores y tu cuenta
  */
 export default function AppTabs() {
   const { width } = useWindowDimensions();
-  const lateral = width >= ANCHO_TABLETA;
+  const lateral = width >= ANCHO_ESCRITORIO;
   return (
     <Tabs
       tabBar={(props) => <BarraNavegacion {...props} />}
@@ -67,17 +75,43 @@ function useContadores() {
 
 function BarraNavegacion({ state, navigation }: BottomTabBarProps) {
   const { width } = useWindowDimensions();
+  const cont = useContadores();
+  const { tema } = useThemePreference();
   const ir = (name: string, key: string, activa: boolean) => {
     const ev = navigation.emit({ type: 'tabPress', target: key, canPreventDefault: true });
     if (!activa && !ev.defaultPrevented) navigation.navigate(name);
   };
-  const rutas = state.routes.map((r, i) => ({
-    ...r,
-    activa: state.index === i,
-    info: PESTANAS.find((p) => p.name === r.name) ?? PESTANAS[0],
-  }));
-  if (width >= ANCHO_ESCRITORIO) return <Lateral rutas={rutas} ir={ir} />;
-  if (width >= ANCHO_TABLETA) return <Rail rutas={rutas} ir={ir} />;
+  const rutas = state.routes
+    .map((r, i) => ({
+      ...r,
+      activa: state.index === i,
+      info: PESTANAS.find((p) => p.name === r.name) ?? PESTANAS[0],
+    }))
+    .filter(
+      (r) =>
+        !(
+          tema === 'obsidiana' &&
+          width >= ANCHO_ESCRITORIO &&
+          SIN_ASIGNATURAS_EN_NAV.includes(r.name)
+        ),
+    );
+  if (width >= ANCHO_ESCRITORIO) {
+    return tema === 'obsidiana' ? (
+      <LateralObsidiana rutas={rutas} ir={ir} novedades={cont.novedades} />
+    ) : (
+      <Lateral rutas={rutas} ir={ir} />
+    );
+  }
+  if (tema === 'obsidiana') {
+    return (
+      <BarraInferiorObsidiana
+        rutas={rutas}
+        ir={ir}
+        novedades={cont.novedades}
+        urgentes={cont.urgentes}
+      />
+    );
+  }
   return <Inferior rutas={rutas} ir={ir} />;
 }
 
@@ -88,8 +122,8 @@ function Inferior({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
   const theme = useTheme();
   const { tema } = useThemePreference();
   const { width } = useWindowDimensions();
-  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
-  const cuadernoMovil = width < ANCHO_TABLETA && tema === 'cuaderno';
+  const nocturnoMovil = width < ANCHO_ESCRITORIO && tema === 'nocturno';
+  const cuadernoMovil = width < ANCHO_ESCRITORIO && tema === 'cuaderno';
   const { bottom } = useSafeAreaInsets();
   const cont = useContadores();
   return (
@@ -177,40 +211,9 @@ function Logo({ grande, nocturno }: { grande?: boolean; nocturno?: boolean }) {
         grande && styles.logoGrande,
         { backgroundColor: nocturno ? theme.brand : theme.ink },
       ]}>
-      <ThemedText
-        style={[styles.logoTexto, { color: nocturno ? theme.brandInk : theme.paper }]}>
+      <ThemedText style={[styles.logoTexto, { color: nocturno ? theme.brandInk : theme.paper }]}>
         H
       </ThemedText>
-    </View>
-  );
-}
-
-function Rail({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
-  const theme = useTheme();
-  const { top } = useSafeAreaInsets();
-  const principales = rutas.filter((r) => r.name !== 'ajustes');
-  const ajustes = rutas.find((r) => r.name === 'ajustes');
-  const boton = (r: Rutas[number]) => (
-    <Pressable
-      key={r.key}
-      onPress={() => ir(r.name, r.key, r.activa)}
-      accessibilityRole="tab"
-      accessibilityState={{ selected: r.activa }}
-      accessibilityLabel={r.info.titulo}
-      style={[styles.railItem, r.activa && [styles.sombra1, { backgroundColor: theme.surface }]]}>
-      <Feather name={r.info.icono} size={20} color={r.activa ? theme.ink : theme.ink3} />
-    </Pressable>
-  );
-  return (
-    <View
-      style={[
-        styles.rail,
-        { backgroundColor: theme.paper2, borderRightColor: theme.line, paddingTop: 16 + top },
-      ]}>
-      <Logo />
-      <View style={styles.railGrupo}>{principales.map(boton)}</View>
-      <View style={styles.flex} />
-      {ajustes ? boton(ajustes) : null}
     </View>
   );
 }
@@ -256,7 +259,7 @@ function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
           return [
             styles.lateralItem,
             r.activa && [styles.sombra1, { backgroundColor: theme.surface }],
-              !r.activa && hovered && { backgroundColor: nocturnoWeb ? theme.surface : theme.paper },
+            !r.activa && hovered && { backgroundColor: nocturnoWeb ? theme.surface : theme.paper },
           ];
         }}>
         <Feather name={r.info.icono} size={16} color={r.activa ? theme.ink : theme.ink2} />
@@ -306,13 +309,9 @@ function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
             accessibilityRole="button"
             accessibilityLabel={proxima ? `Abrir ${proxima.nombre}` : 'No hay próximas entregas'}
             onPress={() =>
-              proxima &&
-              router.push({ pathname: '/tarea/[key]', params: { key: proxima.key } })
+              proxima && router.push({ pathname: '/tarea/[key]', params: { key: proxima.key } })
             }
-            style={[
-              styles.proxima,
-              { backgroundColor: theme.surface, borderColor: theme.line },
-            ]}>
+            style={[styles.proxima, { backgroundColor: theme.surface, borderColor: theme.line }]}>
             <ThemedText type="label" themeColor="ink2">
               PRÓXIMA ENTREGA
             </ThemedText>
@@ -328,8 +327,7 @@ function Lateral({ rutas, ir }: { rutas: Rutas; ir: Ir }) {
           <Pressable
             disabled={!proxima}
             onPress={() =>
-              proxima &&
-              router.push({ pathname: '/ia/[key]', params: { key: proxima.key } })
+              proxima && router.push({ pathname: '/ia/[key]', params: { key: proxima.key } })
             }
             style={[
               styles.preguntar,
@@ -402,21 +400,6 @@ const styles = StyleSheet.create({
   logo: { width: 28, height: 28, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
   logoGrande: { width: 30, height: 30 },
   logoTexto: { fontSize: 14, lineHeight: 18, fontWeight: 700 },
-  rail: {
-    width: 72,
-    alignItems: 'center',
-    gap: 20,
-    paddingBottom: 20,
-    borderRightWidth: 1,
-  },
-  railGrupo: { gap: 8, alignItems: 'center' },
-  railItem: {
-    width: 44,
-    height: 44,
-    borderRadius: Radii.superficie,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   lateral: { width: 240, paddingHorizontal: 12, paddingTop: 20, borderRightWidth: 1 },
   marca: {
     flexDirection: 'row',

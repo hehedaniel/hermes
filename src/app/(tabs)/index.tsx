@@ -2,7 +2,14 @@ import Feather from '@expo/vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Cifras, EstadoChip, FilaRail, Seccion } from '@/components/anden';
@@ -10,17 +17,11 @@ import { Button } from '@/components/button';
 import { EntregaCard, esUrgente, cuandoDe } from '@/components/entrega-card';
 import { Screen } from '@/components/screen';
 import { PanelTarea } from '@/components/tarea-detalle';
+import { PendientesObsidiana } from '@/components/pendientes-obsidiana';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Vacio } from '@/components/vacio';
-import {
-  ANCHO_ESCRITORIO,
-  ANCHO_TABLETA,
-  anchoNavegacion,
-  MARGEN,
-  Radii,
-  Spacing,
-} from '@/constants/theme';
+import { ANCHO_ESCRITORIO, anchoNavegacion, MARGEN, Radii, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Entrega } from '@/lib/data';
@@ -47,7 +48,9 @@ function agrupar(entregas: Entrega[], now: number) {
       .filter((e) => e.estado === 'vencida' && e.fecha > now - 30 * DIA)
       .sort((a, b) => b.fecha - a.fecha),
     semana: abiertas.filter((e) => e.estado !== 'vencida' && e.fecha && e.fecha <= now + 7 * DIA),
-    despues: abiertas.filter((e) => e.estado !== 'vencida' && (!e.fecha || e.fecha > now + 7 * DIA)),
+    despues: abiertas.filter(
+      (e) => e.estado !== 'vencida' && (!e.fecha || e.fecha > now + 7 * DIA),
+    ),
     entregadas: entregas
       .filter((e) => e.estado === 'entregada')
       .sort((a, b) => (b.envio?.fecha ?? b.fecha) - (a.envio?.fecha ?? a.fecha)),
@@ -119,24 +122,21 @@ export default function PendientesScreen() {
   const alternarPlegada = (clave: string) => {
     const nuevas = { ...plegadas, [clave]: !plegadas[clave] };
     setPlegadas(nuevas);
-    AsyncStorage.setItem(SECCIONES_PLEGADAS_KEY, JSON.stringify(nuevas)).catch(
-      (error: unknown) => console.error('No se pudo guardar el estado de las secciones.', error),
+    AsyncStorage.setItem(SECCIONES_PLEGADAS_KEY, JSON.stringify(nuevas)).catch((error: unknown) =>
+      console.error('No se pudo guardar el estado de las secciones.', error),
     );
   };
 
   if (ready && !client) return <Bienvenida />;
   if (client && !snapshot) return <Sincronizando />;
+  if (tema === 'obsidiana') return <PendientesObsidiana />;
 
-  const maestro = width >= ANCHO_TABLETA;
   const escritorio = width >= ANCHO_ESCRITORIO;
   const nocturnoWeb = Platform.OS === 'web' && escritorio && tema === 'nocturno';
-  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
-  const cuadernoMovil = width < ANCHO_TABLETA && tema === 'cuaderno';
+  const nocturnoMovil = width < ANCHO_ESCRITORIO && tema === 'nocturno';
+  const cuadernoMovil = width < ANCHO_ESCRITORIO && tema === 'cuaderno';
   const cuadernoWeb = Platform.OS === 'web' && escritorio && tema === 'cuaderno';
-  const anchoListaMaximo = Math.max(
-    260,
-    width - anchoNavegacion(width) - anchoLateral - 284,
-  );
+  const anchoListaMaximo = Math.max(260, width - anchoNavegacion(width) - anchoLateral - 284);
   const anchoListaActual = escritorio ? Math.min(anchoLista, anchoListaMaximo) : 330;
   const anchoLateralActual = escritorio
     ? Math.min(anchoLateral, Math.max(200, width - anchoNavegacion(width) - anchoListaActual - 284))
@@ -174,15 +174,13 @@ export default function PendientesScreen() {
       texto: urgentes === 1 ? 'Urgente' : 'Urgentes',
       alerta: urgentes > 0,
     },
-    ...(maestro && !escritorio
-      ? []
-      : [
-          {
-            key: 'cerradas',
-            n: g.entregadas.length,
-            texto: g.entregadas.length === 1 ? 'Cerrada' : 'Cerradas',
-          },
-        ]),
+    ...[
+      {
+        key: 'cerradas',
+        n: g.entregadas.length,
+        texto: g.entregadas.length === 1 ? 'Cerrada' : 'Cerradas',
+      },
+    ],
   ];
   const cifrasVisibles = escritorio
     ? cifras.filter(
@@ -192,19 +190,19 @@ export default function PendientesScreen() {
       )
     : cifras;
 
-  // En tableta y escritorio, la tarea elegida se ve al lado (por defecto, la primera abierta)
+  // En escritorio, la tarea elegida se ve al lado (por defecto, la primera abierta)
   const todas = [...g.vencidas, ...g.semana, ...g.despues, ...g.entregadas];
   const seleccion =
     todas.find((e) => e.key === elegida) ?? todas.find((e) => e.estado !== 'entregada') ?? todas[0];
-  const alPulsar = maestro ? (e: Entrega) => () => setElegida(e.key) : () => undefined;
+  const alPulsar = escritorio ? (e: Entrega) => () => setElegida(e.key) : () => undefined;
 
   const fila = (e: Entrega) => (
     <EntregaCard
       key={e.key}
       entrega={e}
       nowMs={nowMs}
-      onPress={maestro ? alPulsar(e) : undefined}
-      seleccionada={maestro && seleccion?.key === e.key}
+      onPress={escritorio ? alPulsar(e) : undefined}
+      seleccionada={escritorio && seleccion?.key === e.key}
     />
   );
 
@@ -215,9 +213,7 @@ export default function PendientesScreen() {
       { titulo: 'Más adelante', items: g.despues },
       { titulo: 'Entregadas', items: g.entregadas },
     ];
-    const pendientesVisibles = gruposCuaderno
-      .slice(0, 3)
-      .some((grupo) => grupo.items.length > 0);
+    const pendientesVisibles = gruposCuaderno.slice(0, 3).some((grupo) => grupo.items.length > 0);
     return (
       <Screen
         title="Pendientes"
@@ -245,11 +241,7 @@ export default function PendientesScreen() {
                 </ThemedText>
               </View>
               {items.map((entrega) => (
-                <TarjetaCuaderno
-                  key={entrega.key}
-                  entrega={entrega}
-                  nowMs={nowMs}
-                />
+                <TarjetaCuaderno key={entrega.key} entrega={entrega} nowMs={nowMs} />
               ))}
               {grupo.titulo === 'Entregadas' && grupo.items.length > ENTREGADAS_VISIBLES ? (
                 <Button
@@ -290,10 +282,7 @@ export default function PendientesScreen() {
         refreshable
         sinEspacioInicial
         maxWidth={nocturnoWeb ? 820 : undefined}
-        contentStyle={[
-          styles.nocturnoContenido,
-          nocturnoMovil && styles.nocturnoContenidoMovil,
-        ]}>
+        contentStyle={[styles.nocturnoContenido, nocturnoMovil && styles.nocturnoContenidoMovil]}>
         <View style={styles.nocturnoCabecera}>
           <View style={styles.flex}>
             <ThemedText type="meta" themeColor="ink2">
@@ -457,19 +446,13 @@ export default function PendientesScreen() {
                   titulo={gr.titulo}
                   derecha={String(gr.items.length)}
                   onPress={
-                    plegable && anchosCargados
-                      ? () => alternarPlegada(gr.titulo)
-                      : undefined
+                    plegable && anchosCargados ? () => alternarPlegada(gr.titulo) : undefined
                   }
                   expanded={plegable ? !plegada : undefined}
                 />
                 {!plegada
                   ? gr.items.map((entrega) => (
-                      <TarjetaNocturna
-                        key={entrega.key}
-                        entrega={entrega}
-                        nowMs={nowMs}
-                      />
+                      <TarjetaNocturna key={entrega.key} entrega={entrega} nowMs={nowMs} />
                     ))
                   : null}
               </View>
@@ -484,7 +467,7 @@ export default function PendientesScreen() {
       title="Pendientes"
       etiqueta={`FP IA y Big Data · ${snapshot?.courses.length ?? 0} asignaturas`}
       derecha={cuadernoWeb ? ' ' : undefined}
-      maxWidth={maestro ? anchoListaActual : undefined}
+      maxWidth={escritorio ? anchoListaActual : undefined}
       contentStyle={
         cuadernoWeb
           ? { paddingTop: 12, paddingRight: 4 }
@@ -511,10 +494,7 @@ export default function PendientesScreen() {
         />
       ) : null}
       {cuadernoWeb
-        ? [
-            ...grupos,
-            { titulo: 'Entregadas', items: g.entregadas },
-          ].map((grupo) =>
+        ? [...grupos, { titulo: 'Entregadas', items: g.entregadas }].map((grupo) =>
             grupo.items.length ? (
               <View key={grupo.titulo} style={styles.cuadernoHomeGroup}>
                 <View style={styles.cuadernoHomeGroupHeader}>
@@ -538,28 +518,28 @@ export default function PendientesScreen() {
             ) : null,
           )
         : null}
-      {!cuadernoWeb ? gruposVisibles
-        .filter((gr) => gr.items.length)
-        .map((gr, i) => {
-          const plegable = gr.titulo !== 'Vencidas';
-          const plegada = !!plegadas[gr.titulo];
-          return (
-            <View key={gr.titulo}>
-              <Seccion
-                numero={i + 1}
-                titulo={gr.titulo}
-                derecha={String(gr.items.length)}
-                onPress={
-                  plegable && anchosCargados
-                    ? () => alternarPlegada(gr.titulo)
-                    : undefined
-                }
-                expanded={plegable ? !plegada : undefined}
-              />
-              {!plegada ? gr.items.map(fila) : null}
-            </View>
-          );
-        }) : null}
+      {!cuadernoWeb
+        ? gruposVisibles
+            .filter((gr) => gr.items.length)
+            .map((gr, i) => {
+              const plegable = gr.titulo !== 'Vencidas';
+              const plegada = !!plegadas[gr.titulo];
+              return (
+                <View key={gr.titulo}>
+                  <Seccion
+                    numero={i + 1}
+                    titulo={gr.titulo}
+                    derecha={String(gr.items.length)}
+                    onPress={
+                      plegable && anchosCargados ? () => alternarPlegada(gr.titulo) : undefined
+                    }
+                    expanded={plegable ? !plegada : undefined}
+                  />
+                  {!plegada ? gr.items.map(fila) : null}
+                </View>
+              );
+            })
+        : null}
 
       {!cuadernoWeb && g.entregadas.length ? (
         <View>
@@ -591,7 +571,7 @@ export default function PendientesScreen() {
     </Screen>
   );
 
-  if (!maestro) return lista;
+  if (!escritorio) return lista;
 
   const anchoDetalle = width - anchoNavegacion(width) - anchoListaActual - (escritorio ? 12 : 1);
   const ajustarAnchoLista = (ancho: number) => {
@@ -621,9 +601,7 @@ export default function PendientesScreen() {
           etiqueta="Ancho de la lista Pendientes"
         />
       ) : null}
-      <SafeAreaView
-        edges={['top']}
-        style={[styles.detalle, { borderLeftColor: theme.line }]}>
+      <SafeAreaView edges={['top']} style={[styles.detalle, { borderLeftColor: theme.line }]}>
         {seleccion ? (
           <PanelTarea
             key={seleccion.key}
@@ -710,15 +688,14 @@ function TarjetaCuaderno({
   const theme = useTheme();
   const info = useAsignaturas()(entrega.cursoId, entrega.curso);
   const urgente = esUrgente(entrega, nowMs);
-  const color =
-    entrega.estado === 'vencida' ? theme.stLate : urgente ? theme.urgent : info.color;
-  const secondary = entrega.estado === 'entregada' ? 'Pendiente de corregir' : cuandoDe(entrega, nowMs);
+  const color = entrega.estado === 'vencida' ? theme.stLate : urgente ? theme.urgent : info.color;
+  const secondary =
+    entrega.estado === 'entregada' ? 'Pendiente de corregir' : cuandoDe(entrega, nowMs);
   return (
     <Pressable
       accessibilityRole="button"
       onPress={
-        onPress ??
-        (() => router.push({ pathname: '/tarea/[key]', params: { key: entrega.key } }))
+        onPress ?? (() => router.push({ pathname: '/tarea/[key]', params: { key: entrega.key } }))
       }
       style={({ pressed }) => [
         styles.cuadernoTask,
@@ -752,7 +729,9 @@ function TarjetaCuaderno({
           ) : secondary ? (
             <ThemedText
               type="meta"
-              style={{ color: urgente || entrega.estado === 'vencida' ? theme.urgent : theme.ink2 }}>
+              style={{
+                color: urgente || entrega.estado === 'vencida' ? theme.urgent : theme.ink2,
+              }}>
               {secondary}
             </ThemedText>
           ) : null}
@@ -826,10 +805,9 @@ function Bienvenida() {
   const { tema } = useThemePreference();
   const { width } = useWindowDimensions();
   const nocturnoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
-  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
-  const cuadernoMovil = width < ANCHO_TABLETA && tema === 'cuaderno';
-  const cuadernoWeb =
-    Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'cuaderno';
+  const nocturnoMovil = width < ANCHO_ESCRITORIO && tema === 'nocturno';
+  const cuadernoMovil = width < ANCHO_ESCRITORIO && tema === 'cuaderno';
+  const cuadernoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'cuaderno';
   const bienvenidaMovil = nocturnoMovil || cuadernoMovil;
   const puntos = [
     ['Pendientes ordenados por urgencia', 'con nota y estado reales'],
@@ -841,10 +819,7 @@ function Bienvenida() {
       <ThemedView style={styles.flex}>
         <SafeAreaView style={styles.flex} edges={['top']}>
           <View
-            style={[
-              styles.nocturnoBienvenida,
-              bienvenidaMovil && styles.nocturnoBienvenidaMovil,
-            ]}>
+            style={[styles.nocturnoBienvenida, bienvenidaMovil && styles.nocturnoBienvenidaMovil]}>
             {nocturnoWeb || cuadernoWeb || cuadernoMovil ? (
               <View style={styles.nocturnoBienvenidaMarca}>
                 <View style={[styles.nocturnoBienvenidaLogo, { backgroundColor: theme.brand }]}>
@@ -873,7 +848,10 @@ function Bienvenida() {
                   ]}>
                   Tu curso,{'\n'}sin pelearte{'\n'}con Moodle.
                 </ThemedText>
-                <ThemedText type="small" themeColor="ink2" style={styles.nocturnoBienvenidaSubtitulo}>
+                <ThemedText
+                  type="small"
+                  themeColor="ink2"
+                  style={styles.nocturnoBienvenidaSubtitulo}>
                   Hermes organiza entregas, novedades y horarios de Moodle; la IA te ayuda a
                   entender cada tarea y preparar tu trabajo.
                 </ThemedText>
@@ -900,7 +878,11 @@ function Bienvenida() {
                 </ThemedText>
                 {puntos.map(([titulo, detalle], index) => (
                   <View key={titulo} style={styles.nocturnoBienvenidaFila}>
-                    <View style={[styles.nocturnoBienvenidaIcono, { backgroundColor: theme.brandWash }]}>
+                    <View
+                      style={[
+                        styles.nocturnoBienvenidaIcono,
+                        { backgroundColor: theme.brandWash },
+                      ]}>
                       <Feather
                         name={index === 0 ? 'clipboard' : index === 1 ? 'bell' : 'star'}
                         size={15}
@@ -942,7 +924,9 @@ function Bienvenida() {
             <ThemedText type="label" themeColor="ink2">
               Bienvenida
             </ThemedText>
-            <ThemedText style={styles.lema}>Tu curso,{'\n'}sin pelearte{'\n'}con Moodle.</ThemedText>
+            <ThemedText style={styles.lema}>
+              Tu curso,{'\n'}sin pelearte{'\n'}con Moodle.
+            </ThemedText>
             <ThemedText themeColor="ink2" style={styles.intro}>
               Hermes lee tu Moodle y te lo cuenta claro: qué entregar, qué ha cambiado y qué toca
               hoy.
@@ -1004,7 +988,9 @@ function Sincronizando() {
                 </ThemedText>
               </View>
               <View style={[styles.esq, { backgroundColor: theme.paper2, width: '70%' }]} />
-              <View style={[styles.esq, { backgroundColor: theme.paper2, width: '40%', height: 8 }]} />
+              <View
+                style={[styles.esq, { backgroundColor: theme.paper2, width: '40%', height: 8 }]}
+              />
             </FilaRail>
           ))}
           <View style={styles.nota}>
@@ -1142,19 +1128,48 @@ const styles = StyleSheet.create({
   },
   nocturnoBienvenida: { flex: 1, maxWidth: 1120, width: '100%', alignSelf: 'center', padding: 32 },
   nocturnoBienvenidaMovil: { maxWidth: 480, padding: MARGEN, paddingTop: Spacing.five },
-  nocturnoBienvenidaMarca: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 52 },
-  nocturnoBienvenidaLogo: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  nocturnoBienvenidaMarca: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 52,
+  },
+  nocturnoBienvenidaLogo: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   nocturnoBienvenidaCuerpo: { flexDirection: 'row', alignItems: 'center', gap: 60, flex: 1 },
-  nocturnoBienvenidaCuerpoMovil: { flexDirection: 'column', alignItems: 'stretch', justifyContent: 'center', gap: 28 },
+  nocturnoBienvenidaCuerpoMovil: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    gap: 28,
+  },
   nocturnoBienvenidaTexto: { flex: 1, gap: 16, maxWidth: 560 },
   nocturnoBienvenidaTextoMovil: { maxWidth: undefined, gap: 14 },
   nocturnoBienvenidaTitulo: { fontSize: 48, lineHeight: 52, fontWeight: 700, letterSpacing: -1.6 },
   nocturnoBienvenidaTituloMovil: { fontSize: 39, lineHeight: 43, letterSpacing: -1.1 },
   nocturnoBienvenidaSubtitulo: { fontSize: 16, lineHeight: 24, maxWidth: 470 },
-  nocturnoBienvenidaTarjeta: { flex: 1, maxWidth: 400, gap: 18, borderWidth: 1, borderRadius: 16, padding: 24 },
+  nocturnoBienvenidaTarjeta: {
+    flex: 1,
+    maxWidth: 400,
+    gap: 18,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 24,
+  },
   nocturnoBienvenidaTarjetaMovil: { flex: undefined, maxWidth: undefined, gap: 14, padding: 16 },
   nocturnoBienvenidaFila: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  nocturnoBienvenidaIcono: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  nocturnoBienvenidaIcono: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   nocturnoBienvenidaNota: { borderTopWidth: 1, borderTopColor: '#303742', paddingTop: 16 },
   marca: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logo: { width: 30, height: 30, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },

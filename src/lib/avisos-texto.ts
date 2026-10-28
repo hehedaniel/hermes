@@ -12,12 +12,15 @@ export type PreferenciasAvisos = {
   notas: boolean;
   novedades: boolean;
   recordatorios: boolean;
+  /** Cuántas horas antes de cada entrega se avisa */
+  antelacion: number[];
 };
 
 export const AVISOS_POR_DEFECTO: PreferenciasAvisos = {
   notas: true,
   novedades: true,
   recordatorios: true,
+  antelacion: [24, 2],
 };
 
 export type Aviso = {
@@ -119,19 +122,27 @@ const MAX_RECORDATORIOS = 40;
 const abierta = (e: Entrega) => e.estado === 'pendiente' || e.estado === 'borrador';
 
 /** Recordatorios de las entregas pendientes: 1 día y 2 horas antes, solo los que están por llegar. */
-export function planRecordatorios(snap: Snapshot | null, ahora = Date.now()): Recordatorio[] {
+export function planRecordatorios(
+  snap: Snapshot | null,
+  ahora = Date.now(),
+  antelacion: number[] = ANTELACION_HORAS,
+): Recordatorio[] {
   if (!snap) return [];
   const plan: Recordatorio[] = [];
   for (const e of snap.entregas) {
     if (!abierta(e) || !e.fecha) continue;
-    for (const horas of ANTELACION_HORAS) {
+    for (const horas of antelacion) {
       const cuando = e.fecha * 1000 - horas * 3600_000;
       if (cuando <= ahora + 60_000) continue; // ya pasó (o es ahora mismo)
       plan.push({
         id: `recordatorio:${e.key}:${horas}h`,
         canal: 'entregas',
         titulo:
-          horas >= 24 ? `Mañana se entrega: ${e.nombre}` : `En ${horas} h se entrega: ${e.nombre}`,
+          horas >= 48
+            ? `En ${Math.round(horas / 24)} días se entrega: ${e.nombre}`
+            : horas >= 24
+              ? `Mañana se entrega: ${e.nombre}`
+              : `En ${horas} h se entrega: ${e.nombre}`,
         cuerpo: `${e.curso} · ${fechaCorta(e.fecha)}${e.estado === 'borrador' ? ' · tienes un borrador sin enviar' : ''}`,
         ruta: rutaTarea(e.key),
         cuando,

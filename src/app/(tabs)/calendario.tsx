@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Cabecera, Seccion } from '@/components/anden';
+import { CalendarioObsidiana } from '@/components/calendario-obsidiana';
 import { Segmented } from '@/components/button';
 import { EntregaCard } from '@/components/entrega-card';
 import { EventoRow } from '@/components/evento-row';
@@ -24,7 +25,6 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import {
   ANCHO_ESCRITORIO,
-  ANCHO_TABLETA,
   anchoNavegacion,
   MARGEN,
   MaxContentWidth,
@@ -57,10 +57,10 @@ const hoyDe = (ms: number) => new Date(new Date(ms).setHours(0, 0, 0, 0));
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 
 /**
- * Mes (entregas + Google) y horario de clase. En el móvil se deslizan; en tableta y
+ * Mes (entregas + Google) y horario de clase. En el móvil se deslizan; en
  * escritorio, el mes ocupa la pantalla y el día elegido va en un panel al lado.
  */
-export default function CalendarioScreen() {
+function CalendarioClasico() {
   const { snapshot, refresh, syncing } = useMoodle();
   const google = useGoogleCal();
   const { cargarRango } = google;
@@ -69,8 +69,8 @@ export default function CalendarioScreen() {
   const nowMs = useNow();
   const { width } = useWindowDimensions();
   const nocturnoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
-  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
-  const cuadernoMovil = width < ANCHO_TABLETA && tema === 'cuaderno';
+  const nocturnoMovil = width < ANCHO_ESCRITORIO && tema === 'nocturno';
+  const cuadernoMovil = width < ANCHO_ESCRITORIO && tema === 'cuaderno';
   const pager = useRef<ScrollView>(null);
   const [vistaElegida, setVistaElegida] = useState<Vista | null>(null);
   const vista = vistaElegida ?? (nocturnoWeb || nocturnoMovil ? 'horario' : 'mes');
@@ -102,7 +102,7 @@ export default function CalendarioScreen() {
   }, [snapshot]);
   const googlePorDia = useMemo(() => eventosPorDia(google.eventos, dayKey), [google.eventos]);
 
-  const ancho = width >= ANCHO_TABLETA;
+  const ancho = width >= ANCHO_ESCRITORIO;
   const pageWidth = Math.min(width, MaxContentWidth);
 
   const prefijoMes = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
@@ -175,7 +175,7 @@ export default function CalendarioScreen() {
     />
   );
 
-  // ——— Tableta y escritorio ———
+  // ——— Escritorio ———
   if (ancho) {
     const anchoPrincipal = width - anchoNavegacion(width) - (vista === 'mes' ? PANEL : 0);
     return (
@@ -615,3 +615,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
 });
+
+export default function CalendarioScreen() {
+  const { tema } = useThemePreference();
+  if (tema === 'obsidiana') return <CalendarioObsidiana />;
+  return <CalendarioClasico />;
+}

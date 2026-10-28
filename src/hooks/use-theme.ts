@@ -26,7 +26,7 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue>({
-  tema: 'anden',
+  tema: 'obsidiana',
   cambiarTema: () => {},
   modoColor: 'sistema',
   cambiarModoColor: () => {},
@@ -35,7 +35,7 @@ const ThemeContext = createContext<ThemeContextValue>({
 });
 
 export function ThemePreferenceProvider({ children }: { children: ReactNode }) {
-  const [tema, setTema] = useState<TemaId>('anden');
+  const [tema, setTema] = useState<TemaId>('obsidiana');
   const [modoColor, setModoColor] = useState<ModoColor>('sistema');
   const [listo, setListo] = useState(false);
   const scheme = useColorScheme();
@@ -86,7 +86,8 @@ export function ThemePreferenceProvider({ children }: { children: ReactNode }) {
       console.error('No se pudo guardar el modo de color elegido.', error),
     );
   }, []);
-  const oscuro = modoColor === 'oscuro' || (modoColor === 'sistema' && scheme === 'dark');
+  const oscuro =
+    tema === 'obsidiana' || modoColor === 'oscuro' || (modoColor === 'sistema' && scheme === 'dark');
   const value = useMemo(
     () => ({ tema, cambiarTema, modoColor, cambiarModoColor, oscuro, listo }),
     [tema, cambiarTema, modoColor, cambiarModoColor, oscuro, listo],
@@ -102,5 +103,7 @@ export function useTheme() {
   const { tema, oscuro } = useThemePreference();
   if (tema === 'cuaderno') return oscuro ? Colors.cuadernoOscuro : Colors.cuaderno;
   if (tema === 'nocturno') return oscuro ? Colors.nocturno : Colors.nocturnoClaro;
+  // El diseño Obsidiana solo existe en oscuro
+  if (tema === 'obsidiana') return Colors.obsidianaOscuro;
   return oscuro ? Colors.dark : Colors.light;
 }

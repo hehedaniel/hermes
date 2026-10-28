@@ -1,6 +1,6 @@
 import { StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
 
-import { familia, Fonts, type ThemeColor } from '@/constants/theme';
+import { FAMILIA_OBSIDIANA, familia, Fonts, type ThemeColor } from '@/constants/theme';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 
 /**
@@ -37,6 +37,10 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
       ? { fontFamily: Fonts.mono }
       : tema === 'cuaderno'
         ? {}
+      : tema === 'obsidiana'
+        ? plano.fontFamily
+          ? {}
+          : { fontFamily: familiaObsidiana(type, plano.fontWeight), fontWeight: 'normal' as const }
       : plano.fontFamily
         ? {}
         : { fontFamily: familia(plano.fontWeight), fontWeight: 'normal' as const };
@@ -50,6 +54,20 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
       {...rest}
     />
   );
+}
+
+/** Familia del tema Obsidiana según el papel del texto y su peso. */
+function familiaObsidiana(type: ThemedTextProps['type'], peso?: TextStyle['fontWeight']) {
+  if (type === 'display' || type === 'title' || type === 'subtitle') {
+    return FAMILIA_OBSIDIANA.serif[400];
+  }
+  if (type === 'label' || type === 'cifra') return FAMILIA_OBSIDIANA.mono[500];
+  if (type === 'meta') return FAMILIA_OBSIDIANA.mono[400];
+  const n = Number(peso === 'bold' ? 700 : peso === 'normal' || peso == null ? 400 : peso);
+  if (n >= 700) return FAMILIA_OBSIDIANA.sans[700];
+  if (n >= 600) return FAMILIA_OBSIDIANA.sans[600];
+  if (n >= 500) return FAMILIA_OBSIDIANA.sans[500];
+  return FAMILIA_OBSIDIANA.sans[400];
 }
 
 /** Estilo de texto para un TextInput (no pasa por ThemedText). */

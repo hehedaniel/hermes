@@ -1,14 +1,16 @@
 import Feather from '@expo/vector-icons/Feather';
 import * as Clipboard from 'expo-clipboard';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Caja } from '@/components/anden';
+import { Etiqueta, O, T, useMovil, usePadX } from '@/components/obs';
+import { MarcoObsidiana } from '@/components/obs-marco';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Fonts, Radii, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import { getDocumentoActual } from '@/lib/ia/documento-actual';
 
 /** Un documento de texto o código que ha generado la IA (los PDF van al visor). */
@@ -17,6 +19,57 @@ export default function DocumentoScreen() {
   const theme = useTheme();
   const [copiado, setCopiado] = useState(false);
   const contenido = doc?.contenido;
+  const { tema } = useThemePreference();
+  const movil = useMovil();
+  const padX = usePadX(32);
+
+  if (tema === 'obsidiana') {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <MarcoObsidiana
+          migas={[{ texto: 'Asistente', alPulsar: () => router.back() }, { texto: doc?.nombre ?? 'Documento' }]}
+          derecha={
+            contenido ? (
+              <Pressable
+                onPress={async () => {
+                  await Clipboard.setStringAsync(contenido);
+                  setCopiado(true);
+                }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: '#24272F' }}>
+                <Feather name={copiado ? 'check' : 'copy'} size={12} color="#797E8D" />
+                <T k="mono" up s={10} ls={0.14} c="#A4A9B6">
+                  {copiado ? 'Copiado' : 'Copiar'}
+                </T>
+              </Pressable>
+            ) : undefined
+          }>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: padX, paddingVertical: movil ? 24 : 40 }}>
+            <View style={{ width: '100%', maxWidth: 960, alignSelf: 'center', gap: 24 }}>
+              <View style={{ gap: 10 }}>
+                <Etiqueta c={O.lime} s={10} ls={0.2}>
+                  Documento generado por Hermes
+                </Etiqueta>
+                <T k="serif" s={movil ? 30 : 38} lh={movil ? 36 : 44} c={O.white} ls={-0.02}>
+                  {doc?.nombre ?? 'Documento'}
+                </T>
+                {contenido ? (
+                  <T k="mono" s={11} c="#676B78">
+                    {contenido.length.toLocaleString('es-ES')} caracteres
+                  </T>
+                ) : null}
+              </View>
+              <View style={{ backgroundColor: '#121317', borderWidth: 1, borderColor: '#1D1F25', borderRadius: 12, padding: 24 }}>
+                <T k="mono" s={12.5} lh={20} c="#C3C7D2" selectable>
+                  {contenido ?? 'No hay ningún documento que mostrar. Vuelve al asistente y genera uno para verlo aquí.'}
+                </T>
+              </View>
+            </View>
+          </ScrollView>
+        </MarcoObsidiana>
+      </>
+    );
+  }
 
   return (
     <ThemedView style={styles.flex}>

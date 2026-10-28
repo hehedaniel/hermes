@@ -28,7 +28,9 @@ import {
 } from '@/lib/pruebas-dev';
 import { useMoodle } from '@/lib/store';
 
-const OPCIONES: { clave: keyof PreferenciasAvisos; titulo: string; texto: string }[] = [
+type ClaveAviso = 'notas' | 'novedades' | 'recordatorios';
+
+const OPCIONES: { clave: ClaveAviso; titulo: string; texto: string }[] = [
   { clave: 'notas', titulo: 'Notas', texto: 'Cuando te publican la nota de una entrega.' },
   {
     clave: 'novedades',
@@ -59,7 +61,7 @@ export function AvisosSettings() {
 
   if (!AVISOS_DISPONIBLES) return null;
 
-  async function cambiar(clave: keyof PreferenciasAvisos, valor: boolean) {
+  async function cambiar(clave: ClaveAviso, valor: boolean) {
     const nuevas = { ...prefs, [clave]: valor };
     setPrefs(nuevas);
     await guardarPreferencias(nuevas);

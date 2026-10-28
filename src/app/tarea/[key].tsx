@@ -13,10 +13,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { PanelTarea, TareaDetalle } from '@/components/tarea-detalle';
+import { TareaObsidiana } from '@/components/tarea-obsidiana';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Vacio } from '@/components/vacio';
-import { ANCHO_ESCRITORIO, ANCHO_TABLETA, MARGEN } from '@/constants/theme';
+import { ANCHO_ESCRITORIO, MARGEN } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import { useAsignaturas, useMoodle } from '@/lib/store';
@@ -28,13 +29,13 @@ export default function TareaScreen() {
   const theme = useTheme();
   const { tema } = useThemePreference();
   const { width } = useWindowDimensions();
-  const cuadernoMovil = width < ANCHO_TABLETA && tema === 'cuaderno';
+  const cuadernoMovil = width < ANCHO_ESCRITORIO && tema === 'cuaderno';
   const nocturnoWeb =
     Platform.OS === 'web' &&
     width >= ANCHO_ESCRITORIO &&
     (tema === 'nocturno' || tema === 'cuaderno');
   const nocturnoMovil =
-    width < ANCHO_TABLETA && (tema === 'nocturno' || tema === 'cuaderno');
+    width < ANCHO_ESCRITORIO && (tema === 'nocturno' || tema === 'cuaderno');
   const e = snapshot?.entregas.find((x) => x.key === key);
   const asignatura = useAsignaturas();
   const info = e ? asignatura(e.cursoId, e.curso) : null;
@@ -49,6 +50,15 @@ export default function TareaScreen() {
           texto="Esta entrega ya no aparece en Moodle. Tira para actualizar en Pendientes."
         />
       </Screen>
+    );
+  }
+
+  if (tema === 'obsidiana') {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <TareaObsidiana entrega={e} nowMs={nowMs} />
+      </>
     );
   }
 
@@ -106,8 +116,8 @@ export default function TareaScreen() {
     );
   }
 
-  // En tableta y escritorio, a sangre y con la columna lateral hasta abajo
-  if (width >= ANCHO_TABLETA) {
+  // En escritorio, a sangre y con la columna lateral hasta abajo
+  if (width >= ANCHO_ESCRITORIO) {
     return (
       <ThemedView style={styles.flex}>
         <Stack.Screen options={{ headerShown: !nocturnoWeb, title: 'Detalle de la tarea' }} />

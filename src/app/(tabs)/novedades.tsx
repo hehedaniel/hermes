@@ -5,10 +5,11 @@ import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'reac
 
 import { FilaRail, Marca, Seccion } from '@/components/anden';
 import { Button, Segmented } from '@/components/button';
+import { NovedadesObsidiana } from '@/components/novedades-obsidiana';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Vacio } from '@/components/vacio';
-import { ANCHO_ESCRITORIO, ANCHO_TABLETA } from '@/constants/theme';
+import { ANCHO_ESCRITORIO } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import { avisar } from '@/lib/dialogo';
@@ -26,17 +27,16 @@ const ETIQUETA: Record<TipoNovedad, string> = {
   fecha: 'Cambio de fecha',
 };
 
-export default function NovedadesScreen() {
+function NovedadesClasico() {
   const { novedades, client, snapshot, marcarLeidas, recargarNovedades } = useMoodle();
   const ahora = useNow();
   const theme = useTheme();
   const { tema } = useThemePreference();
   const { width } = useWindowDimensions();
   const [soloNoLeidas, setSoloNoLeidas] = useState(false);
-  const nocturnoWeb =
-    Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
-  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
-  const cuadernoMovil = width < ANCHO_TABLETA && tema === 'cuaderno';
+  const nocturnoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
+  const nocturnoMovil = width < ANCHO_ESCRITORIO && tema === 'nocturno';
+  const cuadernoMovil = width < ANCHO_ESCRITORIO && tema === 'cuaderno';
   const cuadernoWeb =
     Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'cuaderno';
   const cuadernoDesign = cuadernoMovil || cuadernoWeb;
@@ -424,3 +424,10 @@ const styles = StyleSheet.create({
   cuadernoNovedadBody: { flex: 1, minWidth: 0, gap: 3 },
   cuadernoUnread: { width: 7, height: 7, borderRadius: 4 },
 });
+
+export default function NovedadesScreen() {
+  const { tema } = useThemePreference();
+  const { client } = useMoodle();
+  if (tema === 'obsidiana' && client) return <NovedadesObsidiana />;
+  return <NovedadesClasico />;
+}

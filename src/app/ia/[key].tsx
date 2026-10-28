@@ -21,11 +21,12 @@ import { Button } from '@/components/button';
 import { DocumentoCard } from '@/components/documento-card';
 import { esUrgente } from '@/components/entrega-card';
 import { IASettings } from '@/components/ia-settings';
+import { ChatIAObsidiana } from '@/components/ia-obsidiana';
 import { TextoMarkdown } from '@/components/texto-markdown';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Vacio } from '@/components/vacio';
-import { ANCHO_ESCRITORIO, ANCHO_TABLETA, MARGEN, Radii, Spacing } from '@/constants/theme';
+import { ANCHO_ESCRITORIO, MARGEN, Radii, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Archivo, Entrega } from '@/lib/data';
@@ -56,6 +57,16 @@ export default function ChatIAScreen() {
   const { key } = useLocalSearchParams<{ key: string }>();
   const { snapshot } = useMoodle();
   const e = snapshot?.entregas.find((x) => x.key === key);
+  const { tema } = useThemePreference();
+
+  if (e && tema === 'obsidiana') {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <ChatIAObsidiana e={e} />
+      </>
+    );
+  }
 
   if (!e) {
     return (
@@ -150,7 +161,7 @@ function Chat({ e }: { e: Entrega }) {
     conPanel &&
     (tema === 'nocturno' || tema === 'cuaderno');
   const nocturnoMovil =
-    width < ANCHO_TABLETA && (tema === 'nocturno' || tema === 'cuaderno');
+    width < ANCHO_ESCRITORIO && (tema === 'nocturno' || tema === 'cuaderno');
   const nocturnoDesign = nocturnoWeb || nocturnoMovil;
   const vacio = !chat.mensajes.length && chat.cargado;
   const puedeEnviar = !sinClave && (!!texto.trim() || !!seleccion.length);

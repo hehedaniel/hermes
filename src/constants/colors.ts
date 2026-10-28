@@ -227,11 +227,77 @@ const CUADERNO_OSCURO: Paleta = {
   SBD: '#E5C17A',
 };
 
+/**
+ * Tema «Obsidiana» (docs/diseño, Editorial Obsidian Academic): fondos de carbón casi negro,
+ * títulos editoriales y un verde lima como única señal. Está pensado para oscuro; el claro es
+ * una versión neutra para quien lo prefiera.
+ */
+const OBSIDIANA_OSCURO: Paleta = {
+  paper: '#0A0A0C',
+  paper2: '#0C0C0E',
+  surface: '#111114',
+  surface2: '#15151A',
+  ink: '#FFFFFF',
+  ink2: '#9393A2',
+  ink3: '#6B6B77',
+  line: '#1D1D22',
+  line2: '#2B2B33',
+  brand: '#D6FF38',
+  brandInk: '#0A0A0C',
+  brandWash: '#1B2311',
+  urgent: '#F59E0B',
+  urgentWash: '#201D14',
+  stPend: '#9393A2',
+  stDraft: '#F59E0B',
+  stDone: '#84CC16',
+  stLate: '#F87171',
+  stPendW: '#161619',
+  stDraftW: '#201D14',
+  stDoneW: '#171D18',
+  stLateW: '#2A1818',
+  MIA: '#F87171',
+  SAA: '#38BDF8',
+  BDA: '#F59E0B',
+  PIA: '#84CC16',
+  SBD: '#C084FC',
+};
+
+const OBSIDIANA_CLARO: Paleta = {
+  paper: '#F4F4F5',
+  paper2: '#EBEBED',
+  surface: '#FFFFFF',
+  surface2: '#FAFAFA',
+  ink: '#18181B',
+  ink2: '#52525B',
+  ink3: '#71717A',
+  line: '#E4E4E7',
+  line2: '#D4D4D8',
+  brand: '#3F6212',
+  brandInk: '#FFFFFF',
+  brandWash: '#ECF5DC',
+  urgent: '#B45309',
+  urgentWash: '#FDF0DC',
+  stPend: '#52525B',
+  stDraft: '#B45309',
+  stDone: '#3F6212',
+  stLate: '#B91C1C',
+  stPendW: '#E4E4E7',
+  stDraftW: '#FDF0DC',
+  stDoneW: '#ECF5DC',
+  stLateW: '#FDE2E2',
+  MIA: '#DC2626',
+  SAA: '#0369A1',
+  BDA: '#B45309',
+  PIA: '#4D7C0F',
+  SBD: '#7E22CE',
+};
+
 /** Temas disponibles; Nocturno y Cuaderno mantienen sus respectivas propuestas visuales. */
 export const TEMAS = {
   anden: { nombre: 'Andén', claro: ANDEN_CLARO, oscuro: ANDEN_OSCURO },
   nocturno: { nombre: 'Nocturno', claro: NOCTURNO_CLARO, oscuro: NOCTURNO },
   cuaderno: { nombre: 'Cuaderno de campo', claro: CUADERNO_CLARO, oscuro: CUADERNO_OSCURO },
+  obsidiana: { nombre: 'Obsidiana', claro: OBSIDIANA_CLARO, oscuro: OBSIDIANA_OSCURO },
 } as const;
 export type TemaId = keyof typeof TEMAS;
 
@@ -260,6 +326,8 @@ export const Colors = {
   nocturnoClaro: conAlias(TEMAS.nocturno.claro),
   cuaderno: conAlias(TEMAS.cuaderno.claro),
   cuadernoOscuro: conAlias(TEMAS.cuaderno.oscuro),
+  obsidiana: conAlias(TEMAS.obsidiana.claro),
+  obsidianaOscuro: conAlias(TEMAS.obsidiana.oscuro),
 };
 
 export type ColoresTema = (typeof Colors)['light'];

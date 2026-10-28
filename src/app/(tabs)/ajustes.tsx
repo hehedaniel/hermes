@@ -3,17 +3,18 @@ import * as Clipboard from 'expo-clipboard';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { type ComponentProps, useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { Campo, Etiqueta, FilaAjuste, Interruptor } from '@/components/ajustes-ui';
-import { Caja, Marca, Seccion } from '@/components/anden';
+import { Caja, Marca, Seccion as SeccionBase } from '@/components/anden';
+import { AjustesObsidiana } from '@/components/ajustes-obsidiana';
 import { AvisosSettings } from '@/components/avisos-settings';
 import { Button } from '@/components/button';
 import { GoogleCalSettings } from '@/components/google-cal-settings';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ANCHO_ESCRITORIO, ANCHO_TABLETA, Spacing } from '@/constants/theme';
+import { ANCHO_ESCRITORIO, Spacing } from '@/constants/theme';
 import { TEMAS, type TemaId } from '@/constants/colors';
 import { VERSION } from '@/constants/version';
 import { useAppUpdates } from '@/hooks/app-updates';
@@ -34,7 +35,32 @@ const loginMovil =
 const esWeb = Platform.OS === 'web';
 const CAMBIOS_URL = 'https://github.com/hehedaniel/hermes/blob/main/CHANGELOG.md';
 
-export default function AjustesScreen() {
+
+/** Cabecera de apartado: en Obsidiana, número y título en serif; en los demás, la de siempre. */
+function Seccion(props: ComponentProps<typeof SeccionBase>) {
+  const { tema } = useThemePreference();
+  const theme = useTheme();
+  if (tema !== 'obsidiana') return <SeccionBase {...props} />;
+  return (
+    <View style={[styles.obsSeccion, { borderBottomColor: theme.line }]}>
+      {props.numero !== undefined ? (
+        <ThemedText type="label" themeColor="ink3">
+          {String(props.numero).padStart(2, '0')}
+        </ThemedText>
+      ) : null}
+      <ThemedText type="subtitle" style={styles.flex}>
+        {props.titulo}
+      </ThemedText>
+      {props.derecha ? (
+        <ThemedText type="meta" themeColor="ink3">
+          {props.derecha}
+        </ThemedText>
+      ) : null}
+    </View>
+  );
+}
+
+function AjustesClasico() {
   const { client, snapshot, moodleUrl, connect, disconnect, refresh, syncing } = useMoodle();
   const theme = useTheme();
   const { tema, cambiarTema, modoColor, cambiarModoColor, oscuro, listo } = useThemePreference();
@@ -44,7 +70,7 @@ export default function AjustesScreen() {
     if (snapshot) actualizarWidgets(snapshot);
   }, [snapshot, tema, modoColor]);
   const nocturnoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
-  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
+  const nocturnoMovil = width < ANCHO_ESCRITORIO && tema === 'nocturno';
   const nocturnoDesign = nocturnoWeb || nocturnoMovil;
   const { guardaArchivos, resumen, borrarTodo } = useDownloads();
   const [url, setUrl] = useState(moodleUrl);
@@ -160,7 +186,7 @@ export default function AjustesScreen() {
         </View>
       ) : null}
       <View>
-        <Seccion titulo="Apariencia" sinRegla />
+        <Seccion numero={1} titulo="Apariencia" sinRegla />
         {(Object.keys(TEMAS) as TemaId[]).map((id) => {
           const paleta = TEMAS[id][oscuro ? 'oscuro' : 'claro'];
           const seleccionado = tema === id;
@@ -270,7 +296,7 @@ export default function AjustesScreen() {
       {client ? <AvisosSettings /> : null}
 
       <View>
-        <Seccion titulo="Inteligencia artificial" derecha={nombreIA} sinRegla />
+        <Seccion numero={2} titulo="Inteligencia artificial" derecha={nombreIA} sinRegla />
         <FilaAjuste
           icono="star"
           titulo="Elegir proveedor y modelo"
@@ -281,7 +307,7 @@ export default function AjustesScreen() {
       </View>
 
       <View>
-        <Seccion titulo={client ? 'Sesión' : 'Conectar con Moodle'} sinRegla />
+        <Seccion numero={3} titulo={client ? 'Sesión' : 'Conectar con Moodle'} sinRegla />
         {client && !verConexion ? (
           <>
             <FilaAjuste
@@ -365,7 +391,7 @@ export default function AjustesScreen() {
 
       {!client || verConexion ? (
         <View>
-          <Seccion
+          <Seccion numero={4}
             titulo={esWeb ? '¿Cómo consigo el token?' : '¿De dónde saco el token?'}
             sinRegla
           />
@@ -431,7 +457,7 @@ export default function AjustesScreen() {
 
       {updatesEnabled ? (
         <View>
-          <Seccion titulo="Actualizaciones" sinRegla />
+          <Seccion numero={5} titulo="Actualizaciones" sinRegla />
           <FilaAjuste
             icono="download"
             titulo="Buscar actualizaciones"
@@ -466,7 +492,16 @@ function paginaActual() {
   return window.location.href.replace(/\/ajustes\/?$/, '').replace(/\/$/, '');
 }
 
+export default function AjustesScreen() {
+  const { tema } = useThemePreference();
+  const { client } = useMoodle();
+  // Sin cuenta conectada se necesita el formulario de conexión de siempre
+  if (tema === 'obsidiana' && client) return <AjustesObsidiana />;
+  return <AjustesClasico />;
+}
+
 const styles = StyleSheet.create({
+  obsSeccion: { flexDirection: 'row', alignItems: 'baseline', gap: 12, paddingTop: 22, paddingBottom: 8, borderBottomWidth: 1 },
   tema: {
     flexDirection: 'row',
     alignItems: 'center',

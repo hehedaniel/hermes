@@ -16,9 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EstadoChip, type IconoFeather, Marca, Progreso, Seccion } from '@/components/anden';
 import { ArchivoRow } from '@/components/archivo-row';
 import { Button } from '@/components/button';
+import { CursoObsidiana } from '@/components/curso-obsidiana';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { ANCHO_ESCRITORIO, ANCHO_TABLETA, MARGEN, Radii, Spacing } from '@/constants/theme';
+import { ANCHO_ESCRITORIO, MARGEN, Radii, Spacing } from '@/constants/theme';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Archivo } from '@/lib/data';
 import { archivosDe, type Bloque, type Modulo } from '@/lib/contents';
@@ -50,9 +51,7 @@ const ANCHO_PANEL = 900;
 
 const peso = (as: Archivo[]) => as.reduce((s, a) => s + (a.size || 0), 0);
 
-export default function CursoScreen() {
-  const { id, nombre } = useLocalSearchParams<{ id: string; nombre?: string }>();
-  const cursoId = Number(id);
+function CursoClasico({ cursoId, nombre }: { cursoId: number; nombre?: string }) {
   const { contenido, cargando, error, recargar } = useCourseContents(cursoId);
   const { guardaArchivos, estado, descargarVarios } = useDownloads();
   const { novedades } = useMoodle();
@@ -60,10 +59,9 @@ export default function CursoScreen() {
   const { tema } = useThemePreference();
   const info = useAsignaturas()(cursoId, nombre);
   const { width } = useWindowDimensions();
-  const nocturnoWeb =
-    width >= ANCHO_ESCRITORIO && (tema === 'nocturno' || tema === 'cuaderno');
+  const nocturnoWeb = width >= ANCHO_ESCRITORIO && (tema === 'nocturno' || tema === 'cuaderno');
   const nocturnoMovil =
-    width < ANCHO_TABLETA && (tema === 'nocturno' || tema === 'cuaderno');
+    width < ANCHO_ESCRITORIO && (tema === 'nocturno' || tema === 'cuaderno');
   const nocturno = nocturnoWeb || nocturnoMovil;
   const [progreso, setProgreso] = useState<{ hechos: number; total: number } | null>(null);
 
@@ -522,3 +520,11 @@ const styles = StyleSheet.create({
   novedad: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   punto: { width: 6, height: 6, borderRadius: 3, marginTop: 7 },
 });
+
+export default function CursoScreen() {
+  const { id, nombre } = useLocalSearchParams<{ id: string; nombre?: string }>();
+  const { tema } = useThemePreference();
+  const cursoId = Number(id);
+  if (tema === 'obsidiana') return <CursoObsidiana cursoId={cursoId} nombre={nombre} />;
+  return <CursoClasico cursoId={cursoId} nombre={nombre} />;
+}

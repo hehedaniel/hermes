@@ -2,12 +2,12 @@ import { router } from 'expo-router';
 import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { Cifras, FilaRail } from '@/components/anden';
+import { CursosObsidiana } from '@/components/cursos-obsidiana';
 import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Vacio } from '@/components/vacio';
-import { ANCHO_ESCRITORIO, ANCHO_TABLETA } from '@/constants/theme';
-import { useNow } from '@/hooks/use-now';
+import { ANCHO_ESCRITORIO } from '@/constants/theme';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Entrega } from '@/lib/data';
 import { useDownloads } from '@/lib/downloads';
@@ -37,7 +37,8 @@ export default function CursosScreen() {
   const { tema } = useThemePreference();
   const { width } = useWindowDimensions();
   const info = useAsignaturas();
-  const nowMs = useNow();
+
+  if (tema === 'obsidiana' && client) return <CursosObsidiana />;
 
   if (!client) {
     return (
@@ -65,13 +66,10 @@ export default function CursosScreen() {
     .map((c) => ({ c, a: info(c.id, c.fullname) }))
     .sort((x, y) => x.a.siglas.localeCompare(y.a.siglas, 'es'));
   const entregas = snapshot?.entregas ?? [];
-  const vencidasRecientes = entregas.filter(
-    (e) => e.estado === 'vencida' && e.fecha > nowMs / 1000 - 30 * 86400,
-  ).length;
   const nocturnoWeb =
     Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
-  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
-  const cuadernoMovil = width < ANCHO_TABLETA && tema === 'cuaderno';
+  const nocturnoMovil = width < ANCHO_ESCRITORIO && tema === 'nocturno';
+  const cuadernoMovil = width < ANCHO_ESCRITORIO && tema === 'cuaderno';
   const cuadernoWeb =
     Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'cuaderno';
   const cuadernoDesign = cuadernoMovil || cuadernoWeb;
@@ -84,7 +82,7 @@ export default function CursosScreen() {
         derecha={cuadernoDesign ? ' ' : undefined}
         refreshable
         sinEspacioInicial={!cuadernoDesign}
-        maxWidth={nocturnoWeb || (tema === 'cuaderno' && width >= ANCHO_TABLETA) ? 960 : undefined}
+        maxWidth={nocturnoWeb || (tema === 'cuaderno' && width >= ANCHO_ESCRITORIO) ? 960 : undefined}
         contentStyle={[
           styles.nocturnoContenido,
           nocturnoMovil && styles.nocturnoContenidoMovil,

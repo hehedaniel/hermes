@@ -3,7 +3,6 @@
  * y recordatorios programados de las entregas. En la web no hay notificaciones (avisos.web.ts).
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import {
@@ -17,12 +16,13 @@ import {
 import { CLAVES } from './claves';
 import type { Snapshot } from './data';
 import type { Novedad } from './novedades';
+import { Notifications } from './notif-nativo';
 
 export { AVISOS_POR_DEFECTO, type PreferenciasAvisos } from './avisos-texto';
-export const AVISOS_DISPONIBLES = true;
+export const AVISOS_DISPONIBLES = Notifications !== null;
 
 // Con la app abierta también se enseñan (si no, Android las guarda en silencio)
-Notifications.setNotificationHandler({
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
@@ -31,23 +31,23 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const CANALES: Record<Canal, { nombre: string; importancia: Notifications.AndroidImportance }> = {
-  notas: { nombre: 'Notas publicadas', importancia: Notifications.AndroidImportance.HIGH },
-  entregas: {
-    nombre: 'Recordatorios de entregas',
-    importancia: Notifications.AndroidImportance.HIGH,
-  },
-  novedades: {
-    nombre: 'Novedades de Moodle',
-    importancia: Notifications.AndroidImportance.DEFAULT,
-  },
-};
+function canales(
+  N: NonNullable<typeof Notifications>,
+): Record<Canal, { nombre: string; importancia: number }> {
+  return {
+    notas: { nombre: 'Notas publicadas', importancia: N.AndroidImportance.HIGH },
+    entregas: { nombre: 'Recordatorios de entregas', importancia: N.AndroidImportance.HIGH },
+    novedades: { nombre: 'Novedades de Moodle', importancia: N.AndroidImportance.DEFAULT },
+  };
+}
 
 export async function configurarCanales() {
-  if (Platform.OS !== 'android') return;
+  if (Platform.OS !== 'android' || !Notifications) return;
+  const CANALES = canales(Notifications);
+  const N = Notifications;
   await Promise.all(
     (Object.keys(CANALES) as Canal[]).map((id) =>
-      Notifications.setNotificationChannelAsync(id, {
+      N.setNotificationChannelAsync(id, {
         name: CANALES[id].nombre,
         importance: CANALES[id].importancia,
         lightColor: '#0B6B5B',
@@ -70,11 +70,15 @@ export async function guardarPreferencias(p: PreferenciasAvisos) {
 }
 
 export async function permisoConcedido() {
+  if (!Notifications) return false;
+  if (!Notifications) return false;
   return (await Notifications.getPermissionsAsync()).granted;
 }
 
 /** Pide permiso para notificar (Android 13+ enseña el diálogo una vez). */
 export async function pedirPermiso() {
+  if (!Notifications) return false;
+  if (!Notifications) return false;
   await AsyncStorage.setItem(CLAVES.permisoPedido, '1').catch(() => {});
   const actual = await Notifications.getPermissionsAsync();
   if (actual.granted) return true;
@@ -93,6 +97,8 @@ export async function prepararAvisos() {
 }
 
 async function mostrar(a: Aviso, cuando?: number) {
+  if (!Notifications) return;
+  if (!Notifications) return;
   await Notifications.scheduleNotificationAsync({
     identifier: a.id,
     content: { title: a.titulo, body: a.cuerpo, data: { ruta: a.ruta, tipo: a.canal } },
@@ -115,14 +121,18 @@ export async function avisarNovedades(nuevas: Novedad[]) {
  */
 export async function programarRecordatorios(snap: Snapshot | null) {
   try {
-    const programadas = await Notifications.getAllScheduledNotificationsAsync();
+    const N = Notifications;
+    if (!N) return;
+    const programadas = await N.getAllScheduledNotificationsAsync();
     await Promise.all(
       programadas
         .filter((n) => n.identifier.startsWith('recordatorio:'))
-        .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+        .map((n) => N.cancelScheduledNotificationAsync(n.identifier)),
     );
-    if (!(await leerPreferencias()).recordatorios || !(await permisoConcedido())) return;
-    for (const r of planRecordatorios(snap)) await mostrar(r, r.cuando);
+    const prefs = await leerPreferencias();
+    if (!prefs.recordatorios || !(await permisoConcedido())) return;
+    for (const r of planRecordatorios(snap, Date.now(), prefs.antelacion))
+      await mostrar(r, r.cuando);
   } catch {
     // los recordatorios no son críticos
   }

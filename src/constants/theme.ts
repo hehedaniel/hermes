@@ -18,6 +18,24 @@ export const FAMILIA = {
   700: 'SpaceGrotesk_700Bold',
 } as const;
 
+/** Obsidiana: Newsreader para títulos y cifras grandes, Inter para el texto y JetBrains Mono
+ * para etiquetas, fechas y datos técnicos. */
+export const FAMILIA_OBSIDIANA = {
+  serif: { 400: 'Newsreader_400Regular', 500: 'Newsreader_500Medium' },
+  sans: {
+    300: 'Inter_300Light',
+    400: 'Inter_400Regular',
+    500: 'Inter_500Medium',
+    600: 'Inter_600SemiBold',
+    700: 'Inter_700Bold',
+  },
+  mono: {
+    400: 'JetBrainsMono_400Regular',
+    500: 'JetBrainsMono_500Medium',
+    600: 'JetBrainsMono_600SemiBold',
+  },
+} as const;
+
 /** Familia para un peso (los pesos sin archivo propio van al más cercano). */
 export function familia(peso?: string | number) {
   const n = Number(peso === 'bold' ? 700 : peso === 'normal' || peso == null ? 400 : peso);
@@ -51,12 +69,10 @@ export const Radii = { chip: 4, control: 8, superficie: 12, hoja: 20, pastilla: 
 export const TEMA_PREFERENCIA_KEY = 'hermes.tema';
 export const MODO_COLOR_PREFERENCIA_KEY = 'hermes.modo-color';
 
-/** Ancho a partir del cual hay rail lateral (tableta) y barra lateral completa (escritorio). */
-export const ANCHO_TABLETA = 768;
+/** Ancho a partir del cual hay barra lateral (escritorio); por debajo, la versión móvil. */
 export const ANCHO_ESCRITORIO = 1100;
-/** Ancho de la navegación según la ventana: nada (barra abajo), raíl de 72 o barra de 240. */
-export const anchoNavegacion = (w: number) =>
-  w >= ANCHO_ESCRITORIO ? 240 : w >= ANCHO_TABLETA ? 72 : 0;
+/** Ancho de la navegación según la ventana: nada (barra abajo) o barra lateral de 240. */
+export const anchoNavegacion = (w: number) => (w >= ANCHO_ESCRITORIO ? 240 : 0);
 
 export const BottomTabInset = 0;
 export const MaxContentWidth = 760;

@@ -9,7 +9,7 @@ import { ArchivoRow } from '@/components/archivo-row';
 import { Button } from '@/components/button';
 import { esUrgente } from '@/components/entrega-card';
 import { ThemedText } from '@/components/themed-text';
-import { ANCHO_ESCRITORIO, ANCHO_TABLETA, Radii, Spacing } from '@/constants/theme';
+import { ANCHO_ESCRITORIO, Radii, Spacing } from '@/constants/theme';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Archivo, Entrega } from '@/lib/data';
 import { formatoTamano } from '@/lib/downloads';
@@ -60,7 +60,7 @@ export function TareaDetalle({
     Platform.OS === 'web' &&
     windowWidth >= ANCHO_ESCRITORIO &&
     (tema === 'nocturno' || tema === 'cuaderno');
-  const cuadernoMovil = tema === 'cuaderno' && windowWidth < ANCHO_TABLETA;
+  const cuadernoMovil = tema === 'cuaderno' && windowWidth < ANCHO_ESCRITORIO;
   const info = useAsignaturas()(e.cursoId, e.curso);
   const dos = ancho >= umbralDosColumnas;
   const [chat, setChat] = useState<{ key: string; hay: boolean }>();
@@ -476,7 +476,7 @@ export function TareaDetalle({
 
 /**
  * El detalle con su propio scroll, para el panel derecho de Pendientes y la pantalla de la
- * tarea en tableta y escritorio: a sangre, con la columna lateral hasta abajo.
+ * tarea en escritorio: a sangre, con la columna lateral hasta abajo.
  */
 export function PanelTarea({
   entrega,

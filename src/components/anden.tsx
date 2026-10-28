@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ANCHO_ESCRITORIO, ANCHO_TABLETA, Radii, Spacing } from '@/constants/theme';
+import { ANCHO_ESCRITORIO, Radii, Spacing } from '@/constants/theme';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Estado } from '@/lib/data';
 
@@ -248,7 +248,7 @@ export function FilaRail({
   const { tema } = useThemePreference();
   const { width } = useWindowDimensions();
   const nocturnoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
-  const nocturnoMovil = width < ANCHO_TABLETA && tema === 'nocturno';
+  const nocturnoMovil = width < ANCHO_ESCRITORIO && tema === 'nocturno';
   const nocturno = nocturnoWeb || nocturnoMovil;
   const contenido = (
     <>

@@ -1,10 +1,14 @@
-import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
+import { Notifications } from '@/lib/notif-nativo';
+
+// Sin el módulo nativo (cliente antiguo) no hay respuestas a notificaciones
+const useUltimaRespuesta = Notifications?.useLastNotificationResponse ?? (() => null);
+
 /** Al tocar una notificación, abre su pantalla (la entrega o Novedades). */
 export function useAbrirAviso() {
-  const respuesta = Notifications.useLastNotificationResponse();
+  const respuesta = useUltimaRespuesta();
   const abierta = useRef<string | null>(null);
   useEffect(() => {
     if (!respuesta) return;
