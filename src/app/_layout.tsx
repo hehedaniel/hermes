@@ -34,6 +34,7 @@ import { ExtractorPdf } from '@/lib/ia/pdf-texto';
 import { BusquedaProvider } from '@/lib/busqueda-estado';
 import { MoodleProvider } from '@/lib/store';
 import { HorarioRemoto } from '@/lib/use-horario';
+import { NovedadesModal } from '@/components/novedades-modal';
 import { SyncDatosProvider } from '@/lib/use-sync-datos';
 
 /**
@@ -116,6 +117,7 @@ function RootLayoutContent() {
                 <AppUpdateProvider enabled={comprobarActualizaciones && fuentes && listo}>
                   <StatusBar style={oscuro ? 'light' : 'dark'} />
                   <ExtractorPdf />
+                  <NovedadesModal />
                   <Stack
                     screenOptions={{
                       headerBackButtonDisplayMode: 'minimal',

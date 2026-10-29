@@ -6,6 +6,12 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.5.1] - 2026-10-29
+
+### Añadido
+- **Novedades al actualizar.** Después de instalar una versión nueva, una pantalla corta cuenta lo más importante (una vez); en Ajustes → «Novedades de esta versión» se vuelve a ver. Las novedades de cada versión se escriben en `src/lib/que-hay-de-nuevo.ts` y un test avisa si falta la de la versión actual.
+- El 29 de octubre, sin clase por la jornada de formación FIWARE (en `public/horario.json`).
+
 ## [2.5.0] - 2026-10-29
 
 ### Añadido

@@ -18,5 +18,7 @@ export const CLAVES = {
   syncReg: 'sync_reg_v1',
   syncCtx: 'sync_ctx_v1',
   syncUltima: 'sync_ultima_v1',
+  /** Última versión de la app cuyas novedades ya se enseñaron */
+  novedadesVista: 'novedades_vista_v1',
   iaChat: (entregaKey: string) => `ia_chat_v1_${entregaKey}`,
 } as const;

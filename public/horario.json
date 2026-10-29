@@ -22,6 +22,7 @@
   ],
   "sinClase": [
     { "desde": "2026-10-12", "motivo": "Fiesta Nacional de España" },
+    { "desde": "2026-10-29", "motivo": "Jornada de formación FIWARE" },
     { "desde": "2026-11-02", "motivo": "Lunes siguiente al Día de Todos los Santos" },
     { "desde": "2026-12-07", "motivo": "Lunes siguiente al Día de la Constitución" },
     { "desde": "2026-12-08", "motivo": "Día de la Inmaculada Concepción" },

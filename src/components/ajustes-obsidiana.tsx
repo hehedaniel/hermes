@@ -12,6 +12,7 @@ import { Pressable, ScrollView, TextInput, useWindowDimensions, View } from 'rea
 import { AvatarUsuario } from '@/components/avatar-usuario';
 import { T, useArriba, useMovil } from '@/components/obs';
 import { TEMAS } from '@/constants/colors';
+import { abrirNovedades } from '@/components/novedades-modal';
 import { VERSION } from '@/constants/version';
 import { useAppUpdates } from '@/hooks/app-updates';
 import { useThemePreference } from '@/hooks/use-theme';
@@ -101,13 +102,18 @@ export function AjustesObsidiana() {
         </Tarjeta>
         <Cuenta />
         <Apariencia />
-        <Pressable
-          onPress={() => WebBrowser.openBrowserAsync(CAMBIOS_URL)}
-          style={{ alignItems: 'center', paddingBottom: 24 }}>
-          <T k="mono" s={11} c={Z.z600}>
-            Hermes {VERSION} · Ver cambios
-          </T>
-        </Pressable>
+        <View style={{ alignItems: 'center', paddingBottom: 24, gap: 10 }}>
+          <Pressable onPress={abrirNovedades}>
+            <T k="mono" s={11} c={Z.z400}>
+              Novedades de esta versión
+            </T>
+          </Pressable>
+          <Pressable onPress={() => WebBrowser.openBrowserAsync(CAMBIOS_URL)}>
+            <T k="mono" s={11} c={Z.z600}>
+              Hermes {VERSION} · Ver cambios
+            </T>
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );
