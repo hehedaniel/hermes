@@ -1,0 +1,45 @@
+{
+  "v": 1,
+  "inicio": "2026-09-28",
+  "fin": "2027-06-22",
+  "franjas": [
+    { "inicio": "15:45", "fin": "16:45" },
+    { "inicio": "16:45", "fin": "17:45" },
+    { "inicio": "18:15", "fin": "19:15" },
+    { "inicio": "19:15", "fin": "20:15" }
+  ],
+  "horario": {
+    "1": ["MIA", "MIA", "MIA", "SAA"],
+    "2": ["SAA", "SAA", "BDA", "BDA"],
+    "3": ["PIA", "PIA", "BDA", "BDA"],
+    "4": ["SBD", "PIA", "PIA", "PIA"],
+    "5": ["SBD", "SBD", "PIA", "PIA"]
+  },
+  "trimestres": [
+    { "desde": "2026-09-28", "hasta": "2026-12-22" },
+    { "desde": "2026-12-23", "hasta": "2027-03-19" },
+    { "desde": "2027-03-22", "hasta": "2027-06-22" }
+  ],
+  "sinClase": [
+    { "desde": "2026-10-12", "motivo": "Fiesta Nacional de España" },
+    { "desde": "2026-11-02", "motivo": "Lunes siguiente al Día de Todos los Santos" },
+    { "desde": "2026-12-07", "motivo": "Lunes siguiente al Día de la Constitución" },
+    { "desde": "2026-12-08", "motivo": "Día de la Inmaculada Concepción" },
+    { "desde": "2026-12-23", "hasta": "2027-01-05", "motivo": "Vacaciones de Navidad" },
+    { "desde": "2027-01-06", "motivo": "Día de la Epifanía" },
+    { "desde": "2027-01-07", "motivo": "Vacaciones de Navidad" },
+    { "desde": "2027-02-26", "motivo": "Día de la Comunidad Educativa" },
+    { "desde": "2027-03-01", "motivo": "Lunes siguiente al Día de Andalucía" },
+    { "desde": "2027-03-22", "hasta": "2027-03-24", "motivo": "Vacaciones de Semana Santa" },
+    { "desde": "2027-03-25", "motivo": "Jueves Santo" },
+    { "desde": "2027-03-26", "motivo": "Viernes Santo" },
+    { "desde": "2027-05-13", "hasta": "2027-05-14", "motivo": "Romería del Rocío (fiesta local)" },
+    { "desde": "2027-05-17", "motivo": "Romería del Rocío (fiesta local)" }
+  ],
+  "sinClaseModulo": [
+    { "fecha": "2026-10-13", "modulo": "SAA", "motivo": "Sin clase de Aprendizaje Automático" },
+    { "fecha": "2026-10-19", "modulo": "SAA", "motivo": "Sin clase de Aprendizaje Automático" },
+    { "fecha": "2026-10-20", "modulo": "SAA", "motivo": "Sin clase de Aprendizaje Automático" }
+  ],
+  "cambios": []
+}

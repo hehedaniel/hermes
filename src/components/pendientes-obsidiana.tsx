@@ -3,6 +3,7 @@
  * cabecera con fecha, cuatro cifras, filtro por asignatura y, a la derecha, «Ahora mismo»,
  * «Sincronización» y «Carga por asignatura».
  */
+import { useHorario } from '@/lib/use-horario';
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -39,6 +40,7 @@ export function PendientesObsidiana() {
   const arriba = useArriba();
   const { snapshot, syncing, refresh } = useMoodle();
   const info = useAsignaturas();
+  useHorario();
   const nowMs = useNow();
   const ahora = nowMs / 1000;
   const [filtro, setFiltro] = useState<number | 'todas'>('todas');

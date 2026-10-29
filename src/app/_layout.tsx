@@ -33,6 +33,7 @@ import { GoogleCalProvider } from '@/lib/google-cal';
 import { ExtractorPdf } from '@/lib/ia/pdf-texto';
 import { BusquedaProvider } from '@/lib/busqueda-estado';
 import { MoodleProvider } from '@/lib/store';
+import { HorarioRemoto } from '@/lib/use-horario';
 import { SyncDatosProvider } from '@/lib/use-sync-datos';
 
 /**
@@ -107,6 +108,7 @@ function RootLayoutContent() {
   return (
     <MoodleProvider>
       <SyncDatosProvider>
+        <HorarioRemoto />
         <BusquedaProvider>
           <DownloadsProvider>
             <GoogleCalProvider>

@@ -79,5 +79,16 @@ export function useFaltas() {
     anotarMarcas(fecha, franjas, marca);
   }, []);
 
-  return { marcas, listo, limite, setLimite, marcar, marcarVarias };
+  /** Borra todas las marcas (también en tus otros dispositivos, al sincronizar) */
+  const borrarTodo = useCallback(() => {
+    const antes = ref.current;
+    ref.current = {};
+    setMarcas({});
+    AsyncStorage.setItem(CLAVES.faltas, JSON.stringify({})).catch(() => {});
+    for (const [fecha, porFranja] of Object.entries(antes)) {
+      anotarMarcas(fecha, Object.keys(porFranja).map(Number), null);
+    }
+  }, []);
+
+  return { marcas, listo, limite, setLimite, marcar, marcarVarias, borrarTodo };
 }

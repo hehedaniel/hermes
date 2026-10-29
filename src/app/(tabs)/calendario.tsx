@@ -1,4 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
+import { limitarMes } from '@/lib/horario';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   type NativeScrollEvent,
@@ -122,10 +123,10 @@ function CalendarioClasico() {
     setSelected(k);
     const d = deClave(k);
     if (d.getFullYear() !== month.getFullYear() || d.getMonth() !== month.getMonth())
-      setMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+      setMonth(limitarMes(new Date(d.getFullYear(), d.getMonth(), 1)));
   }
   const moverMes = (delta: number) =>
-    setMonth((cur) => new Date(cur.getFullYear(), cur.getMonth() + delta, 1));
+    setMonth((cur) => limitarMes(new Date(cur.getFullYear(), cur.getMonth() + delta, 1)));
   function irAHoy() {
     const hoy = hoyDe(Date.now());
     setMonth(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
@@ -220,7 +221,11 @@ function CalendarioClasico() {
             )}
           </ScrollView>
           {vista === 'mes' ? (
-            <View style={[styles.panel, { borderLeftColor: theme.line, backgroundColor: theme.surface2 }]}>
+            <View
+              style={[
+                styles.panel,
+                { borderLeftColor: theme.line, backgroundColor: theme.surface2 },
+              ]}>
               <ScrollView contentContainerStyle={styles.panelContenido}>
                 <PanelDia
                   dia={deClave(selected)}
@@ -267,7 +272,11 @@ function CalendarioClasico() {
             <Flecha icono="chevron-right" etiqueta="Mes siguiente" onPress={() => moverMes(1)} />
           </View>
         </View>
-        <View style={[styles.cuadernoMonthCard, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+        <View
+          style={[
+            styles.cuadernoMonthCard,
+            { backgroundColor: theme.surface, borderColor: theme.line },
+          ]}>
           <MonthCalendar
             month={month}
             selected={selected}
@@ -297,7 +306,11 @@ function CalendarioClasico() {
           </View>
           <ClasesDelDia dia={deClave(selected)} nowMs={nowMs} />
         </View>
-        <View style={[styles.cuadernoCalendarCard, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+        <View
+          style={[
+            styles.cuadernoCalendarCard,
+            { backgroundColor: theme.surface, borderColor: theme.line },
+          ]}>
           <ThemedText type="smallBold">Entregas de este día</ThemedText>
           {delDia.length ? (
             delDia.map((entrega) => (
@@ -310,7 +323,11 @@ function CalendarioClasico() {
           )}
         </View>
         {google.url ? (
-          <View style={[styles.cuadernoCalendarCard, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+          <View
+            style={[
+              styles.cuadernoCalendarCard,
+              { backgroundColor: theme.surface, borderColor: theme.line },
+            ]}>
             <ThemedText type="smallBold">Google Calendar</ThemedText>
             {google.error ? (
               <ThemedText type="meta" style={{ color: theme.urgent }}>

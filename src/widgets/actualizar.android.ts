@@ -1,13 +1,14 @@
 import { requestWidgetUpdate } from 'react-native-android-widget';
 
 import type { Snapshot } from '@/lib/data';
+import { cargarHorarioGuardado } from '@/lib/horario-remoto';
 
 import { dibujar, leerPaletasWidget, WIDGETS } from './render';
 
 /** Redibuja los widgets que haya en la pantalla de inicio (se llama tras cada sincronización). */
 export function actualizarWidgets(snapshot: Snapshot) {
-  void leerPaletasWidget()
-    .then((paletas) => {
+  void Promise.all([leerPaletasWidget(), cargarHorarioGuardado()])
+    .then(([paletas]) => {
       for (const nombre of Object.values(WIDGETS)) {
         requestWidgetUpdate({
           widgetName: nombre,

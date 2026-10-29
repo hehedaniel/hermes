@@ -21,6 +21,7 @@ import {
   moduloDe,
   motivoSinClase,
 } from '@/lib/horario';
+import { useHorario } from '@/lib/use-horario';
 import { useMoodle } from '@/lib/store';
 
 const DIA = 86400000;
@@ -47,6 +48,7 @@ type Props = {
 
 /** Horario del día con una tira de la semana para cambiar de día. */
 export function HorarioView({ nowMs, dia, onDia, entregasPorDia, googlePorDia }: Props) {
+  useHorario();
   const theme = useTheme();
   const lunes = lunesDe(dia);
   const semana = Array.from(
@@ -193,6 +195,7 @@ export function ClasesDelDia({
   compacto?: boolean;
 }) {
   const theme = useTheme();
+  useHorario();
   const horario = horarioDelDia(dia);
 
   if (horario.tipo !== 'clases') {
@@ -255,9 +258,7 @@ function ClaseRow({
   const { tema } = useThemePreference();
   const { snapshot } = useMoodle();
   const m = MODULOS[clase.modulo];
-  const curso = snapshot?.courses.find(
-    (c) => moduloDe(c.fullname) === (clase.modulo as ModuloId),
-  );
+  const curso = snapshot?.courses.find((c) => moduloDe(c.fullname) === (clase.modulo as ModuloId));
 
   const ahora = new Date(nowMs);
   const mismoDia = dayKey(ahora) === dayKey(dia);
@@ -280,7 +281,11 @@ function ClaseRow({
         styles.clase,
         tema === 'cuaderno' && [
           styles.cuadernoClase,
-          { backgroundColor: theme.surface, borderColor: theme.line, borderLeftColor: theme[clase.modulo] },
+          {
+            backgroundColor: theme.surface,
+            borderColor: theme.line,
+            borderLeftColor: theme[clase.modulo],
+          },
         ],
         { opacity: pressed ? 0.7 : acabada ? 0.5 : 1 },
       ]}>
@@ -329,12 +334,24 @@ const styles = StyleSheet.create({
   diaLetra: { fontSize: 9.5 },
   diaNum: { fontSize: 15, lineHeight: 19, fontWeight: 700 },
   diaDot: { width: 4, height: 4, borderRadius: 2 },
-  volverHoy: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'center', marginTop: -6 },
+  volverHoy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'center',
+    marginTop: -6,
+  },
   lista: { gap: 2 },
   clase: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 9 },
   hora: { width: 40, fontSize: 12 },
   barra: { width: 3, alignSelf: 'stretch', borderRadius: 2 },
-  barraDescanso: { width: 0, alignSelf: 'stretch', borderLeftWidth: 1.5, borderStyle: 'dashed', marginHorizontal: 0.75 },
+  barraDescanso: {
+    width: 0,
+    alignSelf: 'stretch',
+    borderLeftWidth: 1.5,
+    borderStyle: 'dashed',
+    marginHorizontal: 0.75,
+  },
   descansoTexto: { fontSize: 9.5, letterSpacing: 1 },
   body: { flex: 1, gap: 2 },
   tituloFila: { flexDirection: 'row', alignItems: 'center', gap: 8 },

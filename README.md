@@ -235,6 +235,7 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Plantillas para las entregas con IA y estilo de escritura del alumno
 - [x] Sincronización de faltas, plantillas y estilo entre móvil y web (Archivos privados de Moodle)
 - [x] Plantillas Word que se rellenan conservando el formato
+- [x] Horario compartido: se edita en `public/horario.json` y llega a todos sin versión nueva ([cómo](docs/horario.md))
 - [ ] Notificaciones en iPhone a través del script de Google (correo o ntfy), sin servidor propio
 - [ ] Visor de PDF sin conexión (pdf.js dentro de la app)
 - [ ] Menos datos en segundo plano: solo lo que puede cambiar; los temas cada pocas horas

@@ -6,6 +6,15 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.5.0] - 2026-10-29
+
+### Añadido
+- **Horario compartido.** El horario, los días sin clase, las clases canceladas y los cambios de hora viven ahora en `public/horario.json`, que se publica con la web. La app lo descarga al abrirse y cada 10 minutos, lo guarda para usarlo sin conexión y lo aplica al calendario, el horario, los widgets y la calculadora de faltas. Un cambio llega a todos (tú y tus compañeros) sin sacar una versión nueva; cómo editarlo está en `docs/horario.md`. Si el archivo está mal escrito, la app lo ignora y `npm test` avisa antes de publicar.
+- Faltas: botón «Borrar todas mis marcas» (también en tus otros dispositivos al sincronizar).
+
+### Cambiado
+- El calendario ya no retrocede más allá de septiembre (el mes en que empieza el curso).
+
 ## [2.4.0] - 2026-10-29
 
 ### Añadido

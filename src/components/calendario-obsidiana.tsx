@@ -14,7 +14,8 @@ import { useNow } from '@/hooks/use-now';
 import type { Entrega } from '@/lib/data';
 import { dayKey, hora, MESES } from '@/lib/format';
 import { eventosPorDia, useGoogleCal } from '@/lib/google-cal';
-import { AULA, MODULOS, horarioDelDia, motivoSinClase } from '@/lib/horario';
+import { AULA, MODULOS, horarioDelDia, limitarMes, motivoSinClase } from '@/lib/horario';
+import { useHorario } from '@/lib/use-horario';
 import { useAsignaturas, useMoodle } from '@/lib/store';
 
 const DIA = 86400000;
@@ -53,6 +54,7 @@ function semanasDe(mes: Date) {
 }
 
 export function CalendarioObsidiana() {
+  useHorario();
   const movil = useMovil();
   const padX = usePadX(32);
   const arriba = useArriba();
@@ -84,7 +86,8 @@ export function CalendarioObsidiana() {
   const googlePorDia = useMemo(() => eventosPorDia(google.eventos, dayKey), [google.eventos]);
 
   const mover = (delta: number) =>
-    setMes((c) => new Date(c.getFullYear(), c.getMonth() + delta, 1));
+    setMes((c) => limitarMes(new Date(c.getFullYear(), c.getMonth() + delta, 1)));
+  const enPrimerMes = limitarMes(new Date(mes.getFullYear(), mes.getMonth() - 1, 1)) >= mes;
   const tituloMes = `${MESES[mes.getMonth()]} de ${mes.getFullYear()}`.replace(/^\w/, (c) =>
     c.toUpperCase(),
   );
@@ -175,8 +178,10 @@ export function CalendarioObsidiana() {
                   <Pressable
                     key={d}
                     onPress={() => mover(d)}
+                    disabled={d < 0 && enPrimerMes}
                     accessibilityLabel={d < 0 ? 'Mes anterior' : 'Mes siguiente'}
                     style={{
+                      opacity: d < 0 && enPrimerMes ? 0.3 : 1,
                       width: 28,
                       height: 28,
                       borderRadius: 14,
@@ -234,7 +239,7 @@ export function CalendarioObsidiana() {
                         key={k}
                         onPress={() => {
                           setElegido(k);
-                          if (fuera) setMes(new Date(d.getFullYear(), d.getMonth(), 1));
+                          if (fuera) setMes(limitarMes(new Date(d.getFullYear(), d.getMonth(), 1)));
                         }}
                         style={{
                           flex: 1,
@@ -373,6 +378,7 @@ function PanelDia({
 }) {
   const info = useAsignaturas();
   const google = useGoogleCal();
+  useHorario();
   const horario = horarioDelDia(dia);
   const agenda = [...eventos].sort(
     (a, b) => Number(b.todoElDia) - Number(a.todoElDia) || a.inicio - b.inicio,

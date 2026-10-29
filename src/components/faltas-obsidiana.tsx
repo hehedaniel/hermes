@@ -3,12 +3,14 @@
  * puedes faltar aún (10 % o 20 % de las horas) y un registro por días para marcarlas.
  * No sale en el diseño de Stitch: sigue su estética.
  */
+import { useHorario } from '@/lib/use-horario';
 import Feather from '@expo/vector-icons/Feather';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { fechaEditorial, O, T, useArriba, useMovil, usePadX } from '@/components/obs';
 import { useNow } from '@/hooks/use-now';
+import { confirmar } from '@/lib/dialogo';
 import {
   type Hora,
   LIMITES,
@@ -51,19 +53,23 @@ export function FaltasObsidiana() {
   const arriba = useArriba();
   const padX = usePadX(64);
   const info = useAsignaturas();
+  const versionHorario = useHorario();
   const nowMs = useNow();
   const ahora = useMemo(() => new Date(nowMs), [nowMs]);
   const hoy = claveDia(ahora);
-  const { marcas, limite, setLimite, marcar, marcarVarias } = useFaltas();
+  const { marcas, limite, setLimite, marcar, marcarVarias, borrarTodo } = useFaltas();
 
   const [trimId, setTrimId] = useState<number | string | null>(null);
   const [dia, setDia] = useState(hoy);
   const trimestre = PERIODOS.find((t) => t.id === (trimId ?? trimestreDe(hoy).id)) ?? PERIODOS[0];
-  const datos = useMemo(
-    () => resumen(marcas, trimestre, ahora, limite),
-    [marcas, trimestre, ahora, limite],
-  );
-  const horas = useMemo(() => horasDelDia(dia, marcas), [dia, marcas]);
+  const datos = useMemo(() => {
+    void versionHorario; // se recalcula cuando llega un horario nuevo
+    return resumen(marcas, trimestre, ahora, limite);
+  }, [marcas, trimestre, ahora, limite, versionHorario]);
+  const horas = useMemo(() => {
+    void versionHorario;
+    return horasDelDia(dia, marcas);
+  }, [dia, marcas, versionHorario]);
 
   const total = ORDEN.reduce((a, m) => a + datos[m].faltadas, 0);
 
@@ -139,6 +145,23 @@ export function FaltasObsidiana() {
               />
             ))}
           </View>
+          {Object.keys(marcas).length ? (
+            <View style={{ flexDirection: 'row' }}>
+              <Mini
+                texto="Borrar todas mis marcas"
+                onPress={() =>
+                  confirmar({
+                    titulo: 'Borrar todas las marcas',
+                    texto:
+                      'Se quitan todas tus faltas y horas sin clase marcadas, también en tus otros dispositivos al sincronizar.',
+                    boton: 'Borrar',
+                    destructivo: true,
+                    onOk: borrarTodo,
+                  })
+                }
+              />
+            </View>
+          ) : null}
         </View>
 
         <View

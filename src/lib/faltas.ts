@@ -8,34 +8,23 @@
  *  - faltadas = horas que el alumno marcó como «falté» (todas injustificadas).
  */
 import {
+  CURSO_COMPLETO,
   FIN_CURSO,
-  FRANJAS,
-  HORARIO,
   INICIO_CURSO,
   type ModuloId,
+  TRIMESTRES,
+  type Trimestre,
   claveDia,
   minutos,
   motivoSinClase,
   sinClaseDeModulo,
+  slotsDelDia,
 } from './horario';
 
 export const LIMITE_FALTAS = 0.1;
 
-export type Trimestre = { id: 1 | 2 | 3 | 'curso'; nombre: string; desde: string; hasta: string };
-
-export const TRIMESTRES: Trimestre[] = [
-  { id: 1, nombre: '1.er trimestre', desde: INICIO_CURSO, hasta: '2026-12-22' },
-  { id: 2, nombre: '2.º trimestre', desde: '2026-12-23', hasta: '2027-03-19' },
-  { id: 3, nombre: '3.er trimestre', desde: '2027-03-22', hasta: FIN_CURSO },
-];
-
-/** Todo el curso, de seguido: la Orden de la Junta cuenta sobre la duración total del módulo. */
-export const CURSO_COMPLETO: Trimestre = {
-  id: 'curso',
-  nombre: 'Curso completo',
-  desde: INICIO_CURSO,
-  hasta: FIN_CURSO,
-};
+export { CURSO_COMPLETO, TRIMESTRES };
+export type { Trimestre };
 
 /** Los tres trimestres y el curso entero, para el selector. */
 export const PERIODOS: Trimestre[] = [...TRIMESTRES, CURSO_COMPLETO];
@@ -72,15 +61,21 @@ export function horasDelDia(fecha: string, marcas: Marcas): Hora[] {
   const dow = new Date(a, m - 1, d, 12).getDay();
   if (dow === 0 || dow === 6) return [];
   const festivo = motivoSinClase(new Date(a, m - 1, d, 12));
-  return HORARIO[dow].map((modulo, i) => ({
-    fecha,
-    franja: i,
-    modulo,
-    inicio: FRANJAS[i].inicio,
-    fin: FRANJAS[i].fin,
-    automatica: festivo ?? sinClaseDeModulo(fecha, modulo),
-    marca: marcas[fecha]?.[String(i)] ?? null,
-  }));
+  return slotsDelDia(fecha, dow).flatMap((f, i) =>
+    f.modulo
+      ? [
+          {
+            fecha,
+            franja: i,
+            modulo: f.modulo,
+            inicio: f.inicio,
+            fin: f.fin,
+            automatica: festivo ?? sinClaseDeModulo(fecha, f.modulo),
+            marca: marcas[fecha]?.[String(i)] ?? null,
+          },
+        ]
+      : [],
+  );
 }
 
 /** Todas las fechas «YYYY-MM-DD» de un trimestre. */
