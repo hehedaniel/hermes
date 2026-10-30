@@ -20,10 +20,10 @@ import {
   useMovil,
   usePadX,
 } from '@/components/obs';
+import { ResumenInicio } from '@/components/resumen-inicio';
 import { useNow } from '@/hooks/use-now';
 import type { Entrega } from '@/lib/data';
 import { haceCuanto, hora, MESES, quedan } from '@/lib/format';
-import { MODULOS, horarioDelDia, minutos } from '@/lib/horario';
 import { useAsignaturas, useMoodle } from '@/lib/store';
 
 const DIA = 86400;
@@ -77,24 +77,7 @@ export function PendientesObsidiana() {
     [snapshot?.courses, todas, info],
   );
 
-  // Ahora mismo: la clase en curso o la siguiente de hoy
   const hoy = new Date(nowMs);
-  const horario = horarioDelDia(hoy);
-  const minAhora = hoy.getHours() * 60 + hoy.getMinutes();
-  let ahoraMismo = { titulo: 'Sin clase en este momento.', sub: '' };
-  if (horario.tipo === 'clases') {
-    const enCurso = horario.clases.find(
-      (c) => minAhora >= minutos(c.inicio) && minAhora < minutos(c.fin),
-    );
-    const siguiente = horario.clases.find((c) => minutos(c.inicio) > minAhora);
-    if (enCurso) {
-      ahoraMismo = { titulo: MODULOS[enCurso.modulo].nombre, sub: `Hasta las ${enCurso.fin}` };
-    } else if (siguiente) {
-      ahoraMismo.sub = `Siguiente: ${MODULOS[siguiente.modulo].corto} a las ${siguiente.inicio}`;
-    }
-  } else if (horario.tipo === 'sin-clase') {
-    ahoraMismo.sub = horario.motivo;
-  }
 
   const sincronizado = snapshot ? haceCuanto(snapshot.syncedAt, nowMs) : null;
   const abrir = (e: Entrega) => router.push({ pathname: '/tarea/[key]', params: { key: e.key } });
@@ -156,18 +139,13 @@ export function PendientesObsidiana() {
           </Pressable>
         </View>
 
-        {/* Cifras */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: movil ? 10 : 14 }}>
-          <Cifra etiqueta="Por entregar" n={abiertas.length} unidad="abiertas" />
-          <Cifra
-            etiqueta="Urgentes"
-            n={urgentes.length}
-            unidad="< 48 h"
-            color={urgentes.length ? O.lime : O.white}
-          />
-          <Cifra etiqueta="Vencidas" n={vencidas.length} unidad="sin entregar" />
-          <Cifra etiqueta="Cerradas" n={cerradas.length} unidad="entregadas" />
-        </View>
+        {/* Resumen */}
+        <ResumenInicio
+          ahora={hoy}
+          abiertas={abiertas}
+          urgentes={urgentes.length}
+          vencidas={vencidas.length}
+        />
 
         {/* Filtros */}
         <ScrollView
@@ -282,20 +260,6 @@ export function PendientesObsidiana() {
 
           <View style={{ flex: movil ? undefined : 1, minWidth: movil ? 0 : 260, gap: 16 }}>
             <Tarjeta radius={12} borde={O.line} style={{ padding: 20 }}>
-              <Etiqueta s={9.5} ls={0.2} c="#60606D" style={{ marginBottom: 8 }}>
-                Ahora mismo
-              </Etiqueta>
-              <T s={14} w={600} c={O.white} style={{ marginBottom: ahoraMismo.sub ? 8 : 0 }}>
-                {ahoraMismo.titulo}
-              </T>
-              {ahoraMismo.sub ? (
-                <T s={12.5} c="#7E7E8D" lh={20}>
-                  {ahoraMismo.sub}
-                </T>
-              ) : null}
-            </Tarjeta>
-
-            <Tarjeta radius={12} borde={O.line} style={{ padding: 20 }}>
               <Etiqueta s={9.5} ls={0.2} c="#60606D" style={{ marginBottom: 10 }}>
                 Sincronización
               </Etiqueta>
@@ -368,42 +332,6 @@ export function PendientesObsidiana() {
 
 const NUMEROS = ['Cero', 'Una', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho', 'Nueve'];
 const numero = (n: number) => NUMEROS[n] ?? String(n);
-
-function Cifra({
-  etiqueta,
-  n,
-  unidad,
-  color = O.white,
-}: {
-  etiqueta: string;
-  n: number;
-  unidad: string;
-  color?: string;
-}) {
-  const movil = useMovil();
-  return (
-    <Tarjeta
-      radius={12}
-      borde={O.line}
-      style={
-        movil
-          ? { flexGrow: 1, flexBasis: '45%', paddingHorizontal: 16, paddingVertical: 14 }
-          : { flex: 1, paddingHorizontal: 20, paddingVertical: 16 }
-      }>
-      <Etiqueta s={9.5} ls={0.2} c="#6B6B77" style={{ marginBottom: 8 }}>
-        {etiqueta}
-      </Etiqueta>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-        <T w={300} s={24} lh={32} c={color} ls={-0.025}>
-          {n}
-        </T>
-        <T s={12} c="#71717E">
-          {unidad}
-        </T>
-      </View>
-    </Tarjeta>
-  );
-}
 
 function Lista({ titulo, n, children }: { titulo: string; n: number; children: React.ReactNode }) {
   return (

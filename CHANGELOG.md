@@ -6,6 +6,14 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.5.5] - 2026-10-30
+
+### Añadido
+- **Resumen en el inicio.** Arriba de Pendientes, cuatro tarjetas con lo más importante: la próxima clase (con hora y aula), la próxima entrega (con cuánto falta y cuántas tienes abiertas, urgentes y vencidas), el próximo examen en rojo con su cuenta atrás y cómo vas de faltas en el trimestre (en ámbar al acercarte al límite y en rojo si te pasas). Cada una abre su pantalla.
+
+### Cambiado
+- Las cifras sueltas del inicio y la tarjeta «Ahora mismo» pasan a esta franja.
+
 ## [2.5.4] - 2026-10-30
 
 ### Añadido
