@@ -6,6 +6,16 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.5.2] - 2026-10-30
+
+### Añadido
+- **Exámenes en el calendario.** Se apuntan en `examenes` de `public/horario.json`: salen con una marca violeta y una tarjeta «Examen» al abrir el día, sin quitar clases. El 12 de noviembre, examen de Programación.
+- **Tipos de día sin clase.** Festivo, vacaciones, formación, excursión u otro, cada uno con su etiqueta en el calendario.
+- **Eventos con hora y enlace.** Un día sin clase puede llevar hora de inicio y fin, descripción y enlace al mapa. Las formaciones FIWARE del 29 de octubre (básico) y del 5 de noviembre (avanzada) salen con su horario y lugar.
+
+### Corregido
+- El aviso de novedades ya no ocupa todo el ancho en pantallas grandes.
+
 ## [2.5.1] - 2026-10-29
 
 ### Añadido

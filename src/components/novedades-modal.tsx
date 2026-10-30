@@ -96,7 +96,16 @@ const styles = StyleSheet.create({
     padding: 28,
     backgroundColor: 'rgba(0, 0, 0, 0.48)',
   },
-  card: { borderWidth: 1, borderRadius: 18, padding: 22, gap: 14, maxHeight: '85%' },
+  card: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 22,
+    gap: 14,
+    maxHeight: '85%',
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
+  },
   icono: {
     width: 48,
     height: 48,

@@ -80,11 +80,45 @@ export const TIPOS_SIN_CLASE: Record<TipoSinClase, string> = {
   excursion: 'Excursión',
   otro: 'Sin clase',
 };
-export type DiaSinClase = { desde: string; hasta?: string; motivo: string; tipo?: TipoSinClase };
+/** Un examen (u otra fecha señalada) de un módulo: sale en el calendario y no cambia las clases. */
+export type Examen = { fecha: string; modulo: ModuloId; titulo: string; hora?: string };
+
+export const EXAMENES: Examen[] = [
+  { fecha: '2026-11-12', modulo: 'PIA', titulo: 'Examen de Programación' },
+];
+
+export type DiaSinClase = {
+  desde: string;
+  hasta?: string;
+  motivo: string;
+  tipo?: TipoSinClase;
+  /** Si hay un evento ese día (formación, excursión…): hora de inicio y fin «HH:MM», texto y enlace. */
+  inicio?: string;
+  fin?: string;
+  descripcion?: string;
+  enlace?: string;
+};
 
 export const DIAS_SIN_CLASE: DiaSinClase[] = [
   { desde: '2026-10-12', motivo: 'Fiesta Nacional de España' },
-  { desde: '2026-10-29', tipo: 'formacion', motivo: 'Jornada de formación FIWARE' },
+  {
+    desde: '2026-10-29',
+    tipo: 'formacion',
+    motivo: 'Jornada de formación FIWARE',
+    inicio: '17:00',
+    fin: '18:00',
+    descripcion: 'Formación FIWARE básico IES La Marisma y visita',
+    enlace: 'https://maps.app.goo.gl/wrgeFcjzqmPnG7o68',
+  },
+  {
+    desde: '2026-11-05',
+    tipo: 'formacion',
+    motivo: 'Formación FIWARE (nivel avanzado)',
+    inicio: '17:00',
+    fin: '19:00',
+    descripcion: 'Formación FIWARE Avanzada IES La Marisma y visita',
+    enlace: 'https://maps.app.goo.gl/wrgeFcjzqmPnG7o68',
+  },
   { desde: '2026-11-02', motivo: 'Lunes siguiente al Día de Todos los Santos' },
   { desde: '2026-12-07', motivo: 'Lunes siguiente al Día de la Constitución' },
   { desde: '2026-12-08', motivo: 'Día de la Inmaculada Concepción' },
@@ -153,6 +187,7 @@ export type ConfigHorario = {
   sinClase: DiaSinClase[];
   sinClaseModulo: { fecha: string; modulo: ModuloId; motivo: string }[];
   cambios: CambioDia[];
+  examenes?: Examen[];
 };
 
 const FECHA = /^\d{4}-\d{2}-\d{2}$/;
@@ -217,11 +252,34 @@ export function validarHorario(d: unknown): string | null {
       return 'sinClase: cada uno necesita desde, motivo y (opcional) hasta';
     if (x.tipo !== undefined && !(typeof x.tipo === 'string' && x.tipo in TIPOS_SIN_CLASE))
       return `sinClase (${x.desde}): tipo tiene que ser ${Object.keys(TIPOS_SIN_CLASE).join(', ')}`;
+    for (const c of ['inicio', 'fin'] as const)
+      if (x[c] !== undefined && !(typeof x[c] === 'string' && /^\d{2}:\d{2}$/.test(x[c] as string)))
+        return `sinClase (${x.desde}): ${c} tiene que ser HH:MM`;
+    for (const c of ['descripcion', 'enlace'] as const)
+      if (x[c] !== undefined && typeof x[c] !== 'string')
+        return `sinClase (${x.desde}): ${c} tiene que ser texto`;
+    if (x.enlace !== undefined && !/^https?:\/\//.test(x.enlace as string))
+      return `sinClase (${x.desde}): enlace tiene que empezar por http(s)://`;
   }
   if (!Array.isArray(d.sinClaseModulo)) return 'sinClaseModulo: falta';
   for (const x of d.sinClaseModulo) {
     if (!esObjeto(x) || !esFecha(x.fecha) || !esModulo(x.modulo) || typeof x.motivo !== 'string')
       return 'sinClaseModulo: cada uno necesita fecha, modulo y motivo';
+  }
+  if (d.examenes !== undefined) {
+    if (!Array.isArray(d.examenes)) return 'examenes: tiene que ser una lista';
+    for (const x of d.examenes) {
+      if (
+        !esObjeto(x) ||
+        !esFecha(x.fecha) ||
+        !esModulo(x.modulo) ||
+        typeof x.titulo !== 'string' ||
+        !x.titulo
+      )
+        return 'examenes: cada uno necesita fecha, modulo y titulo';
+      if (x.hora !== undefined && !HORA.test(String(x.hora)))
+        return `examenes (${x.fecha}): hora con formato HH:MM`;
+    }
   }
   if (!Array.isArray(d.cambios)) return 'cambios: falta';
   for (const x of d.cambios) {
@@ -258,6 +316,7 @@ const HORARIO_INCLUIDO: ConfigHorario = {
   sinClase: clonar(DIAS_SIN_CLASE),
   sinClaseModulo: clonar(SIN_CLASE_MODULO),
   cambios: [],
+  examenes: clonar(EXAMENES),
 };
 
 /** El horario que lleva la app de serie (el mismo que public/horario.json al publicarlo). */
@@ -283,6 +342,7 @@ export function aplicarHorario(d: unknown): string | null {
   reemplazar(DIAS_SIN_CLASE, c.sinClase);
   reemplazar(SIN_CLASE_MODULO, c.sinClaseModulo);
   reemplazar(CAMBIOS, c.cambios);
+  reemplazar(EXAMENES, c.examenes ?? []);
   c.trimestres.forEach((t, i) => {
     TRIMESTRES[i].desde = t.desde;
     TRIMESTRES[i].hasta = t.hasta;
@@ -339,6 +399,17 @@ export function motivoSinClase(d: Date): string | null {
   }
   return null;
 }
+
+/** El evento (hora, descripción, enlace) de un día sin clase, si lo tiene. */
+export function eventoSinClase(d: Date): DiaSinClase | null {
+  const k = claveDia(d);
+  const f = DIAS_SIN_CLASE.find((x) => k >= x.desde && k <= (x.hasta ?? x.desde));
+  return f && (f.inicio || f.descripcion || f.enlace) ? f : null;
+}
+
+/** Los exámenes de un día (fecha «YYYY-MM-DD»). */
+export const examenesDelDia = (fecha: string): Examen[] =>
+  EXAMENES.filter((x) => x.fecha === fecha);
 
 /** Qué tipo de día sin clase es (por defecto, vacaciones si el motivo lo dice y festivo si no). */
 export function tipoSinClase(d: Date): TipoSinClase | null {

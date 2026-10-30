@@ -7,7 +7,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, type StyleProp, View, type ViewStyle } from 'react-native';
+import { Linking, Pressable, ScrollView, type StyleProp, View, type ViewStyle } from 'react-native';
 
 import { fechaEditorial, O, Punto, T, useArriba, useMovil, usePadX } from '@/components/obs';
 import { useNow } from '@/hooks/use-now';
@@ -18,6 +18,9 @@ import {
   AULA,
   MODULOS,
   TIPOS_SIN_CLASE,
+  claveDia,
+  eventoSinClase,
+  examenesDelDia,
   horarioDelDia,
   limitarMes,
   motivoSinClase,
@@ -42,6 +45,9 @@ const deClave = (k: string) => {
 };
 
 /** Semanas (lunes a domingo) que cubren el mes. */
+/** Violeta: no se confunde con el rojo de los festivos, el ámbar de formación ni el lima de hoy. */
+const COLOR_EXAMEN = '#A78BFA';
+
 function semanasDe(mes: Date) {
   const primero = new Date(mes.getFullYear(), mes.getMonth(), 1);
   const lunes = new Date(primero);
@@ -246,6 +252,7 @@ export function CalendarioObsidiana() {
                       tipoFestivo === 'otro'
                         ? '#E0A93C'
                         : '#E0564C';
+                    const examenes = examenesDelDia(k);
                     const entregas = porDia.get(k) ?? [];
                     const eventos = (googlePorDia.get(k) ?? []).length;
                     const colorNum = fuera ? ZINC.z600 : finde ? ZINC.z400 : ZINC.z300;
@@ -313,9 +320,15 @@ export function CalendarioObsidiana() {
                               <Punto key={e.key} color={info(e.cursoId, e.curso).color} size={5} />
                             ))}
                             {eventos ? <Punto color={ZINC.z500} size={5} /> : null}
+                            {examenes.length ? <Punto color={COLOR_EXAMEN} size={5} /> : null}
                           </View>
                         ) : (
                           <View style={{ gap: 2 }}>
+                            {examenes.length ? (
+                              <T k="mono" up s={9} ls={0.05} c={COLOR_EXAMEN}>
+                                Examen
+                              </T>
+                            ) : null}
                             {festivo ? (
                               <T k="mono" up s={9} ls={0.05} c={colorFestivo}>
                                 {TIPOS_SIN_CLASE[tipoFestivo ?? 'festivo']}
@@ -395,6 +408,8 @@ function PanelDia({
   const google = useGoogleCal();
   useHorario();
   const horario = horarioDelDia(dia);
+  const examenes = examenesDelDia(claveDia(dia));
+  const ev = eventoSinClase(dia);
   const agenda = [...eventos].sort(
     (a, b) => Number(b.todoElDia) - Number(a.todoElDia) || a.inicio - b.inicio,
   );
@@ -428,6 +443,30 @@ function PanelDia({
         <T k="serif" w={500} s={26} lh={32} c={ZINC.z100} style={{ marginBottom: 20 }}>
           {fechaEditorial(dia)}
         </T>
+
+        {examenes.map((x) => (
+          <View
+            key={x.titulo}
+            style={{
+              marginBottom: 14,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: COLOR_EXAMEN,
+              backgroundColor: '#17141F',
+              padding: 12,
+              gap: 4,
+            }}>
+            <T k="mono" up s={9} ls={0.15} c={COLOR_EXAMEN}>
+              Examen{x.hora ? ` · ${x.hora}` : ''}
+            </T>
+            <T w={500} s={13} lh={18} c={ZINC.z100}>
+              {x.titulo}
+            </T>
+            <T k="mono" up s={9.5} ls={0.05} c={ZINC.z500}>
+              {MODULOS[x.modulo].nombre}
+            </T>
+          </View>
+        ))}
 
         {horario.tipo === 'clases' ? (
           <View style={{ gap: 10 }}>
@@ -505,9 +544,43 @@ function PanelDia({
             })}
           </View>
         ) : (
-          <T s={12.5} lh={19} c={ZINC.z500}>
-            {horario.tipo === 'fin-de-semana' ? 'Fin de semana: no hay clases.' : horario.motivo}
-          </T>
+          <View style={{ gap: 12 }}>
+            <T s={12.5} lh={19} c={ZINC.z500}>
+              {horario.tipo === 'fin-de-semana' ? 'Fin de semana: no hay clases.' : horario.motivo}
+            </T>
+            {ev ? (
+              <View
+                style={{
+                  padding: 14,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: '#3A2F14',
+                  backgroundColor: '#17130A',
+                  gap: 6,
+                }}>
+                {ev.inicio ? (
+                  <T k="mono" s={10.5} c="#F5B544">
+                    {ev.inicio}
+                    {ev.fin ? ` - ${ev.fin}` : ''}
+                  </T>
+                ) : null}
+                {ev.descripcion ? (
+                  <T s={13.5} lh={20}>
+                    {ev.descripcion}
+                  </T>
+                ) : null}
+                {ev.enlace ? (
+                  <Pressable
+                    accessibilityRole="link"
+                    onPress={() => void Linking.openURL(ev.enlace as string)}>
+                    <T k="mono" s={10.5} c={O.lime}>
+                      Ver lugar en el mapa
+                    </T>
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : null}
+          </View>
         )}
 
         {google.url ? (

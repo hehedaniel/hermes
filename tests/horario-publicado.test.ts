@@ -4,8 +4,10 @@ import test, { afterEach } from 'node:test';
 
 import { horasDelDia, resumen, TRIMESTRES } from '../src/lib/faltas';
 import {
+  eventoSinClase,
   aplicarHorario,
   horarioDelDia,
+  examenesDelDia,
   horarioIncluido,
   limitarMes,
   motivoSinClase,
@@ -131,4 +133,48 @@ test('los días sin clase tienen tipo: formación, excursión…, y por defecto 
   const malo = horarioIncluido();
   malo.sinClase.push({ desde: '2026-11-17', motivo: 'x', tipo: 'fiesta' as never });
   assert.match(String(aplicarHorario(malo)), /tipo/);
+});
+
+test('los exámenes salen en su día, sin cambiar las clases, y se validan', () => {
+  assert.equal(examenesDelDia('2026-11-12')[0]?.modulo, 'PIA');
+  assert.equal(examenesDelDia('2026-11-13').length, 0);
+  assert.equal(horarioDelDia(dia(2026, 11, 12)).tipo, 'clases'); // el examen no quita clases
+  assert.equal(tipoSinClase(dia(2026, 11, 5)), 'formacion');
+  const c = horarioIncluido();
+  c.examenes!.push({
+    fecha: '2026-11-20',
+    modulo: 'BDA',
+    titulo: 'Examen de Big Data',
+    hora: '16:00',
+  });
+  assert.equal(aplicarHorario(c), null);
+  assert.equal(examenesDelDia('2026-11-20')[0].hora, '16:00');
+  const sin = horarioIncluido();
+  delete sin.examenes; // el campo es opcional: un horario antiguo sigue valiendo
+  assert.equal(aplicarHorario(sin), null);
+  assert.equal(examenesDelDia('2026-11-12').length, 0);
+  for (const malo of [
+    { fecha: '2026-11-20', modulo: 'XXX', titulo: 'x' },
+    { fecha: '2026-11-20', modulo: 'BDA', titulo: '' },
+    { fecha: '2026-11-20', modulo: 'BDA', titulo: 'x', hora: '25:00' },
+  ]) {
+    const m = horarioIncluido();
+    m.examenes = [malo as never];
+    assert.match(String(aplicarHorario(m)), /examenes/);
+  }
+});
+
+test('los días de formación llevan hora, descripción y enlace, y se validan', () => {
+  const a = eventoSinClase(dia(2026, 10, 29));
+  assert.equal(a?.inicio, '17:00');
+  assert.equal(a?.fin, '18:00');
+  assert.match(a?.descripcion ?? '', /básico/);
+  const b = eventoSinClase(dia(2026, 11, 5));
+  assert.equal(b?.fin, '19:00');
+  assert.match(b?.descripcion ?? '', /Avanzada/);
+  assert.match(b?.enlace ?? '', /^https:\/\/maps\.app\.goo\.gl\//);
+  assert.equal(eventoSinClase(dia(2026, 10, 12)), null);
+  const c = horarioIncluido();
+  c.sinClase[0].inicio = '5pm';
+  assert.ok(typeof aplicarHorario(c) === 'string');
 });

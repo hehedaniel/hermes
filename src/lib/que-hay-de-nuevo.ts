@@ -9,6 +9,15 @@ export type NovedadVersion = { version: string; titulo: string; puntos: string[]
 
 export const NOVEDADES_APP: NovedadVersion[] = [
   {
+    version: '2.5.2',
+    titulo: 'Exámenes y formaciones en el calendario',
+    puntos: [
+      'Los exámenes salen en el calendario (el 12 de noviembre, Programación).',
+      'Los días sin clase tienen tipo: festivo, vacaciones, formación o excursión.',
+      'Las formaciones FIWARE muestran su hora y un enlace al lugar.',
+    ],
+  },
+  {
     version: '2.5.1',
     titulo: 'Novedades al actualizar',
     puntos: [
