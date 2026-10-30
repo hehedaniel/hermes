@@ -33,12 +33,12 @@ function Cuadro({
     <Pressable
       onPress={onPress}
       disabled={!onPress}
-      style={movil ? { width: '100%' } : { flex: 1, minWidth: 0 }}>
+      style={movil ? { flexBasis: '47%', flexGrow: 1 } : { flex: 1, minWidth: 0 }}>
       <Tarjeta
         radius={12}
         borde={borde ?? O.line}
         bg={fondo}
-        style={{ padding: 16, gap: 6, minHeight: 112, flex: 1 }}>
+        style={{ padding: movil ? 14 : 16, gap: 6, minHeight: movil ? 128 : 112, flex: 1 }}>
         <Etiqueta s={9.5} ls={0.2} c={borde ?? '#6B6B77'}>
           {etiqueta}
         </Etiqueta>
@@ -52,12 +52,10 @@ export function ResumenInicio({
   ahora,
   abiertas,
   urgentes,
-  vencidas,
 }: {
   ahora: Date;
   abiertas: Entrega[];
   urgentes: number;
-  vencidas: number;
 }) {
   const movil = useMovil();
   const info = useAsignaturas();
@@ -78,14 +76,15 @@ export function ResumenInicio({
   const colorFaltas = faltas.nivel === 'pasado' ? ROJO : faltas.nivel === 'aviso' ? AMBAR : O.white;
 
   return (
-    <View style={{ flexDirection: movil ? 'column' : 'row', gap: movil ? 10 : 14 }}>
+    <View
+      style={{ flexDirection: 'row', flexWrap: movil ? 'wrap' : 'nowrap', gap: movil ? 10 : 14 }}>
       <Cuadro etiqueta={clase?.enCurso ? 'Ahora en clase' : 'Próxima clase'}>
         {clase ? (
           <>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Punto color={info(0, MODULOS[clase.modulo].nombre).color} />
               <T s={14} w={600} c={O.white} numberOfLines={2} style={{ flex: 1 }}>
-                {MODULOS[clase.modulo].nombre}
+                {movil ? MODULOS[clase.modulo].corto : MODULOS[clase.modulo].nombre}
               </T>
             </View>
             <T s={12.5} c="#8E8E9C">
@@ -118,10 +117,6 @@ export function ResumenInicio({
               {proxima.fecha
                 ? `${diaMesHora(proxima.fecha)} · ${quedan(proxima.fecha, ms).replace('Quedan ', 'en ')}`
                 : 'Sin fecha'}
-            </T>
-            <T k="mono" up s={9.5} ls={0.05} c="#6B6B77">
-              {abiertas.length} abiertas · {urgentes} urgentes
-              {vencidas ? ` · ${vencidas} vencidas` : ''}
             </T>
           </>
         ) : (
@@ -161,7 +156,7 @@ export function ResumenInicio({
       </Cuadro>
 
       <Cuadro
-        etiqueta="Faltas del trimestre"
+        etiqueta={movil ? 'Faltas' : 'Faltas del trimestre'}
         borde={faltas.nivel === 'ok' ? undefined : colorFaltas}
         onPress={() => router.push('/faltas' as Href)}>
         {faltas.faltadas && faltas.peor ? (

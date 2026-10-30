@@ -6,6 +6,12 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.5.6] - 2026-10-30
+
+### Cambiado
+- **Resumen del inicio en el móvil.** Las cuatro tarjetas se ven en cuadrícula de 2×2 en vez de en lista, para que ocupen menos y la lista de tareas quede más arriba.
+- La tarjeta «Próxima entrega» solo muestra el título y lo que falta, sin el recuento de abiertas, urgentes y vencidas.
+
 ## [2.5.5] - 2026-10-30
 
 ### Añadido

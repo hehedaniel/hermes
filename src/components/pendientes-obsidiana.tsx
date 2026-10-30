@@ -140,12 +140,7 @@ export function PendientesObsidiana() {
         </View>
 
         {/* Resumen */}
-        <ResumenInicio
-          ahora={hoy}
-          abiertas={abiertas}
-          urgentes={urgentes.length}
-          vencidas={vencidas.length}
-        />
+        <ResumenInicio ahora={hoy} abiertas={abiertas} urgentes={urgentes.length} />
 
         {/* Filtros */}
         <ScrollView

@@ -9,6 +9,11 @@ export type NovedadVersion = { version: string; titulo: string; puntos: string[]
 
 export const NOVEDADES_APP: NovedadVersion[] = [
   {
+    version: '2.5.6',
+    titulo: 'Resumen del inicio más compacto',
+    puntos: ['En el móvil, el resumen del inicio se ve en cuadrícula de 2×2 y ocupa menos.'],
+  },
+  {
     version: '2.5.5',
     titulo: 'Resumen en el inicio',
     puntos: [
