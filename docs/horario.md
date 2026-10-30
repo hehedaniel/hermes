@@ -19,10 +19,12 @@ de minutos está publicado.
 
 Módulos: `MIA`, `SAA`, `BDA`, `PIA`, `SBD`. Fechas siempre `AAAA-MM-DD`, horas `HH:MM`.
 
-### Un día sin clase para todos (festivo, jornada, huelga…)
-En `sinClase` (con `hasta` para varios días seguidos):
+### Un día sin clase para todos (festivo, formación, excursión…)
+En `sinClase` (con `hasta` para varios días seguidos). `tipo` es opcional y decide cómo se ve en el calendario:
+`festivo`, `vacaciones`, `formacion`, `excursion` u `otro` («Sin clase»). Si no lo pones, es «Vacaciones» cuando el
+motivo lo dice y «Festivo» en el resto.
 ```json
-{ "desde": "2026-11-10", "motivo": "Jornada de puertas abiertas" },
+{ "desde": "2026-10-29", "tipo": "formacion", "motivo": "Jornada de formación FIWARE" },
 { "desde": "2026-12-23", "hasta": "2027-01-05", "motivo": "Vacaciones de Navidad" }
 ```
 

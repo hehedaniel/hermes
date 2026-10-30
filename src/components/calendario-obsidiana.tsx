@@ -14,7 +14,15 @@ import { useNow } from '@/hooks/use-now';
 import type { Entrega } from '@/lib/data';
 import { dayKey, hora, MESES } from '@/lib/format';
 import { eventosPorDia, useGoogleCal } from '@/lib/google-cal';
-import { AULA, MODULOS, horarioDelDia, limitarMes, motivoSinClase } from '@/lib/horario';
+import {
+  AULA,
+  MODULOS,
+  TIPOS_SIN_CLASE,
+  horarioDelDia,
+  limitarMes,
+  motivoSinClase,
+  tipoSinClase,
+} from '@/lib/horario';
 import { useHorario } from '@/lib/use-horario';
 import { useAsignaturas, useMoodle } from '@/lib/store';
 
@@ -231,6 +239,13 @@ export function CalendarioObsidiana() {
                     const finde = di >= 5;
                     const sel = k === elegido;
                     const festivo = !finde ? motivoSinClase(d) : null;
+                    const tipoFestivo = festivo ? tipoSinClase(d) : null;
+                    const colorFestivo =
+                      tipoFestivo === 'formacion' ||
+                      tipoFestivo === 'excursion' ||
+                      tipoFestivo === 'otro'
+                        ? '#E0A93C'
+                        : '#E0564C';
                     const entregas = porDia.get(k) ?? [];
                     const eventos = (googlePorDia.get(k) ?? []).length;
                     const colorNum = fuera ? ZINC.z600 : finde ? ZINC.z400 : ZINC.z300;
@@ -284,7 +299,7 @@ export function CalendarioObsidiana() {
                               {d.getDate()}
                             </T>
                           )}
-                          {festivo ? <Punto color="#E0564C" /> : null}
+                          {festivo ? <Punto color={colorFestivo} /> : null}
                         </View>
                         {movil ? (
                           <View
@@ -302,8 +317,8 @@ export function CalendarioObsidiana() {
                         ) : (
                           <View style={{ gap: 2 }}>
                             {festivo ? (
-                              <T k="mono" up s={9} ls={0.05} c="#E0564C">
-                                {/vacaciones/i.test(festivo) ? 'Vacaciones' : 'Festivo'}
+                              <T k="mono" up s={9} ls={0.05} c={colorFestivo}>
+                                {TIPOS_SIN_CLASE[tipoFestivo ?? 'festivo']}
                               </T>
                             ) : null}
                             {finde && !entregas.length ? (

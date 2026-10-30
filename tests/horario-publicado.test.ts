@@ -9,6 +9,7 @@ import {
   horarioIncluido,
   limitarMes,
   motivoSinClase,
+  tipoSinClase,
   validarHorario,
   versionHorario,
 } from '../src/lib/horario';
@@ -116,4 +117,18 @@ test('el calendario no retrocede más allá del mes en que empieza el curso', ()
   assert.deepEqual(limitarMes(new Date(2026, 7, 1)), new Date(2026, 8, 1));
   assert.deepEqual(limitarMes(new Date(2026, 8, 1)), new Date(2026, 8, 1));
   assert.deepEqual(limitarMes(new Date(2026, 10, 1)), new Date(2026, 10, 1));
+});
+
+test('los días sin clase tienen tipo: formación, excursión…, y por defecto festivo o vacaciones', () => {
+  const c = horarioIncluido();
+  c.sinClase.push({ desde: '2026-11-17', motivo: 'Visita a una empresa', tipo: 'excursion' });
+  assert.equal(aplicarHorario(c), null);
+  assert.equal(tipoSinClase(dia(2026, 11, 17)), 'excursion');
+  assert.equal(tipoSinClase(dia(2026, 10, 29)), 'formacion'); // el de public/horario.json
+  assert.equal(tipoSinClase(dia(2026, 12, 8)), 'festivo');
+  assert.equal(tipoSinClase(dia(2026, 12, 28)), 'vacaciones');
+  assert.equal(tipoSinClase(dia(2026, 11, 18)), null);
+  const malo = horarioIncluido();
+  malo.sinClase.push({ desde: '2026-11-17', motivo: 'x', tipo: 'fiesta' as never });
+  assert.match(String(aplicarHorario(malo)), /tipo/);
 });

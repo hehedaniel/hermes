@@ -72,8 +72,19 @@ export let INICIO_CURSO = '2026-09-28';
 export let FIN_CURSO = '2027-06-22';
 
 /** Días sin clase (fechas "YYYY-MM-DD", ambos extremos incluidos). */
-export const DIAS_SIN_CLASE: { desde: string; hasta?: string; motivo: string }[] = [
+export type TipoSinClase = 'festivo' | 'vacaciones' | 'formacion' | 'excursion' | 'otro';
+export const TIPOS_SIN_CLASE: Record<TipoSinClase, string> = {
+  festivo: 'Festivo',
+  vacaciones: 'Vacaciones',
+  formacion: 'Formación',
+  excursion: 'Excursión',
+  otro: 'Sin clase',
+};
+export type DiaSinClase = { desde: string; hasta?: string; motivo: string; tipo?: TipoSinClase };
+
+export const DIAS_SIN_CLASE: DiaSinClase[] = [
   { desde: '2026-10-12', motivo: 'Fiesta Nacional de España' },
+  { desde: '2026-10-29', tipo: 'formacion', motivo: 'Jornada de formación FIWARE' },
   { desde: '2026-11-02', motivo: 'Lunes siguiente al Día de Todos los Santos' },
   { desde: '2026-12-07', motivo: 'Lunes siguiente al Día de la Constitución' },
   { desde: '2026-12-08', motivo: 'Día de la Inmaculada Concepción' },
@@ -139,7 +150,7 @@ export type ConfigHorario = {
   franjas: Franja[];
   horario: Record<string, ModuloId[]>;
   trimestres: { desde: string; hasta: string }[];
-  sinClase: { desde: string; hasta?: string; motivo: string }[];
+  sinClase: DiaSinClase[];
   sinClaseModulo: { fecha: string; modulo: ModuloId; motivo: string }[];
   cambios: CambioDia[];
 };
@@ -204,6 +215,8 @@ export function validarHorario(d: unknown): string | null {
       typeof x.motivo !== 'string'
     )
       return 'sinClase: cada uno necesita desde, motivo y (opcional) hasta';
+    if (x.tipo !== undefined && !(typeof x.tipo === 'string' && x.tipo in TIPOS_SIN_CLASE))
+      return `sinClase (${x.desde}): tipo tiene que ser ${Object.keys(TIPOS_SIN_CLASE).join(', ')}`;
   }
   if (!Array.isArray(d.sinClaseModulo)) return 'sinClaseModulo: falta';
   for (const x of d.sinClaseModulo) {
@@ -325,6 +338,14 @@ export function motivoSinClase(d: Date): string | null {
     if (k >= f.desde && k <= (f.hasta ?? f.desde)) return f.motivo;
   }
   return null;
+}
+
+/** Qué tipo de día sin clase es (por defecto, vacaciones si el motivo lo dice y festivo si no). */
+export function tipoSinClase(d: Date): TipoSinClase | null {
+  const k = claveDia(d);
+  const f = DIAS_SIN_CLASE.find((x) => k >= x.desde && k <= (x.hasta ?? x.desde));
+  if (!f) return null;
+  return f.tipo ?? (/vacaciones/i.test(f.motivo) ? 'vacaciones' : 'festivo');
 }
 
 export type Clase = { modulo: ModuloId; inicio: string; fin: string };
