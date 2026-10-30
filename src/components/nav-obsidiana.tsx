@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { IconoFeather } from '@/components/anden';
 import { O, T } from '@/components/obs';
 import { useMoodle } from '@/lib/store';
+import { useEsProfesor } from '@/lib/use-es-profesor';
 
 type Ruta = {
   key: string;
@@ -37,6 +38,7 @@ export function BarraInferiorObsidiana({
   const { bottom } = useSafeAreaInsets();
   const { snapshot } = useMoodle();
   const [abierto, setAbierto] = useState(false);
+  const esProfesor = useEsProfesor();
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const boton = useRef<View>(null);
   const [p] = useState(() => new Animated.Value(0));
@@ -75,7 +77,7 @@ export function BarraInferiorObsidiana({
   };
   ruta('novedades', 'bell', 'Novedades');
   ruta('cursos', 'book-open', 'Asignaturas');
-  if (proxima)
+  if (proxima && !esProfesor)
     opciones.push({
       id: 'ia',
       icono: 'star',

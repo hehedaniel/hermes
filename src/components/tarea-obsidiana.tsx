@@ -18,6 +18,8 @@ import { diaMes, diaMesHora, hora, quedan } from '@/lib/format';
 import { htmlATexto } from '@/lib/html-texto';
 import { hayChat } from '@/lib/ia/chats';
 import { useAsignaturas } from '@/lib/store';
+import { EntregaPropia } from '@/components/entrega-propia';
+import { useEsProfesor } from '@/lib/use-es-profesor';
 
 const CHIP = {
   borrador: { bg: '#271F0C', fg: '#F59E0B', borde: '#3E3113', texto: 'Borrador' },
@@ -157,6 +159,7 @@ export function TareaObsidiana({ entrega: e, nowMs }: { entrega: Entrega; nowMs:
     }, [e.key]),
   );
   const conChat = chat?.key === e.key && chat.hay;
+  const esProfesor = useEsProfesor();
 
   const ancho = width >= 1100;
   const padX = usePadX(32);
@@ -298,6 +301,9 @@ export function TareaObsidiana({ entrega: e, nowMs }: { entrega: Entrega; nowMs:
             Todavía no has enviado tu trabajo.
           </T>
         ) : null}
+        {abierta && !esProfesor && e.tipo === 'assign' && e.entregable && !e.entregable.prueba ? (
+          <EntregaPropia entrega={e} />
+        ) : null}
         {abierta && abrirMoodle ? (
           <Pressable
             onPress={abrirMoodle}
@@ -401,43 +407,45 @@ export function TareaObsidiana({ entrega: e, nowMs }: { entrega: Entrega; nowMs:
         </View>
       </View>
 
-      <View
-        style={{
-          backgroundColor: '#121418',
-          borderWidth: 1,
-          borderColor: '#2B3917',
-          borderRadius: 12,
-          padding: 20,
-          overflow: 'hidden',
-        }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-          <Feather name="star" size={14} color={O.lime} />
-          <T k="mono" up s={9.5} w={700} ls={0.18} c={O.lime}>
-            {conChat ? 'Seguir con la IA' : 'Hacer con IA'}
-          </T>
-        </View>
-        <T s={12.5} lh={20} c="#B4B8C5" style={{ marginBottom: 20 }}>
-          Trabaja sobre el enunciado y los archivos de la tarea. También puede explicarte la
-          corrección del profesor punto por punto.
-        </T>
-        <Pressable
-          onPress={irIA}
+      {!esProfesor ? (
+        <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 6,
-            paddingVertical: 10,
-            paddingHorizontal: 16,
-            borderRadius: 999,
-            backgroundColor: O.lime,
+            backgroundColor: '#121418',
+            borderWidth: 1,
+            borderColor: '#2B3917',
+            borderRadius: 12,
+            padding: 20,
+            overflow: 'hidden',
           }}>
-          <T k="mono" up s={10} w={700} ls={0.05} c="#000">
-            Abrir asistente
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+            <Feather name="star" size={14} color={O.lime} />
+            <T k="mono" up s={9.5} w={700} ls={0.18} c={O.lime}>
+              {conChat ? 'Seguir con la IA' : 'Hacer con IA'}
+            </T>
+          </View>
+          <T s={12.5} lh={20} c="#B4B8C5" style={{ marginBottom: 20 }}>
+            Trabaja sobre el enunciado y los archivos de la tarea. También puede explicarte la
+            corrección del profesor punto por punto.
           </T>
-          <Feather name="arrow-up-right" size={12} color="#000" />
-        </Pressable>
-      </View>
+          <Pressable
+            onPress={irIA}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              paddingVertical: 10,
+              paddingHorizontal: 16,
+              borderRadius: 999,
+              backgroundColor: O.lime,
+            }}>
+            <T k="mono" up s={10} w={700} ls={0.05} c="#000">
+              Abrir asistente
+            </T>
+            <Feather name="arrow-up-right" size={12} color="#000" />
+          </Pressable>
+        </View>
+      ) : null}
 
       <View style={{ ...TARJETA, padding: 20 }}>
         <Titulo>ASIGNATURA</Titulo>

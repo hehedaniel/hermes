@@ -27,7 +27,7 @@ import {
   type PreferenciasAvisos,
   programarRecordatorios,
 } from '@/lib/avisos';
-import { confirmar } from '@/lib/dialogo';
+import { avisar, confirmar } from '@/lib/dialogo';
 import { IAPlantillas } from '@/components/ia-plantillas';
 import { useSyncDatos } from '@/lib/use-sync-datos';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
@@ -52,6 +52,7 @@ import {
   PROVEEDORES,
 } from '@/lib/ia/proveedores';
 import { useMoodle } from '@/lib/store';
+import { useEsProfesor } from '@/lib/use-es-profesor';
 
 const Z = {
   z100: '#F4F4F5',
@@ -66,6 +67,7 @@ const CAMBIOS_URL = 'https://github.com/hehedaniel/hermes/blob/main/CHANGELOG.md
 const ANTELACIONES = [48, 24, 12, 3, 2, 1];
 
 export function AjustesObsidiana() {
+  const esProfesor = useEsProfesor();
   const { width } = useWindowDimensions();
   const movil = useMovil();
   const arriba = useArriba();
@@ -93,15 +95,19 @@ export function AjustesObsidiana() {
         <Recordatorios />
         <Notificaciones />
         <GoogleCalendar />
-        <Asistente />
-        <Tarjeta
-          n={5}
-          titulo="Plantillas y estilo"
-          texto="Sube tu plantilla de entrega y un texto tuyo para que la IA siga el formato y escriba como tú.">
-          <IAPlantillas />
-        </Tarjeta>
-        <Cuenta />
-        <Apariencia />
+        {!esProfesor ? (
+          <>
+            <Asistente />
+            <Tarjeta
+              n={5}
+              titulo="Plantillas y estilo"
+              texto="Sube tu plantilla de entrega y un texto tuyo para que la IA siga el formato y escriba como tú.">
+              <IAPlantillas />
+            </Tarjeta>
+          </>
+        ) : null}
+        <Cuenta n={esProfesor ? 4 : 6} />
+        <Apariencia n={esProfesor ? 5 : 7} />
         <View style={{ alignItems: 'center', paddingBottom: 24, gap: 10 }}>
           <Pressable onPress={abrirNovedades}>
             <T k="mono" s={11} c={Z.z400}>
@@ -855,8 +861,8 @@ function Asistente() {
 
 // ——— 05: cuenta ———
 
-function Cuenta() {
-  const { snapshot, syncing, refresh, disconnect } = useMoodle();
+function Cuenta({ n }: { n: number }) {
+  const { client, snapshot, syncing, refresh, disconnect } = useMoodle();
   const { guardaArchivos, resumen, borrarTodo } = useDownloads();
   const { enabled: updatesEnabled, checking, checkNow } = useAppUpdates();
   const sync = useSyncDatos();
@@ -881,8 +887,30 @@ function Cuenta() {
       },
     });
   }
+  function copiarToken() {
+    const token = client?.token;
+    if (!token) return;
+    confirmar({
+      titulo: 'Copiar el token',
+      texto:
+        'El token da acceso a tu cuenta de Moodle, como una contraseña. Cópialo solo para pegarlo en tu otro dispositivo y no se lo des a nadie. A los 60 segundos se borrará del portapapeles si sigue ahí.',
+      boton: 'Copiar',
+      onOk: async () => {
+        await Clipboard.setStringAsync(token);
+        setTimeout(() => {
+          void Clipboard.getStringAsync()
+            .then((t) => (t === token ? Clipboard.setStringAsync('') : undefined))
+            .catch(() => undefined);
+        }, 60_000);
+        avisar(
+          'Token copiado',
+          'Pégalo en Ajustes de tu otro dispositivo. Se borra del portapapeles en 60 segundos.',
+        );
+      },
+    });
+  }
   return (
-    <Tarjeta n={6} titulo="Cuenta">
+    <Tarjeta n={n} titulo="Cuenta">
       <View style={{ gap: 24 }}>
         <View
           style={{
@@ -937,6 +965,7 @@ function Cuenta() {
               onPress={() => refresh()}
               disabled={syncing}
             />
+            <Boton texto="Copiar token" onPress={copiarToken} disabled={!client} />
             <Boton texto="Cerrar sesión" peligro onPress={cerrar} />
           </View>
           <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
@@ -1019,11 +1048,11 @@ function Cuenta() {
 
 // ——— 06: apariencia (el selector de tema) ———
 
-function Apariencia() {
+function Apariencia({ n }: { n: number }) {
   const { tema } = useThemePreference();
   return (
     <Tarjeta
-      n={7}
+      n={n}
       titulo="Apariencia"
       texto="Obsidiana es el diseño completo de Hermes, con todas las funciones.">
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

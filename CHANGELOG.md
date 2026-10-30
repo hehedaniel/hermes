@@ -6,6 +6,16 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.5.4] - 2026-10-30
+
+### Añadido
+- **Entregar desde la app.** En cada tarea pendiente, «Entregar desde la app»: eliges tus archivos o escribes el texto y se entregan en Moodle, con confirmación antes. Comprueba el tipo, el tamaño y el número de archivos que admite la tarea. Funciona en el móvil y en la web.
+- **Copiar el token.** En Ajustes → Cuenta, «Copiar token» (con aviso de que es como una contraseña) para pasarlo a otro dispositivo; se borra del portapapeles a los 60 segundos.
+- **Tu rol en cada asignatura.** En la pantalla de la asignatura sale si eres alumno o profesor.
+
+### Cambiado
+- Si eres profesor en alguna asignatura, la app oculta lo de la IA y los trabajos con IA (botón Asistente, «Hacer con IA» y los ajustes de IA y plantillas).
+
 ## [2.5.3] - 2026-10-30
 
 ### Cambiado

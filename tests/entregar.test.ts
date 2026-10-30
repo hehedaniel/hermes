@@ -6,6 +6,7 @@ import {
   configEntrega,
   entregarEnMoodle,
   subirBorrador,
+  textoAHtml,
   tipoAdmitido,
 } from '@/lib/entregar';
 import type { Assignment } from '@/lib/moodle';
@@ -184,4 +185,12 @@ test('Subida rechazada por Moodle', async () => {
     ]),
     /demasiado grande/,
   );
+});
+
+test('el texto escrito a mano se entrega como párrafos y escapa el HTML', () => {
+  assert.equal(
+    textoAHtml('Hola\nmundo\n\nSegundo <b>párrafo</b> & fin'),
+    '<p>Hola<br>mundo</p><p>Segundo &lt;b&gt;párrafo&lt;/b&gt; &amp; fin</p>',
+  );
+  assert.equal(textoAHtml('  una línea  '), '<p>una línea</p>');
 });

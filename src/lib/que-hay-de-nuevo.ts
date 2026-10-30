@@ -9,6 +9,15 @@ export type NovedadVersion = { version: string; titulo: string; puntos: string[]
 
 export const NOVEDADES_APP: NovedadVersion[] = [
   {
+    version: '2.5.4',
+    titulo: 'Entregar desde la app',
+    puntos: [
+      'Entrega tus tareas desde la app o la web: eliges el archivo o escribes el texto.',
+      'Ajustes → Cuenta: botón para copiar el token y pasarlo a otro dispositivo.',
+      'Ves tu rol (alumno o profesor) en cada asignatura; los profesores no ven la parte de IA.',
+    ],
+  },
+  {
     version: '2.5.3',
     titulo: 'Exámenes bien visibles',
     puntos: [

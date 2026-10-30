@@ -171,3 +171,14 @@ export async function entregarEnMoodle(
   );
   return 'enviada';
 }
+
+/** Texto escrito a mano → HTML para el editor de Moodle (párrafos y saltos de línea). */
+export function textoAHtml(texto: string) {
+  const esc = (s: string) =>
+    s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!);
+  return texto
+    .trim()
+    .split(/\n{2,}/)
+    .map((p) => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`)
+    .join('');
+}

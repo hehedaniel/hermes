@@ -20,6 +20,8 @@ import { diaMesHora } from '@/lib/format';
 import { AULA, moduloDe } from '@/lib/horario';
 import { claveArchivo } from '@/lib/novedades';
 import { useProfesorMoodle } from '@/lib/profesor';
+import { ETIQUETA_ROL, useMiRol } from '@/lib/rol';
+import { useEsProfesor } from '@/lib/use-es-profesor';
 import { useAsignaturas, useMoodle } from '@/lib/store';
 import { useCourseContents } from '@/lib/use-course-contents';
 
@@ -66,6 +68,8 @@ export function CursoObsidiana({ cursoId, nombre }: { cursoId: number; nombre?: 
   const a = useAsignaturas()(cursoId, nombre);
   const { width } = useWindowDimensions();
   const profe = useProfesorMoodle(client, cursoId, a.profesor);
+  const esProfesor = useEsProfesor();
+  const rol = useMiRol(client, cursoId, snapshot?.site.userid);
   const [fotoRota, setFotoRota] = useState(false);
   const [progreso, setProgreso] = useState<{ hechos: number; total: number } | null>(null);
 
@@ -196,6 +200,11 @@ export function CursoObsidiana({ cursoId, nombre }: { cursoId: number; nombre?: 
             <Etiqueta s={10} ls={0.14} w={400} c="#757582">
               {elementos} {elementos === 1 ? 'Elemento' : 'Elementos'}
             </Etiqueta>
+            {rol ? (
+              <Etiqueta s={10} ls={0.14} w={500} c={rol === 'alumno' ? '#9393A2' : '#E2F17D'}>
+                Rol: {ETIQUETA_ROL[rol]}
+              </Etiqueta>
+            ) : null}
             {pendientes ? (
               <Etiqueta s={10} ls={0.14} w={500} c="#EAB308">
                 {pendientes} {pendientes === 1 ? 'Pendiente' : 'Pendientes'}
@@ -349,21 +358,23 @@ export function CursoObsidiana({ cursoId, nombre }: { cursoId: number; nombre?: 
                 </Pressable>
               ) : null}
             </View>
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: '#262E19',
-                borderRadius: 12,
-                backgroundColor: 'rgba(17,20,14,0.4)',
-                padding: 20,
-              }}>
-              <Etiqueta s={10} ls={0.2} c="#B4D455" style={{ marginBottom: 12 }}>
-                Asistente
-              </Etiqueta>
-              <T s={12} lh={19.5} c="#969A8F">
-                Abre una tarea y pulsa «Hacer con IA» para que te ayude a preparar la entrega.
-              </T>
-            </View>
+            {!esProfesor ? (
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#262E19',
+                  borderRadius: 12,
+                  backgroundColor: 'rgba(17,20,14,0.4)',
+                  padding: 20,
+                }}>
+                <Etiqueta s={10} ls={0.2} c="#B4D455" style={{ marginBottom: 12 }}>
+                  Asistente
+                </Etiqueta>
+                <T s={12} lh={19.5} c="#969A8F">
+                  Abre una tarea y pulsa «Hacer con IA» para que te ayude a preparar la entrega.
+                </T>
+              </View>
+            ) : null}
           </View>
         </View>
       </View>

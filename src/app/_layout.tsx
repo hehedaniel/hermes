@@ -34,6 +34,7 @@ import { ExtractorPdf } from '@/lib/ia/pdf-texto';
 import { BusquedaProvider } from '@/lib/busqueda-estado';
 import { MoodleProvider } from '@/lib/store';
 import { HorarioRemoto } from '@/lib/use-horario';
+import { DetectarRol } from '@/lib/use-es-profesor';
 import { NovedadesModal } from '@/components/novedades-modal';
 import { SyncDatosProvider } from '@/lib/use-sync-datos';
 
@@ -110,6 +111,7 @@ function RootLayoutContent() {
     <MoodleProvider>
       <SyncDatosProvider>
         <HorarioRemoto />
+        <DetectarRol />
         <BusquedaProvider>
           <DownloadsProvider>
             <GoogleCalProvider>
