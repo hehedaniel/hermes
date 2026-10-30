@@ -9,6 +9,13 @@ export type NovedadVersion = { version: string; titulo: string; puntos: string[]
 
 export const NOVEDADES_APP: NovedadVersion[] = [
   {
+    version: '2.5.3',
+    titulo: 'Exámenes bien visibles',
+    puntos: [
+      'El día del examen sale en rojo fosforito en el calendario, para no pasarlo por alto.',
+    ],
+  },
+  {
     version: '2.5.2',
     titulo: 'Exámenes y formaciones en el calendario',
     puntos: [

@@ -6,6 +6,11 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.5.3] - 2026-10-30
+
+### Cambiado
+- **Exámenes más visibles.** El día del examen sale en rojo fosforito: casilla teñida y rótulo «Examen» en el mes, y tarjeta roja «¡Examen!» al abrir el día, para que no se confunda con el color de una asignatura.
+
 ## [2.5.2] - 2026-10-30
 
 ### Añadido

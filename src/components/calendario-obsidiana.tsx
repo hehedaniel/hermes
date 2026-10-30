@@ -46,7 +46,7 @@ const deClave = (k: string) => {
 
 /** Semanas (lunes a domingo) que cubren el mes. */
 /** Violeta: no se confunde con el rojo de los festivos, el ámbar de formación ni el lima de hoy. */
-const COLOR_EXAMEN = '#A78BFA';
+const COLOR_EXAMEN = '#FF1744';
 
 function semanasDe(mes: Date) {
   const primero = new Date(mes.getFullYear(), mes.getMonth(), 1);
@@ -273,11 +273,18 @@ export function CalendarioObsidiana() {
                           borderColor: '#1F1F25',
                           backgroundColor: sel
                             ? '#1C1D22'
-                            : finde
-                              ? 'rgba(9,9,11,0.5)'
-                              : 'transparent',
+                            : examenes.length
+                              ? 'rgba(255,23,68,0.13)'
+                              : finde
+                                ? 'rgba(9,9,11,0.5)'
+                                : 'transparent',
                           opacity: fuera ? 0.6 : 1,
-                          ...(sel ? { borderWidth: 2, borderColor: '#2B2C34' } : null),
+                          ...(sel
+                            ? {
+                                borderWidth: 2,
+                                borderColor: examenes.length ? COLOR_EXAMEN : '#2B2C34',
+                              }
+                            : null),
                         }}>
                         <View
                           style={{
@@ -320,12 +327,12 @@ export function CalendarioObsidiana() {
                               <Punto key={e.key} color={info(e.cursoId, e.curso).color} size={5} />
                             ))}
                             {eventos ? <Punto color={ZINC.z500} size={5} /> : null}
-                            {examenes.length ? <Punto color={COLOR_EXAMEN} size={5} /> : null}
+                            {examenes.length ? <Punto color={COLOR_EXAMEN} size={7} /> : null}
                           </View>
                         ) : (
                           <View style={{ gap: 2 }}>
                             {examenes.length ? (
-                              <T k="mono" up s={9} ls={0.05} c={COLOR_EXAMEN}>
+                              <T k="mono" up w={700} s={9.5} ls={0.05} c={COLOR_EXAMEN}>
                                 Examen
                               </T>
                             ) : null}
@@ -450,19 +457,19 @@ function PanelDia({
             style={{
               marginBottom: 14,
               borderRadius: 12,
-              borderWidth: 1,
+              borderWidth: 2,
               borderColor: COLOR_EXAMEN,
-              backgroundColor: '#17141F',
-              padding: 12,
+              backgroundColor: 'rgba(255,23,68,0.14)',
+              padding: 14,
               gap: 4,
             }}>
-            <T k="mono" up s={9} ls={0.15} c={COLOR_EXAMEN}>
-              Examen{x.hora ? ` · ${x.hora}` : ''}
+            <T k="mono" up w={700} s={10} ls={0.2} c={COLOR_EXAMEN}>
+              ¡Examen!{x.hora ? ` · ${x.hora}` : ''}
             </T>
-            <T w={500} s={13} lh={18} c={ZINC.z100}>
+            <T w={700} s={15} lh={20} c={ZINC.z100}>
               {x.titulo}
             </T>
-            <T k="mono" up s={9.5} ls={0.05} c={ZINC.z500}>
+            <T k="mono" up s={9.5} ls={0.05} c={ZINC.z300}>
               {MODULOS[x.modulo].nombre}
             </T>
           </View>
