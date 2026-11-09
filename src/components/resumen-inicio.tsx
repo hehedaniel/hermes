@@ -127,7 +127,7 @@ export function ResumenInicio({
       </Cuadro>
 
       <Cuadro
-        etiqueta={examen && examen.dias <= 7 ? '¡Examen!' : 'Próximo examen'}
+        etiqueta={examen && examen.dias <= 7 ? 'Examen' : 'Próximo examen'}
         borde={examen && examen.dias <= 14 ? ROJO : undefined}
         fondo={examen && examen.dias <= 14 ? 'rgba(255,23,68,0.10)' : undefined}
         onPress={() => router.push('/calendario')}>

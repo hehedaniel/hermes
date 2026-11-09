@@ -487,9 +487,14 @@ function BloqueFila({
       </Pressable>
       {abierto ? (
         <View style={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 4, gap: 10 }}>
+          {bloque.descripcion ? (
+            <T s={12.5} lh={19} c="#9393A2" selectable style={{ marginBottom: 6 }}>
+              {bloque.descripcion}
+            </T>
+          ) : null}
           {n ? (
             bloque.modulos.map((m) => <ModuloFila key={m.cmid} modulo={m} entregas={entregas} />)
-          ) : (
+          ) : bloque.descripcion ? null : (
             <T s={12} c="#6B6B77">
               Este apartado no tiene nada todavía.
             </T>

@@ -3,7 +3,14 @@
  * medidas en px, colores hex y familias tipográficas. El tema solo existe en oscuro.
  */
 import { type ReactNode } from 'react';
-import { Text, type TextProps, type TextStyle, useWindowDimensions, View, type ViewStyle } from 'react-native';
+import {
+  Text,
+  type TextProps,
+  type TextStyle,
+  useWindowDimensions,
+  View,
+  type ViewStyle,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ANCHO_ESCRITORIO, FAMILIA_OBSIDIANA } from '@/constants/theme';
@@ -109,9 +116,19 @@ export function Etiqueta({
   return <T k="mono" up s={s} c={c} ls={ls} w={w} {...rest} />;
 }
 
-export function Punto({ color, size = 6, style }: { color: string; size?: number; style?: ViewStyle }) {
+export function Punto({
+  color,
+  size = 6,
+  style,
+}: {
+  color: string;
+  size?: number;
+  style?: ViewStyle;
+}) {
   return (
-    <View style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: color }, style]} />
+    <View
+      style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: color }, style]}
+    />
   );
 }
 

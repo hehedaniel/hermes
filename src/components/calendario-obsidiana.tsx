@@ -464,7 +464,7 @@ function PanelDia({
               gap: 4,
             }}>
             <T k="mono" up w={700} s={10} ls={0.2} c={COLOR_EXAMEN}>
-              ¡Examen!{x.hora ? ` · ${x.hora}` : ''}
+              Examen{x.hora ? ` · ${x.hora}` : ''}
             </T>
             <T w={700} s={15} lh={20} c={ZINC.z100}>
               {x.titulo}

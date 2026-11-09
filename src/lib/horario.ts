@@ -434,7 +434,7 @@ export function horarioDelDia(d: Date): DiaHorario {
   if (dow === 0 || dow === 6) return { tipo: 'fin-de-semana' };
   if (k < INICIO_CURSO)
     return { tipo: 'fuera-de-curso', motivo: 'Las clases empiezan el 28 de septiembre' };
-  if (k > FIN_CURSO) return { tipo: 'fuera-de-curso', motivo: 'Fin de curso: ¡vacaciones!' };
+  if (k > FIN_CURSO) return { tipo: 'fuera-de-curso', motivo: 'Fin de curso' };
   const motivo = motivoSinClase(d);
   if (motivo) return { tipo: 'sin-clase', motivo };
 

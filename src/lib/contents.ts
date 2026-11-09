@@ -3,6 +3,7 @@
  * Sin dependencias de React Native.
  */
 import type { Archivo, Entrega } from './data';
+import { htmlATexto } from './html-texto';
 import { type CourseSection, MoodleClient } from './moodle';
 
 export type Modulo = {
@@ -19,6 +20,8 @@ export type Bloque = {
   id: number;
   numero: number;
   nombre: string;
+  /** Descripción del bloque en Moodle (resultado de aprendizaje, criterios, fechas…), en texto */
+  descripcion?: string;
   modulos: Modulo[];
 };
 
@@ -87,10 +90,11 @@ export async function fetchCourseContents(
         id: sec.id,
         numero: sec.section ?? i,
         nombre: strip(sec.name) || (i === 0 ? 'General' : `Bloque ${i}`),
+        descripcion: htmlATexto(sec.summary) || undefined,
         modulos,
       };
     })
-    .filter((b) => b.modulos.length > 0);
+    .filter((b) => b.modulos.length > 0 || b.descripcion);
 
   return { cursoId, bloques, fetchedAt: Date.now() };
 }
