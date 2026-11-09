@@ -3,7 +3,6 @@
  * Sin dependencias de React Native.
  */
 import type { Archivo, Entrega } from './data';
-import { htmlATexto } from './html-texto';
 import { type CourseSection, MoodleClient } from './moodle';
 
 export type Modulo = {
@@ -38,6 +37,39 @@ const strip = (s?: string) =>
     .replace(/&nbsp;/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+/**
+ * Convierte la descripción de un bloque (HTML de Moodle) en texto: párrafos separados por una
+ * línea en blanco, viñetas y listas numeradas pegadas, sin los saltos que trae el HTML.
+ */
+export function resumenATexto(html?: string) {
+  if (!html) return '';
+  return html
+    .replace(/\s+/g, ' ')
+    .replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_m, dentro: string) => {
+      let n = 0;
+      return dentro.replace(/<li[^>]*>/gi, () => `<li>${++n}. `);
+    })
+    .replace(/<li[^>]*>\s*<p[^>]*>/gi, '<li>')
+    .replace(/<\/p>\s*<\/li>/gi, '</li>')
+    .replace(/<li>(\d+\. )?/gi, (_m, num?: string) => num ?? '• ')
+    .replace(/<(ul|ol)[^>]*>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|tr)>/gi, '\n\n')
+    .replace(/<\/(li|ul|ol)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .split('\n')
+    .map((l) => l.replace(/[ \t ]+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
 /** Actividades que no aportan nada en la lista (etiquetas de texto, subsecciones…). */
 const OCULTAR = new Set(['label', 'subsection', 'qbank']);
@@ -90,7 +122,7 @@ export async function fetchCourseContents(
         id: sec.id,
         numero: sec.section ?? i,
         nombre: strip(sec.name) || (i === 0 ? 'General' : `Bloque ${i}`),
-        descripcion: htmlATexto(sec.summary) || undefined,
+        descripcion: resumenATexto(sec.summary) || undefined,
         modulos,
       };
     })
