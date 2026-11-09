@@ -1,0 +1,168 @@
+{
+  "v": 1,
+  "grupo": "1º DAM-B (tarde) · IES La Marisma",
+  "aula": "A09",
+  "modulos": {
+    "BDAT": {
+      "nombre": "Base de Datos",
+      "corto": "Base de Datos",
+      "profesor": "Mª Joaquina Jiménez Carles",
+      "claves": ["base de datos"]
+    },
+    "IPEC": {
+      "nombre": "Itinerario para la Empleabilidad",
+      "corto": "Empleabilidad",
+      "profesor": "Belén Rodríguez Guerrero",
+      "claves": ["empleabilidad"]
+    },
+    "LMDA": {
+      "nombre": "Lenguajes de Marcas",
+      "corto": "Lenguajes de Marcas",
+      "profesor": "Mª Joaquina Jiménez Carles",
+      "claves": ["lenguajes de marcas", "lenguaje de marcas"]
+    },
+    "PRDA": {
+      "nombre": "Programación",
+      "corto": "Programación",
+      "profesor": "Jesús María Prieto",
+      "claves": ["programacion"]
+    },
+    "SIM": {
+      "nombre": "Sistemas Informáticos",
+      "corto": "Sistemas Informáticos",
+      "profesor": "José González Rodríguez",
+      "claves": ["sistemas informaticos"]
+    },
+    "EDES": {
+      "nombre": "Entornos de Desarrollo",
+      "corto": "Entornos de Desarrollo",
+      "profesor": "Inmaculada Rebollo Conde",
+      "claves": ["entornos de desarrollo"]
+    },
+    "SOS": {
+      "nombre": "Sostenibilidad",
+      "corto": "Sostenibilidad",
+      "profesor": "Jesús María Prieto",
+      "claves": ["sostenibilidad"]
+    },
+    "DIG": {
+      "nombre": "Digitalización",
+      "corto": "Digitalización",
+      "profesor": "Francis Azcárate Llanes",
+      "claves": ["digitalizacion"]
+    }
+  },
+  "inicio": "2026-09-15",
+  "fin": "2027-06-23",
+  "franjas": [
+    {
+      "inicio": "14:45",
+      "fin": "15:45"
+    },
+    {
+      "inicio": "15:45",
+      "fin": "16:45"
+    },
+    {
+      "inicio": "16:45",
+      "fin": "17:45"
+    },
+    {
+      "inicio": "18:15",
+      "fin": "19:15"
+    },
+    {
+      "inicio": "19:15",
+      "fin": "20:15"
+    },
+    {
+      "inicio": "20:15",
+      "fin": "21:15"
+    }
+  ],
+  "horario": {
+    "1": ["BDAT", "BDAT", "SIM", "SIM", "IPEC", "SOS"],
+    "2": ["IPEC", "IPEC", "SIM", "PRDA", "PRDA", "DIG"],
+    "3": ["LMDA", "LMDA", "BDAT", "BDAT", "PRDA", "PRDA"],
+    "4": ["PRDA", "PRDA", "SIM", "SIM", "EDES", "EDES"],
+    "5": ["PRDA", "PRDA", "LMDA", "EDES", "BDAT", "BDAT"]
+  },
+  "trimestres": [
+    {
+      "desde": "2026-09-15",
+      "hasta": "2026-12-22"
+    },
+    {
+      "desde": "2026-12-23",
+      "hasta": "2027-03-19"
+    },
+    {
+      "desde": "2027-03-22",
+      "hasta": "2027-06-23"
+    }
+  ],
+  "sinClase": [
+    {
+      "desde": "2026-10-12",
+      "motivo": "Fiesta Nacional de España"
+    },
+    {
+      "desde": "2026-11-02",
+      "motivo": "Lunes siguiente al Día de Todos los Santos"
+    },
+    {
+      "desde": "2026-12-07",
+      "motivo": "Lunes siguiente al Día de la Constitución"
+    },
+    {
+      "desde": "2026-12-08",
+      "motivo": "Día de la Inmaculada Concepción"
+    },
+    {
+      "desde": "2026-12-23",
+      "hasta": "2027-01-05",
+      "motivo": "Vacaciones de Navidad"
+    },
+    {
+      "desde": "2027-01-06",
+      "motivo": "Día de la Epifanía"
+    },
+    {
+      "desde": "2027-01-07",
+      "motivo": "Vacaciones de Navidad"
+    },
+    {
+      "desde": "2027-02-26",
+      "motivo": "Día de la Comunidad Educativa"
+    },
+    {
+      "desde": "2027-03-01",
+      "motivo": "Lunes siguiente al Día de Andalucía"
+    },
+    {
+      "desde": "2027-03-22",
+      "hasta": "2027-03-24",
+      "motivo": "Vacaciones de Semana Santa"
+    },
+    {
+      "desde": "2027-03-25",
+      "motivo": "Jueves Santo"
+    },
+    {
+      "desde": "2027-03-26",
+      "motivo": "Viernes Santo"
+    },
+    {
+      "desde": "2027-05-13",
+      "hasta": "2027-05-14",
+      "motivo": "Romería del Rocío (fiesta local)"
+    },
+    {
+      "desde": "2027-05-17",
+      "motivo": "Romería del Rocío (fiesta local)"
+    }
+  ],
+  "sinClaseModulo": [],
+  "cambios": [],
+  "examenes": []
+}

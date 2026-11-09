@@ -3,9 +3,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Linking from 'expo-linking';
 
-import { TEMAS, type TemaId } from '@/constants/colors';
-import { MODO_COLOR_PREFERENCIA_KEY, TEMA_PREFERENCIA_KEY } from '@/constants/theme';
-import type { ModoColor } from '@/hooks/use-theme';
 import type { Snapshot } from '@/lib/data';
 
 import { ClasesWidget } from './clases-widget';
@@ -25,22 +22,9 @@ export async function leerSnapshot(): Promise<Snapshot | null> {
   }
 }
 
+/** Los widgets usan siempre el diseño Obsidiana, que solo existe en oscuro. */
 export async function leerPaletasWidget(): Promise<PaletasWidget> {
-  const [temaGuardado, modoGuardado] = await Promise.all([
-    AsyncStorage.getItem(TEMA_PREFERENCIA_KEY),
-    AsyncStorage.getItem(MODO_COLOR_PREFERENCIA_KEY),
-  ]);
-  const tema: TemaId =
-    temaGuardado && Object.prototype.hasOwnProperty.call(TEMAS, temaGuardado)
-      ? (temaGuardado as TemaId)
-      : 'anden';
-  const modo: ModoColor =
-    modoGuardado === 'claro' || modoGuardado === 'oscuro' ? modoGuardado : 'sistema';
-  if (temaGuardado && tema === 'anden' && temaGuardado !== 'anden')
-    console.error(`Tema guardado desconocido al dibujar el widget: ${temaGuardado}`);
-  if (modoGuardado && modoGuardado !== 'sistema' && modoGuardado !== 'claro' && modoGuardado !== 'oscuro')
-    console.error(`Modo de color desconocido al dibujar el widget: ${modoGuardado}`);
-  return tema === 'anden' && modo === 'sistema' ? PALETAS : paletasDeTema(tema, modo);
+  return paletasDeTema('obsidiana', 'oscuro');
 }
 
 /** Tamaño del widget en dp (lo da Android al dibujarlo). */

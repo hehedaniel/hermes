@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 
-import { Colors, TEMAS, type TemaId } from '@/constants/colors';
+import { Colors, type TemaId } from '@/constants/colors';
 import { MODO_COLOR_PREFERENCIA_KEY, TEMA_PREFERENCIA_KEY } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -48,12 +48,9 @@ export function ThemePreferenceProvider({ children }: { children: ReactNode }) {
     ])
       .then(([temaGuardado, modoGuardado]) => {
         if (!activa) return;
-        if (temaGuardado) {
-          if (Object.prototype.hasOwnProperty.call(TEMAS, temaGuardado)) {
-            setTema(temaGuardado as TemaId);
-          } else {
-            console.error(`Tema guardado desconocido: ${temaGuardado}`);
-          }
+        // El diseño es siempre Obsidiana: un tema antiguo guardado por versiones anteriores se descarta
+        if (temaGuardado && temaGuardado !== 'obsidiana') {
+          AsyncStorage.removeItem(TEMA_PREFERENCIA_KEY).catch(() => {});
         }
         if (modoGuardado) {
           if (modoGuardado === 'sistema' || modoGuardado === 'claro' || modoGuardado === 'oscuro') {
@@ -75,10 +72,8 @@ export function ThemePreferenceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const cambiarTema = useCallback((nuevo: TemaId) => {
+    // Solo hay un diseño, pero se mantiene la función por si vuelven a existir más
     setTema(nuevo);
-    AsyncStorage.setItem(TEMA_PREFERENCIA_KEY, nuevo).catch((error: unknown) =>
-      console.error('No se pudo guardar el tema elegido.', error),
-    );
   }, []);
   const cambiarModoColor = useCallback((nuevo: ModoColor) => {
     setModoColor(nuevo);
@@ -87,7 +82,9 @@ export function ThemePreferenceProvider({ children }: { children: ReactNode }) {
     );
   }, []);
   const oscuro =
-    tema === 'obsidiana' || modoColor === 'oscuro' || (modoColor === 'sistema' && scheme === 'dark');
+    tema === 'obsidiana' ||
+    modoColor === 'oscuro' ||
+    (modoColor === 'sistema' && scheme === 'dark');
   const value = useMemo(
     () => ({ tema, cambiarTema, modoColor, cambiarModoColor, oscuro, listo }),
     [tema, cambiarTema, modoColor, cambiarModoColor, oscuro, listo],

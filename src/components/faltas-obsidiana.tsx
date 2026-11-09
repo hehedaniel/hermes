@@ -1,3 +1,5 @@
+'use no memo'; // lee el horario, que es global y cambia: el React Compiler no debe memorizarlo
+
 /**
  * Calculadora de faltas (diseño Obsidiana): por módulo, cuántas horas has faltado, cuántas
  * puedes faltar aún (10 % o 20 % de las horas) y un registro por días para marcarlas.
@@ -25,7 +27,7 @@ import { claveDia, FIN_CURSO, INICIO_CURSO, MODULOS, type ModuloId } from '@/lib
 import { useAsignaturas } from '@/lib/store';
 import { useFaltas } from '@/lib/use-faltas';
 
-const ORDEN: ModuloId[] = ['MIA', 'SAA', 'BDA', 'PIA', 'SBD'];
+const ordenModulos = (): ModuloId[] => Object.keys(MODULOS);
 const NIVEL = {
   ok: { color: O.green, texto: 'Vas bien' },
   aviso: { color: O.amber, texto: 'Cuidado' },
@@ -71,7 +73,7 @@ export function FaltasObsidiana() {
     return horasDelDia(dia, marcas);
   }, [dia, marcas, versionHorario]);
 
-  const total = ORDEN.reduce((a, m) => a + datos[m].faltadas, 0);
+  const total = ordenModulos().reduce((a, m) => a + datos[m].faltadas, 0);
 
   return (
     <ScrollView
@@ -167,7 +169,7 @@ export function FaltasObsidiana() {
         <View
           style={{ flexDirection: movil ? 'column' : 'row', alignItems: 'flex-start', gap: 24 }}>
           <View style={{ flex: movil ? undefined : 1, width: movil ? '100%' : undefined, gap: 14 }}>
-            {ORDEN.map((m) => (
+            {ordenModulos().map((m) => (
               <TarjetaModulo
                 key={m}
                 r={datos[m]}

@@ -11,11 +11,9 @@ import { Pressable, ScrollView, TextInput, useWindowDimensions, View } from 'rea
 
 import { AvatarUsuario } from '@/components/avatar-usuario';
 import { T, useArriba, useMovil } from '@/components/obs';
-import { TEMAS } from '@/constants/colors';
 import { abrirNovedades } from '@/components/novedades-modal';
 import { VERSION } from '@/constants/version';
 import { useAppUpdates } from '@/hooks/app-updates';
-import { useThemePreference } from '@/hooks/use-theme';
 import {
   AVISOS_DISPONIBLES,
   AVISOS_POR_DEFECTO,
@@ -30,6 +28,8 @@ import {
 import { avisar, confirmar } from '@/lib/dialogo';
 import { IAPlantillas } from '@/components/ia-plantillas';
 import { useSyncDatos } from '@/lib/use-sync-datos';
+import { elegirGrupo } from '@/lib/horario-remoto';
+import { useGrupoHorario, useNombresCursos } from '@/lib/use-horario';
 import { formatoTamano, useDownloads } from '@/lib/downloads';
 import { haceCuanto } from '@/lib/format';
 import { useGoogleCal } from '@/lib/google-cal';
@@ -107,7 +107,7 @@ export function AjustesObsidiana() {
           </>
         ) : null}
         <Cuenta n={esProfesor ? 4 : 6} />
-        <Apariencia n={esProfesor ? 5 : 7} />
+        <GrupoHorario n={esProfesor ? 5 : 7} />
         <View style={{ alignItems: 'center', paddingBottom: 24, gap: 10 }}>
           <Pressable onPress={abrirNovedades}>
             <T k="mono" s={11} c={Z.z400}>
@@ -1046,20 +1046,34 @@ function Cuenta({ n }: { n: number }) {
   );
 }
 
-// ——— 06: apariencia (el selector de tema) ———
+// ——— grupo y horario ———
 
-function Apariencia({ n }: { n: number }) {
-  const { tema } = useThemePreference();
+function GrupoHorario({ n }: { n: number }) {
+  'use no memo';
+  const g = useGrupoHorario();
+  const cursos = useNombresCursos();
   return (
     <Tarjeta
       n={n}
-      titulo="Apariencia"
-      texto="Obsidiana es el diseño completo de Hermes, con todas las funciones.">
+      titulo="Grupo y horario"
+      texto="Tu horario, tus exámenes y los días sin clase dependen de tu grupo. Hermes lo reconoce por tus asignaturas; si no acierta, elígelo aquí.">
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        <Chip texto={TEMAS.obsidiana.nombre} activo={tema === 'obsidiana'} onPress={() => {}} />
+        <Chip
+          texto="Automático"
+          activo={g.elegido === 'auto'}
+          onPress={() => void elegirGrupo('auto', cursos)}
+        />
+        {g.grupos.map((x) => (
+          <Chip
+            key={x.id}
+            texto={x.nombre}
+            activo={g.elegido === x.id}
+            onPress={() => void elegirGrupo(x.id, cursos)}
+          />
+        ))}
       </View>
       <T k="mono" s={11} lh={16} c={Z.z500} style={{ marginTop: 14 }}>
-        Más diseños vendrán en el futuro.
+        {g.sinGrupo ? 'No se ha reconocido ningún grupo: elige el tuyo.' : `Ahora: ${g.nombre}`}
       </T>
     </Tarjeta>
   );

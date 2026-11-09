@@ -1,3 +1,5 @@
+'use no memo'; // lee el horario, que es global y cambia: el React Compiler no debe memorizarlo
+
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -16,6 +18,7 @@ import {
   type Clase,
   horarioDelDia,
   minutos,
+  colorModulo,
   MODULOS,
   type ModuloId,
   moduloDe,
@@ -284,7 +287,7 @@ function ClaseRow({
           {
             backgroundColor: theme.surface,
             borderColor: theme.line,
-            borderLeftColor: theme[clase.modulo],
+            borderLeftColor: colorModulo(theme, clase.modulo),
           },
         ],
         { opacity: pressed ? 0.7 : acabada ? 0.5 : 1 },
@@ -293,7 +296,7 @@ function ClaseRow({
         {clase.inicio}
       </ThemedText>
       {tema === 'cuaderno' ? null : (
-        <View style={[styles.barra, { backgroundColor: theme[clase.modulo] }]} />
+        <View style={[styles.barra, { backgroundColor: colorModulo(theme, clase.modulo) }]} />
       )}
       <View style={styles.body}>
         <View style={styles.tituloFila}>

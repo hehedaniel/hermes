@@ -9,6 +9,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import { AppState, Platform } from 'react-native';
 
@@ -18,7 +19,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { actualizarWidgets } from '@/widgets/actualizar';
 
 import { CLAVES } from './claves';
-import { MODULOS, moduloDe } from './horario';
+import { colorModulo, MODULOS, moduloDe, suscribirHorario, versionHorario } from './horario';
 import { conTareaDePrueba } from './tarea-prueba';
 import { avisarNovedades, prepararAvisos, programarRecordatorios } from './avisos';
 import { activarSegundoPlano, desactivarSegundoPlano } from './segundo-plano';
@@ -353,7 +354,10 @@ export type InfoAsignatura = {
 export function useAsignaturas() {
   const { snapshot } = useMoodle();
   const theme = useTheme();
+  // Al cambiar de grupo de horario cambian las asignaturas reconocidas y sus colores
+  const versionDelHorario = useSyncExternalStore(suscribirHorario, versionHorario, versionHorario);
   return useMemo(() => {
+    void versionDelHorario;
     const cursos = snapshot?.courses ?? [];
     const ids = [...cursos].map((c) => c.id).sort((a, b) => a - b);
     return (cursoId: number, nombre?: string): InfoAsignatura => {
@@ -362,7 +366,7 @@ export function useAsignaturas() {
       if (m) {
         return {
           siglas: m,
-          color: theme[m],
+          color: colorModulo(theme, m),
           nombre: MODULOS[m].nombre,
           corto: MODULOS[m].corto,
           profesor: MODULOS[m].profesor,
@@ -376,7 +380,7 @@ export function useAsignaturas() {
         corto: nombreCurso,
       };
     };
-  }, [snapshot?.courses, theme]);
+  }, [snapshot?.courses, theme, versionDelHorario]);
 }
 
 /** Color de cada asignatura (su «línea»). */

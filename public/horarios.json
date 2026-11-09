@@ -1,0 +1,39 @@
+{
+  "v": 1,
+  "grupos": [
+    {
+      "id": "iabd-1",
+      "nombre": "1º IA y Big Data · IES La Marisma",
+      "archivo": "horario.json",
+      "claves": [
+        "modelos de inteligencia",
+        "modelos de ia",
+        "miart",
+        "aprendizaje automatico",
+        "saaut",
+        "big data aplicado",
+        "programacion de inteligencia",
+        "programacion de ia",
+        "priar",
+        "sistemas de big data",
+        "sbigd"
+      ]
+    },
+    {
+      "id": "dam-1b-tarde",
+      "nombre": "1º DAM-B (tarde) · IES La Marisma",
+      "archivo": "horarios/dam-1b-tarde.json",
+      "claves": [
+        "base de datos",
+        "empleabilidad",
+        "lenguajes de marcas",
+        "lenguaje de marcas",
+        "programacion",
+        "sistemas informaticos",
+        "entornos de desarrollo",
+        "sostenibilidad",
+        "digitalizacion"
+      ]
+    }
+  ]
+}

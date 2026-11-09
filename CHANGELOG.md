@@ -6,6 +6,20 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.6.0] - 2026-11-09
+
+### Añadido
+- **Grupos de horario.** Hermes ya no es solo para IA y Big Data: reconoce tu grupo por las asignaturas de tu Moodle (o lo eliges en *Ajustes → Grupo y horario*) y enseña su horario, aula, profesores, calendario y cuentas de faltas. Primer grupo nuevo: **1º DAM-B (tarde)**, con sus fechas de curso. Sin grupo reconocido, Hermes te pide que elijas el tuyo.
+- **Descripción de cada unidad.** En la pantalla de la asignatura, al desplegar una unidad ves el texto que el profesor escribe en ella, con las listas bien ordenadas.
+
+### Cambiado
+- **Obsidiana es el único diseño**, también en la primera pantalla: la bienvenida, la primera sincronización y *Conectar con Moodle* tienen su versión Obsidiana, y se quita el selector de temas de Ajustes. Los widgets de Android también usan Obsidiana.
+- Textos de la app sin signos de exclamación.
+
+### Arreglado
+- Al cambiar de grupo, el calendario, las faltas y los colores de las asignaturas se actualizan al momento.
+- Las horas del trimestre y las faltas permitidas se calculan con el horario y las fechas del grupo de cada alumno.
+
 ## [2.5.6] - 2026-10-30
 
 ### Cambiado

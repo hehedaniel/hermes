@@ -37,8 +37,7 @@ function NovedadesClasico() {
   const nocturnoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'nocturno';
   const nocturnoMovil = width < ANCHO_ESCRITORIO && tema === 'nocturno';
   const cuadernoMovil = width < ANCHO_ESCRITORIO && tema === 'cuaderno';
-  const cuadernoWeb =
-    Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'cuaderno';
+  const cuadernoWeb = Platform.OS === 'web' && width >= ANCHO_ESCRITORIO && tema === 'cuaderno';
   const cuadernoDesign = cuadernoMovil || cuadernoWeb;
   const nocturnoDesign = nocturnoWeb || nocturnoMovil || cuadernoDesign;
 
@@ -67,7 +66,12 @@ function NovedadesClasico() {
     return [...map.entries()].map(([k, items]) => {
       const [y, m, d] = k.split('-').map(Number);
       const fecha = `${d} ${new Date(y, m - 1, d).toLocaleDateString('es-ES', { month: 'short' })}`;
-      const titulo = k === hoy ? `Hoy · ${fecha}` : k === ayer ? `Ayer · ${fecha}` : fechaLarga(new Date(y, m - 1, d));
+      const titulo =
+        k === hoy
+          ? `Hoy · ${fecha}`
+          : k === ayer
+            ? `Ayer · ${fecha}`
+            : fechaLarga(new Date(y, m - 1, d));
       return { titulo, items };
     });
   }, [visibles, ahora]);
@@ -99,7 +103,9 @@ function NovedadesClasico() {
   return (
     <Screen
       title={nocturnoWeb || nocturnoMovil ? undefined : 'Novedades'}
-      etiqueta={cuadernoDesign ? undefined : `Todo el curso · ${snapshot?.courses.length ?? 0} asignaturas`}
+      etiqueta={
+        cuadernoDesign ? undefined : `Todo el curso · ${snapshot?.courses.length ?? 0} asignaturas`
+      }
       derecha={cuadernoDesign ? ' ' : sinLeer ? `${sinLeer} sin leer` : 'al día'}
       derechaColor={sinLeer ? theme.brand : undefined}
       maxWidth={nocturnoWeb || cuadernoDesign ? 960 : undefined}
@@ -276,7 +282,9 @@ function NovedadRow({
           </ThemedText>
         </View>
         <View style={styles.nocturnoNovedadFinal}>
-          {!n.leida ? <View style={[styles.nocturnoPunto, { backgroundColor: theme.stPend }]} /> : null}
+          {!n.leida ? (
+            <View style={[styles.nocturnoPunto, { backgroundColor: theme.stPend }]} />
+          ) : null}
           <ThemedText type="meta" themeColor="ink3">
             {cuando(n.fecha, ahora)}
           </ThemedText>
@@ -331,7 +339,9 @@ function NovedadRow({
             </ThemedText>
           ) : null}
         </View>
-        {!n.leida ? <View style={[styles.cuadernoUnread, { backgroundColor: theme.brand }]} /> : null}
+        {!n.leida ? (
+          <View style={[styles.cuadernoUnread, { backgroundColor: theme.brand }]} />
+        ) : null}
       </Pressable>
     );
   }
@@ -427,7 +437,6 @@ const styles = StyleSheet.create({
 
 export default function NovedadesScreen() {
   const { tema } = useThemePreference();
-  const { client } = useMoodle();
-  if (tema === 'obsidiana' && client) return <NovedadesObsidiana />;
+  if (tema === 'obsidiana') return <NovedadesObsidiana />;
   return <NovedadesClasico />;
 }

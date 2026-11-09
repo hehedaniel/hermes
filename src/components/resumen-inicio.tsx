@@ -1,3 +1,5 @@
+'use no memo'; // lee el horario, que es global y cambia: el React Compiler no debe memorizarlo
+
 /** Franja de resumen del inicio: lo más importante de un vistazo (clase, entrega, examen, faltas). */
 import { type Href, router } from 'expo-router';
 import type { ReactNode } from 'react';
@@ -6,7 +8,7 @@ import { Pressable, View } from 'react-native';
 import { Etiqueta, O, Punto, T, Tarjeta, useMovil } from '@/components/obs';
 import type { Entrega } from '@/lib/data';
 import { diaMesHora, quedan } from '@/lib/format';
-import { AULA, MODULOS } from '@/lib/horario';
+import { AULA, MODULOS, SIN_GRUPO } from '@/lib/horario';
 import { proximaClase, proximoExamen, resumenFaltas } from '@/lib/resumen-inicio';
 import { useAsignaturas } from '@/lib/store';
 import { useFaltas } from '@/lib/use-faltas';
@@ -96,7 +98,9 @@ export function ResumenInicio({
           </>
         ) : (
           <T s={13} c="#7E7E8D">
-            No hay clases en los próximos días.
+            {SIN_GRUPO
+              ? 'Elige tu grupo en Ajustes para ver tu horario.'
+              : 'No hay clases en los próximos días.'}
           </T>
         )}
       </Cuadro>

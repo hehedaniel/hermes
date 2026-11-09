@@ -9,6 +9,16 @@ export type NovedadVersion = { version: string; titulo: string; puntos: string[]
 
 export const NOVEDADES_APP: NovedadVersion[] = [
   {
+    version: '2.6.0',
+    titulo: 'Horario de tu grupo',
+    puntos: [
+      'Hermes reconoce tu grupo por tus asignaturas y muestra su horario, aula, calendario y faltas. Si no acierta, lo eliges en Ajustes.',
+      'Nuevo grupo: 1º DAM-B (tarde).',
+      'Obsidiana es el único diseño, también al abrir la app por primera vez.',
+      'Al desplegar una unidad de la asignatura ves su descripción.',
+    ],
+  },
+  {
     version: '2.5.6',
     titulo: 'Resumen del inicio más compacto',
     puntos: ['En el móvil, el resumen del inicio se ve en cuadrícula de 2×2 y ocupa menos.'],

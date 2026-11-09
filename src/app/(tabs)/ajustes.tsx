@@ -9,6 +9,7 @@ import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'reac
 import { Campo, Etiqueta, FilaAjuste, Interruptor } from '@/components/ajustes-ui';
 import { Caja, Marca, Seccion as SeccionBase } from '@/components/anden';
 import { AjustesObsidiana } from '@/components/ajustes-obsidiana';
+import { ConectarObsidiana } from '@/components/conectar-obsidiana';
 import { AvisosSettings } from '@/components/avisos-settings';
 import { Button } from '@/components/button';
 import { GoogleCalSettings } from '@/components/google-cal-settings';
@@ -34,7 +35,6 @@ const loginMovil =
   Platform.OS !== 'web' && Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
 const esWeb = Platform.OS === 'web';
 const CAMBIOS_URL = 'https://github.com/hehedaniel/hermes/blob/main/CHANGELOG.md';
-
 
 /** Cabecera de apartado: en Obsidiana, número y título en serif; en los demás, la de siempre. */
 function Seccion(props: ComponentProps<typeof SeccionBase>) {
@@ -257,7 +257,13 @@ function AjustesClasico() {
             titulo="Sincronizar ahora"
             texto={`Última vez ${haceCuanto(snapshot.syncedAt)} · ${snapshot.courses.length} asignaturas`}
             derecha={
-              <Button title="Sincronizar" variant="secondary" compacto onPress={refresh} loading={syncing} />
+              <Button
+                title="Sincronizar"
+                variant="secondary"
+                compacto
+                onPress={refresh}
+                loading={syncing}
+              />
             }
           />
           {guardaArchivos ? (
@@ -378,12 +384,19 @@ function AjustesClasico() {
               </View>
             </View>
             {client ? (
-              <Button title="Cancelar" variant="ghost" compacto onPress={() => setVerConexion(false)} />
+              <Button
+                title="Cancelar"
+                variant="ghost"
+                compacto
+                onPress={() => setVerConexion(false)}
+              />
             ) : null}
           </View>
         )}
         {msg ? (
-          <ThemedText type="small" style={[styles.msg, { color: msg.ok ? theme.stDone : theme.urgent }]}>
+          <ThemedText
+            type="small"
+            style={[styles.msg, { color: msg.ok ? theme.stDone : theme.urgent }]}>
             {msg.text}
           </ThemedText>
         ) : null}
@@ -391,7 +404,8 @@ function AjustesClasico() {
 
       {!client || verConexion ? (
         <View>
-          <Seccion numero={4}
+          <Seccion
+            numero={4}
             titulo={esWeb ? '¿Cómo consigo el token?' : '¿De dónde saco el token?'}
             sinRegla
           />
@@ -495,13 +509,19 @@ function paginaActual() {
 export default function AjustesScreen() {
   const { tema } = useThemePreference();
   const { client } = useMoodle();
-  // Sin cuenta conectada se necesita el formulario de conexión de siempre
-  if (tema === 'obsidiana' && client) return <AjustesObsidiana />;
+  if (tema === 'obsidiana') return client ? <AjustesObsidiana /> : <ConectarObsidiana />;
   return <AjustesClasico />;
 }
 
 const styles = StyleSheet.create({
-  obsSeccion: { flexDirection: 'row', alignItems: 'baseline', gap: 12, paddingTop: 22, paddingBottom: 8, borderBottomWidth: 1 },
+  obsSeccion: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 12,
+    paddingTop: 22,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+  },
   tema: {
     flexDirection: 'row',
     alignItems: 'center',

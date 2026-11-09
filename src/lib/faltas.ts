@@ -11,6 +11,7 @@ import {
   CURSO_COMPLETO,
   FIN_CURSO,
   INICIO_CURSO,
+  MODULOS,
   type ModuloId,
   TRIMESTRES,
   type Trimestre,
@@ -52,7 +53,7 @@ export type Hora = {
   marca: Marca | null;
 };
 
-const MODULOS_IDS: ModuloId[] = ['MIA', 'SAA', 'BDA', 'PIA', 'SBD'];
+const idsModulos = (): ModuloId[] => Object.keys(MODULOS);
 
 /** Las horas lectivas de un día, con su marca. Vacío en fines de semana y fuera de curso. */
 export function horasDelDia(fecha: string, marcas: Marcas): Hora[] {
@@ -130,7 +131,7 @@ export function resumen(
   const hoy = claveDia(ahora);
   const minAhora = ahora.getHours() * 60 + ahora.getMinutes();
   const acc = {} as Record<ModuloId, ResumenModulo>;
-  for (const id of MODULOS_IDS)
+  for (const id of idsModulos())
     acc[id] = {
       modulo: id,
       total: 0,
@@ -169,7 +170,7 @@ export function resumen(
     }
   }
 
-  for (const id of MODULOS_IDS) {
+  for (const id of idsModulos()) {
     const r = acc[id];
     r.limite = r.total * limitePct;
     r.permitidas = Math.floor(r.limite + 1e-9);

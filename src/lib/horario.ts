@@ -4,7 +4,8 @@
  * Sin dependencias de React Native.
  */
 
-export type ModuloId = 'MIA' | 'SAA' | 'BDA' | 'PIA' | 'SBD';
+/** Código de un módulo del grupo activo (MIA, SAA… en IA y Big Data; BDAT, PRDA… en DAM). */
+export type ModuloId = string;
 
 export type InfoModulo = {
   nombre: string;
@@ -14,7 +15,7 @@ export type InfoModulo = {
   claves: string[];
 };
 
-export const MODULOS: Record<ModuloId, InfoModulo> = {
+export const MODULOS: Record<string, InfoModulo> = {
   MIA: {
     nombre: 'Modelos de Inteligencia Artificial',
     corto: 'Modelos de IA',
@@ -47,7 +48,35 @@ export const MODULOS: Record<ModuloId, InfoModulo> = {
   },
 };
 
-export const AULA = 'TI4';
+/** Los módulos del grupo de serie (IA y Big Data), para volver a ellos o para validar. */
+const MODULOS_INCLUIDOS: Record<string, InfoModulo> = JSON.parse(JSON.stringify(MODULOS));
+
+/** Colores para los módulos de otros grupos, por orden (los de IA y Big Data los da el tema). */
+const COLORES_MODULO = [
+  '#C98A84',
+  '#7FA6BD',
+  '#C2A66F',
+  '#92AB78',
+  '#A592BD',
+  '#6FB3A8',
+  '#D08FB5',
+  '#B0A8A0',
+];
+
+/** Color de un módulo: el del tema si lo tiene y, si no, uno por orden dentro del grupo. */
+export function colorModulo(tema: object, id: ModuloId): string {
+  const c = (tema as Record<string, unknown>)[id];
+  if (typeof c === 'string' && c.startsWith('#')) return c;
+  const i = Object.keys(MODULOS).indexOf(id);
+  return COLORES_MODULO[(i < 0 ? 0 : i) % COLORES_MODULO.length];
+}
+
+export let AULA = 'TI4';
+const AULA_INCLUIDA = AULA;
+export const NOMBRE_INCLUIDO = '1º IA y Big Data · IES La Marisma';
+/** Nombre del grupo activo, y si no hay ninguno (no se sabe de qué grupo es el alumno). */
+export let NOMBRE_GRUPO = NOMBRE_INCLUIDO;
+export let SIN_GRUPO = false;
 
 export type Franja = { inicio: string; fin: string };
 
@@ -179,6 +208,10 @@ export const CAMBIOS: CambioDia[] = [];
 
 export type ConfigHorario = {
   v: 1;
+  /** Nombre del grupo y su aula; sus módulos (si no, los de IA y Big Data). */
+  grupo?: string;
+  aula?: string;
+  modulos?: Record<string, InfoModulo>;
   inicio: string;
   fin: string;
   franjas: Franja[];
@@ -192,8 +225,8 @@ export type ConfigHorario = {
 
 const FECHA = /^\d{4}-\d{2}-\d{2}$/;
 const HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
-const esModulo = (x: unknown): x is ModuloId =>
-  typeof x === 'string' && Object.prototype.hasOwnProperty.call(MODULOS, x);
+const esModulo = (x: unknown, ids: Set<string>): x is ModuloId =>
+  typeof x === 'string' && ids.has(x);
 const esFecha = (x: unknown): x is string =>
   typeof x === 'string' &&
   FECHA.test(x) &&
@@ -213,9 +246,34 @@ function validarFranjas(x: unknown, n?: number): string | null {
   return null;
 }
 
+function validarModulos(m: unknown, aula: unknown, grupo: unknown): string | null {
+  if (aula !== undefined && typeof aula !== 'string') return 'aula: tiene que ser texto';
+  if (grupo !== undefined && typeof grupo !== 'string') return 'grupo: tiene que ser texto';
+  if (m === undefined) return null;
+  if (!esObjeto(m) || !Object.keys(m).length) return 'modulos: hace falta al menos uno';
+  for (const [id, x] of Object.entries(m)) {
+    if (!/^[A-Za-z0-9_]{1,10}$/.test(id)) return `modulos: el código "${id}" no es válido`;
+    if (
+      !esObjeto(x) ||
+      typeof x.nombre !== 'string' ||
+      !x.nombre ||
+      typeof x.corto !== 'string' ||
+      !x.corto ||
+      typeof x.profesor !== 'string' ||
+      !Array.isArray(x.claves) ||
+      !x.claves.every((c) => typeof c === 'string')
+    )
+      return `modulos (${id}): necesita nombre, corto, profesor y claves (lista de textos)`;
+  }
+  return null;
+}
+
 /** Texto del primer error del horario publicado, o null si es válido. */
 export function validarHorario(d: unknown): string | null {
   if (!esObjeto(d) || d.v !== 1) return 'Falta "v": 1';
+  const errModulos = validarModulos(d.modulos, d.aula, d.grupo);
+  if (errModulos) return errModulos;
+  const ids = new Set(Object.keys(esObjeto(d.modulos) ? d.modulos : MODULOS_INCLUIDOS));
   if (!esFecha(d.inicio) || !esFecha(d.fin) || d.inicio > d.fin)
     return 'inicio/fin: fechas AAAA-MM-DD';
   const ef = validarFranjas(d.franjas);
@@ -224,8 +282,8 @@ export function validarHorario(d: unknown): string | null {
   if (!esObjeto(d.horario)) return 'horario: falta';
   for (let dia = 1; dia <= 5; dia++) {
     const h = d.horario[String(dia)];
-    if (!Array.isArray(h) || h.length !== n || !h.every(esModulo))
-      return `horario["${dia}"]: ${n} módulos válidos (MIA, SAA, BDA, PIA, SBD)`;
+    if (!Array.isArray(h) || h.length !== n || !h.every((m) => esModulo(m, ids)))
+      return `horario["${dia}"]: ${n} módulos válidos (${[...ids].join(', ')})`;
   }
   if (!Array.isArray(d.trimestres) || d.trimestres.length !== 3)
     return 'trimestres: tienen que ser 3';
@@ -263,7 +321,12 @@ export function validarHorario(d: unknown): string | null {
   }
   if (!Array.isArray(d.sinClaseModulo)) return 'sinClaseModulo: falta';
   for (const x of d.sinClaseModulo) {
-    if (!esObjeto(x) || !esFecha(x.fecha) || !esModulo(x.modulo) || typeof x.motivo !== 'string')
+    if (
+      !esObjeto(x) ||
+      !esFecha(x.fecha) ||
+      !esModulo(x.modulo, ids) ||
+      typeof x.motivo !== 'string'
+    )
       return 'sinClaseModulo: cada uno necesita fecha, modulo y motivo';
   }
   if (d.examenes !== undefined) {
@@ -272,7 +335,7 @@ export function validarHorario(d: unknown): string | null {
       if (
         !esObjeto(x) ||
         !esFecha(x.fecha) ||
-        !esModulo(x.modulo) ||
+        !esModulo(x.modulo, ids) ||
         typeof x.titulo !== 'string' ||
         !x.titulo
       )
@@ -288,7 +351,7 @@ export function validarHorario(d: unknown): string | null {
       x.horario !== undefined &&
       (!Array.isArray(x.horario) ||
         x.horario.length !== n ||
-        !x.horario.every((m) => m === null || esModulo(m)))
+        !x.horario.every((m) => m === null || esModulo(m, ids)))
     )
       return `cambios (${x.fecha}): horario con ${n} módulos o null`;
     if (x.franjas !== undefined) {
@@ -308,6 +371,9 @@ const clonar = <T>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
 
 const HORARIO_INCLUIDO: ConfigHorario = {
   v: 1,
+  grupo: NOMBRE_INCLUIDO,
+  aula: AULA_INCLUIDA,
+  modulos: clonar(MODULOS_INCLUIDOS),
   inicio: INICIO_CURSO,
   fin: FIN_CURSO,
   franjas: clonar(FRANJAS),
@@ -335,6 +401,10 @@ export function aplicarHorario(d: unknown): string | null {
   const error = validarHorario(d);
   if (error) return error;
   const c = clonar(d as ConfigHorario);
+  ponerModulos(c.modulos ?? MODULOS_INCLUIDOS);
+  AULA = c.aula ?? AULA_INCLUIDA;
+  NOMBRE_GRUPO = c.grupo ?? NOMBRE_INCLUIDO;
+  SIN_GRUPO = false;
   INICIO_CURSO = c.inicio;
   FIN_CURSO = c.fin;
   reemplazar(FRANJAS, c.franjas);
@@ -354,6 +424,30 @@ export function aplicarHorario(d: unknown): string | null {
   version++;
   oyentes.forEach((f) => f());
   return null;
+}
+
+function ponerModulos(m: Record<string, InfoModulo>) {
+  for (const k of Object.keys(MODULOS)) delete MODULOS[k];
+  Object.assign(MODULOS, clonar(m));
+}
+
+/** Avisa a las pantallas de que algo del horario o del grupo ha cambiado. */
+export function notificarHorario() {
+  version++;
+  oyentes.forEach((f) => f());
+}
+
+/** No se sabe de qué grupo es el alumno: sin módulos ni horario, hasta que elija uno. */
+export function aplicarSinGrupo() {
+  ponerModulos({});
+  NOMBRE_GRUPO = '';
+  SIN_GRUPO = true;
+  for (let dia = 1; dia <= 5; dia++) HORARIO[dia] = [];
+  reemplazar(DIAS_SIN_CLASE, []);
+  reemplazar(SIN_CLASE_MODULO, []);
+  reemplazar(CAMBIOS, []);
+  reemplazar(EXAMENES, []);
+  notificarHorario();
 }
 
 /** El mes en que empieza el curso: de ahí hacia atrás el calendario no tiene nada que enseñar. */
@@ -432,6 +526,8 @@ export function horarioDelDia(d: Date): DiaHorario {
   const k = claveDia(d);
   const dow = d.getDay(); // 0 = domingo
   if (dow === 0 || dow === 6) return { tipo: 'fin-de-semana' };
+  if (SIN_GRUPO)
+    return { tipo: 'sin-clase', motivo: 'Elige tu grupo en Ajustes para ver el horario' };
   if (k < INICIO_CURSO)
     return { tipo: 'fuera-de-curso', motivo: 'Las clases empiezan el 28 de septiembre' };
   if (k > FIN_CURSO) return { tipo: 'fuera-de-curso', motivo: 'Fin de curso' };
@@ -448,8 +544,12 @@ export function horarioDelDia(d: Date): DiaHorario {
   }
   if (!clases.length)
     return { tipo: 'sin-clase', motivo: CAMBIOS.find((x) => x.fecha === k)?.motivo ?? 'Sin clase' };
+  // El descanso es el primer hueco entre dos franjas seguidas
+  const corte = FRANJAS.findIndex(
+    (f, i) => i < FRANJAS.length - 1 && f.fin !== FRANJAS[i + 1].inicio,
+  );
   const descanso =
-    FRANJAS.length >= 3 ? { inicio: FRANJAS[1].fin, fin: FRANJAS[2].inicio } : undefined;
+    corte >= 0 ? { inicio: FRANJAS[corte].fin, fin: FRANJAS[corte + 1].inicio } : undefined;
   return { tipo: 'clases', clases, descanso };
 }
 

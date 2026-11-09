@@ -1,3 +1,5 @@
+'use no memo'; // lee el horario, que es global y cambia: el React Compiler no debe memorizarlo
+
 /**
  * Calendario en el diseño Obsidiana (escritorio), reproducido del HTML de Stitch:
  * cabecera con título, mes en cuadrícula y, a la derecha, el panel del día seleccionado

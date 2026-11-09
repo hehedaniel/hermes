@@ -17,6 +17,7 @@ import { Button } from '@/components/button';
 import { EntregaCard, esUrgente, cuandoDe } from '@/components/entrega-card';
 import { Screen } from '@/components/screen';
 import { PanelTarea } from '@/components/tarea-detalle';
+import { BienvenidaObsidiana, SincronizandoObsidiana } from '@/components/bienvenida-obsidiana';
 import { PendientesObsidiana } from '@/components/pendientes-obsidiana';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -26,7 +27,7 @@ import { useNow } from '@/hooks/use-now';
 import { useTheme, useThemePreference } from '@/hooks/use-theme';
 import type { Entrega } from '@/lib/data';
 import { diaMesHora } from '@/lib/format';
-import { MODULOS, type ModuloId } from '@/lib/horario';
+import { colorModulo, MODULOS, type ModuloId } from '@/lib/horario';
 import { useAsignaturas, useMoodle } from '@/lib/store';
 
 const DIA = 86400;
@@ -127,9 +128,13 @@ export default function PendientesScreen() {
     );
   };
 
+  if (tema === 'obsidiana') {
+    if (ready && !client) return <BienvenidaObsidiana />;
+    if (client && !snapshot) return <SincronizandoObsidiana />;
+    return <PendientesObsidiana />;
+  }
   if (ready && !client) return <Bienvenida />;
   if (client && !snapshot) return <Sincronizando />;
-  if (tema === 'obsidiana') return <PendientesObsidiana />;
 
   const escritorio = width >= ANCHO_ESCRITORIO;
   const nocturnoWeb = Platform.OS === 'web' && escritorio && tema === 'nocturno';
@@ -978,9 +983,9 @@ function Sincronizando() {
       ) : (
         <>
           {(Object.keys(MODULOS) as ModuloId[]).map((m) => (
-            <FilaRail key={m} color={theme[m]} apagada>
+            <FilaRail key={m} color={colorModulo(theme, m)} apagada>
               <View style={styles.esqCabecera}>
-                <ThemedText type="label" style={{ color: theme[m], letterSpacing: 1 }}>
+                <ThemedText type="label" style={{ color: colorModulo(theme, m), letterSpacing: 1 }}>
                   {m}
                 </ThemedText>
                 <ThemedText type="meta" themeColor="ink3">

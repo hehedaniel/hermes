@@ -1,3 +1,5 @@
+'use no memo'; // lee el horario, que es global y cambia: el React Compiler no debe memorizarlo
+
 /**
  * Pendientes en el diseño Obsidiana (escritorio), reproducido del HTML de Stitch:
  * cabecera con fecha, cuatro cifras, filtro por asignatura y, a la derecha, «Ahora mismo»,
