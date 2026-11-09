@@ -28,16 +28,25 @@
       "motivo": "Jornada de formación FIWARE",
       "inicio": "17:00",
       "fin": "18:00",
-      "descripcion": "Formación FIWARE básico IES La Marisma y visita",
+      "descripcion": "Formación FIWARE básico IES La Marisma",
       "enlace": "https://maps.app.goo.gl/wrgeFcjzqmPnG7o68"
     },
     {
       "desde": "2026-11-05",
       "tipo": "formacion",
-      "motivo": "Formación FIWARE (nivel avanzado)",
+      "motivo": "Formación FIWARE (nivel avanzado clase 1)",
       "inicio": "17:00",
       "fin": "19:00",
-      "descripcion": "Formación FIWARE Avanzada IES La Marisma y visita",
+      "descripcion": "Formación FIWARE Avanzada IES La Marisma",
+      "enlace": "https://maps.app.goo.gl/wrgeFcjzqmPnG7o68"
+    },
+        {
+      "desde": "2026-11-12",
+      "tipo": "formacion",
+      "motivo": "Formación FIWARE (nivel avanzado clase 2)",
+      "inicio": "17:00",
+      "fin": "19:00",
+      "descripcion": "Formación FIWARE Avanzada IES La Marisma",
       "enlace": "https://maps.app.goo.gl/wrgeFcjzqmPnG7o68"
     },
     { "desde": "2026-11-02", "motivo": "Lunes siguiente al Día de Todos los Santos" },
@@ -60,5 +69,5 @@
     { "fecha": "2026-10-20", "modulo": "SAA", "motivo": "Sin clase de Aprendizaje Automático" }
   ],
   "cambios": [],
-  "examenes": [{ "fecha": "2026-11-12", "modulo": "PIA", "titulo": "Examen de Programación" }]
+  "examenes": [{ "fecha": "2026-11-13", "modulo": "PIA", "titulo": "Examen de Programación" }]
 }
