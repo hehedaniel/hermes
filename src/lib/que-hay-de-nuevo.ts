@@ -9,6 +9,15 @@ export type NovedadVersion = { version: string; titulo: string; puntos: string[]
 
 export const NOVEDADES_APP: NovedadVersion[] = [
   {
+    version: '2.7.0',
+    titulo: 'Cambia o borra tus entregas',
+    puntos: [
+      'Si Moodle lo permite, puedes cambiar o borrar lo que has entregado, igual que en Moodle.',
+      'Si una entrega venció pero Moodle sigue abierto, ya puedes entregarla con retraso desde la app.',
+      'Los avisos y las confirmaciones de la app tienen un diseño propio.',
+    ],
+  },
+  {
     version: '2.6.0',
     titulo: 'Horario de tu grupo',
     puntos: [

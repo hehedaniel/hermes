@@ -6,6 +6,8 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.7.0] - 2026-11-12
+
 ### Añadido
 - **Cambiar o borrar una entrega ya hecha.** Mientras Moodle lo permita (plazo abierto, sin corregir ni bloquear), en la tarea salen *Cambiar entrega* y *Borrar entrega* (o *Borrar borrador*), con confirmación antes, igual que en Moodle.
 
