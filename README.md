@@ -28,35 +28,42 @@ En la FP todo pasa por el aula virtual: cada módulo tiene sus unidades, sus PDF
 ## Capturas
 
 <p align="center">
-  <img src="docs/screenshots/1-pendientes.png" width="32%" alt="Pendientes" />
-  <img src="docs/screenshots/6-novedades.png" width="32%" alt="Novedades" />
-  <img src="docs/screenshots/7-horario.png" width="32%" alt="Horario" />
+  <img src="docs/screenshots/0-escritorio.png" width="100%" alt="Hermes en el ordenador: barra lateral, resumen del inicio y lista de entregas" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/2-calendario.png" width="32%" alt="Calendario" />
-  <img src="docs/screenshots/3-asignaturas.png" width="32%" alt="Asignaturas" />
-  <img src="docs/screenshots/4-asignatura.png" width="32%" alt="Contenido de una asignatura" />
+  <img src="docs/screenshots/1-pendientes.png" width="24%" alt="Pendientes" />
+  <img src="docs/screenshots/2-tarea.png" width="24%" alt="Una entrega ya hecha, con los botones para cambiarla o borrarla" />
+  <img src="docs/screenshots/3-novedades.png" width="24%" alt="Novedades" />
+  <img src="docs/screenshots/4-calendario.png" width="24%" alt="Calendario y clases del día" />
 </p>
-<p align="center"><sub>Pendientes · Novedades · Horario del día · Calendario del mes · Asignaturas con su profesor · Contenido de una asignatura (datos de ejemplo)</sub></p>
+<p align="center">
+  <img src="docs/screenshots/5-asignaturas.png" width="24%" alt="Asignaturas" />
+  <img src="docs/screenshots/6-asignatura.png" width="24%" alt="Contenido de una asignatura" />
+  <img src="docs/screenshots/7-notas.png" width="24%" alt="Notas" />
+  <img src="docs/screenshots/8-faltas.png" width="24%" alt="Faltas" />
+</p>
+<p align="center"><sub>Escritorio · Pendientes · Detalle de una entrega · Novedades · Calendario con las clases del día · Asignaturas · Contenido de una asignatura · Notas · Faltas (con datos de ejemplo)</sub></p>
 
 ## Qué hace
 
-### 📱 La app (Android y iPhone)
+### 📱 La app (Android, iPhone y web)
 
-- **Pendientes.** Todas las entregas de todos los módulos en una lista: vencidas, próximos 7 días, más adelante. Cada una con su estado (_pendiente, borrador, entregada, vencida_), la **nota** si ya está corregida y cuánto falta. Lo que vence en menos de 3 días se marca en naranja y sale en el globo de la pestaña.
+- **Pendientes.** Todas las entregas de todos los módulos en una lista: vencidas, por entregar y más adelante, cada una con su estado (_pendiente, borrador, entregada, vencida_), la **nota** si ya está corregida y cuánto falta. Arriba, un **resumen en cuatro tarjetas**: la próxima clase, la próxima entrega, el próximo examen (en rojo, con cuenta atrás) y cómo vas de faltas en el trimestre. Lo que vence en menos de 3 días se marca en naranja.
+- **Detalle de la entrega.** Enunciado, fechas de apertura, entrega y cierre, estado, archivos de la tarea y, si ya está corregida, la **corrección del profesor**: nota, comentario y archivos.
+- **Entregar desde la app.** En cada tarea eliges tus archivos o escribes el texto y se entregan en Moodle, con confirmación antes y comprobando el tipo, el tamaño y el número de archivos que admite la tarea. Mientras Moodle lo permita puedes **cambiar** lo entregado o **borrarlo**, y si la entrega venció pero el cierre aún no ha llegado, **entregar con retraso**. Funciona en el móvil y en la web.
 - **Novedades.** Lo que ha cambiado desde la última vez, en todas las asignaturas: **apuntes nuevos**, archivos que el profesor ha **actualizado**, **actividades** y **entregas nuevas**, **notas publicadas** y **cambios de fecha**. Con globo de no leídas; al tocar una, te lleva al archivo, la tarea o la asignatura.
-- **Horario.** Desliza en Calendario y ves **las clases del día**: hora, módulo, profesor y aula, con el descanso y la clase en curso marcada como "AHORA". Arriba, una tira con los días de la semana para saltar a ayer, mañana o cualquier otro día. Los **festivos y vacaciones** del calendario escolar aparecen como "No hay clase" con el motivo. Debajo salen las entregas de ese día y el resto de tus eventos de Google.
-- **Calendario.** Vista de mes con un punto por entrega, del color de su estado, y **tu Google Calendar dentro**: horario de clases y eventos personales en la agenda de cada día.
-- **Asignaturas.** Cada módulo con su profesor, sus bloques y actividades, como en Moodle. Los archivos se **descargan al móvil** (uno a uno o "Descargar todo") y se abren sin conexión.
-- **Widgets (Android).** _Próximas entregas_, con cuánto falta para cada una, y _Clases de hoy_, con la que toca **ahora**; si ya han acabado, enseña las de mañana. Se ven sin abrir la app y se actualizan solos.
-- **Visor integrado.** Los PDF e imágenes se ven dentro de la app, con zoom; Word, PowerPoint o ZIP se abren con la app del móvil que corresponda.
-- **Detalle de entrega.** Enunciado, fechas de apertura, entrega y cierre, estado, nota y archivos adjuntos.
-- **Hacer tareas con IA.** En cada tarea, un chat con la IA que ya conoce el enunciado: le pasas los archivos de la tarea, le pides lo que quieras y, si te genera el trabajo, lo ves como PDF y lo **entregas en Moodle** desde ahí. Eliges la IA en Ajustes, con tu propia clave: **Gemini**, **OpenRouter**, **ChatGPT**, **Claude**, **DeepSeek**, **Mistral** o **Groq**.
-- **Plantillas y tu estilo de escritura.** En Ajustes subes la plantilla de entrega (Word, PDF o texto). Con un Word hecho con estilos, la app rellena tu propio documento (portada, índice, formato) y la IA solo escribe el contenido; con un PDF o un texto sirve de guía de apartados. Se sincroniza con tu Moodle entre móvil y web; también un texto tuyo para que escriba como tú. En cada tarea eliges la plantilla y si usa tu estilo.
-- **Buscador.** Archivos y tareas de todas las asignaturas por nombre, sin conexión (en escritorio y web).
+- **Calendario y horario.** Vista de mes con un punto por entrega, del color de su estado. Al elegir un día ves **las clases**: hora, módulo, profesor y aula, con el descanso y la clase en curso marcada como «AHORA», los **festivos, vacaciones y formaciones** con su motivo, los **exámenes** en rojo, las entregas de ese día y **tu Google Calendar** si lo conectas.
+- **Grupos de horario.** Hermes reconoce tu grupo por las asignaturas de tu Moodle (o lo eliges en _Ajustes → Grupo y horario_) y usa su horario, sus fechas de curso y sus días sin clase. Hoy: **1º IA y Big Data** y **1º DAM-B (tarde)**. El horario se publica con la web y un cambio llega a todos sin sacar versión nueva ([cómo](docs/horario.md)).
+- **Asignaturas.** Cada módulo con sus unidades, la descripción de cada una, sus actividades y tu rol, como en Moodle. Los archivos se **descargan al móvil** (uno a uno o «Descargar todo») y se abren sin conexión.
 - **Notas.** Tus calificaciones por asignatura; si el profesor no publica cuánto vale cada tarea, Hermes calcula una nota aproximada y lo indica.
 - **Faltas.** Cuántas horas has faltado en cada módulo y cuántas te quedan, por trimestre o en todo el curso, con límite del 10 % o del 20 %. Las horas sin clase (festivos o falta del profesor) no cuentan y bajan el total. Se marca por días: «Asistí», «Falté» o «Sin clase».
-- **Diseño Obsidiana.** El diseño por defecto, oscuro y editorial, con barra lateral en escritorio y un botón central en abanico en el móvil.
+- **Widgets (Android).** _Próximas entregas_, con cuánto falta para cada una, y _Clases de hoy_, con la que toca **ahora**; si ya han acabado, enseña las de mañana. Se ven sin abrir la app y se actualizan solos.
+- **Visor integrado.** Los PDF e imágenes se ven dentro de la app, con zoom; Word, PowerPoint o ZIP se abren con la app que corresponda.
+- **Hacer tareas con IA.** En cada tarea, un chat con la IA que ya conoce el enunciado: le pasas los archivos de la tarea, le pides lo que quieras y, si te genera el trabajo, lo ves como PDF y lo **entregas en Moodle** desde ahí. Eliges la IA en Ajustes, con tu propia clave: **Gemini**, **OpenRouter**, **ChatGPT**, **Claude**, **DeepSeek**, **Mistral** o **Groq**. Si eres profesor en alguna asignatura, esta parte se oculta.
+- **Plantillas y tu estilo de escritura.** En Ajustes subes la plantilla de entrega (Word, PDF o texto). Con un Word hecho con estilos, la app rellena tu propio documento (portada, índice, formato) y la IA solo escribe el contenido; con un PDF o un texto sirve de guía de apartados. También un texto tuyo para que escriba como tú. Se sincroniza con tu Moodle entre móvil y web, igual que tus faltas.
+- **Buscador.** Archivos y tareas de todas las asignaturas por nombre, sin conexión (en escritorio y web).
+- **Avisos.** Recordatorios antes del vencimiento de cada entrega y avisos de notas y novedades (Android), con la sincronización en segundo plano. Después de cada actualización, una pantalla corta cuenta lo nuevo.
+- **Diseño Obsidiana.** Oscuro y editorial: barra lateral en el ordenador y barra inferior con un botón central en el móvil. Los avisos y las confirmaciones de la app tienen su propio estilo, en lugar de los del navegador.
 - **Login desde el móvil.** Inicias sesión con tu usuario de la Junta (CAS) y la app recibe el token sola.
 - **Sin servidor propio.** Habla directamente con Moodle y funciona sin conexión con lo último que descargó.
 
@@ -122,19 +129,20 @@ Responde **Yes** a crear el proyecto y la _keystore_. A los 10-20 minutos tendr�
 <details>
 <summary><b>Publicar una versión nueva</b></summary>
 
-Hay dos GitHub Actions:
+Hay estas GitHub Actions:
 
 - **Web** (`.github/workflows/web.yml`): cada push a `main` publica la versión web en GitHub Pages. La primera vez: _Settings → Pages → Source: GitHub Actions_.
-- **Release APK** (`.github/workflows/release.yml`): al subir una etiqueta `vX.Y.Z`, compila el APK en EAS y crea la release con el APK adjunto. La primera vez, guarda un token de [expo.dev](https://expo.dev/settings/access-tokens) como secreto `EXPO_TOKEN` en _Settings → Secrets and variables → Actions_.
+- **Release APK** (`.github/workflows/release.yml`): al subir una etiqueta `vX.Y.Z`, compila el APK firmado con Gradle, sin la cola de EAS, y crea la release con el APK adjunto. Necesita como secretos la firma del APK (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` y `ANDROID_KEY_PASSWORD`), en _Settings → Secrets and variables → Actions_.
+- **APK de desarrollo** (`.github/workflows/dev-apk.yml`): compila el APK de _Hermes Dev_ al subir a la rama `desarrollo`, o a mano desde _Actions_.
 
-Antes de etiquetar, pasa lo de _Sin publicar_ del [`CHANGELOG.md`](CHANGELOG.md) a una sección `## [1.1.0] - fecha`: las notas de la release salen de ahí.
+Antes de etiquetar, pasa lo de _Sin publicar_ del [`CHANGELOG.md`](CHANGELOG.md) a una sección `## [2.7.0] - fecha`: las notas de la release salen de ahí.
 
 ```bash
-git tag v1.1.0
-git push origin v1.1.0
+git tag v2.7.0
+git push origin v2.7.0
 ```
 
-Las dos Actions pasan antes las **comprobaciones** (`.github/workflows/ci.yml`): tipos, lint, pruebas y detección de secretos con gitleaks. Si algo falla, no se publica nada. En local, lo mismo con `npm run check`.
+La web y la release pasan antes las **comprobaciones** (`.github/workflows/ci.yml`): tipos, lint, pruebas y detección de secretos con gitleaks. Si algo falla, no se publica nada. En local, lo mismo con `npm run check`.
 
 Para probar la web en local: `npm run web`. Para generarla como en GitHub Pages: `npm run build:web` (sale en `dist/`).
 
@@ -176,7 +184,7 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 ```
 ├── src/
 │   ├── app/                  pantallas (Expo Router)
-│   │   ├── (tabs)/           Pendientes · Novedades · Calendario · Asignaturas · Ajustes
+│   │   ├── (tabs)/           Pendientes · Calendario · Notas · Faltas · Novedades · Asignaturas · Ajustes
 │   │   ├── curso/[id].tsx    contenido de una asignatura
 │   │   ├── tarea/[key].tsx   detalle de una entrega
 │   │   ├── visor.tsx         visor de PDF (pdf.js) e imágenes
@@ -188,7 +196,10 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 │       ├── data.ts           tareas + eventos → lista de entregas con estado
 │       ├── contents.ts       bloques → actividades → archivos de cada curso
 │       ├── novedades.ts      qué ha cambiado desde la última sincronización
+│       ├── entregar.ts       entregar, cambiar y borrar una entrega
 │       ├── horario.ts        horario del grupo, profesores y días sin clase
+│       ├── grupos.ts         grupos de clase y cuál es el tuyo
+│       ├── faltas.ts         calculadora de faltas por módulo y trimestre
 │       ├── downloads.tsx     descargas al móvil (expo-file-system)
 │       ├── google-cal.tsx    eventos de Google Calendar (vía Apps Script)
 │       └── store.tsx         token, caché y sincronización
@@ -196,7 +207,7 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 ├── .github/workflows/        publicar la web y las releases del APK
 ├── google-apps-script/       Moodle → Google Tasks + Calendar, y eventos para la app
 ├── sincronizador-pc/         descarga del material al PC (Python)
-└── docs/                     icono y capturas
+└── docs/                     icono, capturas y guía del horario
 ```
 
 <details>
@@ -210,6 +221,12 @@ Sigue [`sincronizador-pc/README.md`](sincronizador-pc/README.md).
 | `mod_assign_get_submission_status`            | si la has entregado y la nota                       |
 | `core_calendar_get_action_events_by_timesort` | otras actividades con fecha (SCORM, cuestionarios…) |
 | `core_course_get_contents`                    | bloques, actividades y archivos de cada curso       |
+| `mod_assign_save_submission`                  | guardar tu entrega (archivos o texto)               |
+| `mod_assign_submit_for_grading`               | enviarla, si la tarea usa borradores                |
+| `mod_assign_remove_submission`                | borrar tu entrega o tu borrador                     |
+| `gradereport_user_get_grade_items`            | notas por asignatura, con el peso de cada actividad |
+| `core_user_get_course_user_profiles`          | tu rol en cada asignatura                           |
+| `core_completion_get_activities_completion_status` | qué actividades has completado                 |
 
 El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/launch.php`, que redirige a `moodlemobile://token=…`.
 
@@ -229,9 +246,8 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Versión web instalable en iPhone
 - [x] Notificaciones y sincronización en segundo plano (Android)
 - [x] Detalle de la corrección: nota, fecha, comentario y archivos del profesor
-- [x] Rediseño de la app (versión 2.0)
 - [x] Compilar el APK en GitHub Actions, sin la cola de EAS
-- [x] Hacer tareas con IA (Gemini / OpenRouter) y entregarlas desde la app
+- [x] Hacer tareas con IA (Gemini, OpenRouter, ChatGPT, Claude, DeepSeek, Mistral y Groq) y entregarlas desde la app
 - [x] Plantillas para las entregas con IA y estilo de escritura del alumno
 - [x] Sincronización de faltas, plantillas y estilo entre móvil y web (Archivos privados de Moodle)
 - [x] Plantillas Word que se rellenan conservando el formato
@@ -242,6 +258,10 @@ El token se consigue con el mismo flujo que la app oficial: `admin/tool/mobile/l
 - [x] Buscador de archivos y tareas (escritorio y web)
 - [x] Diseño Obsidiana por defecto y pantalla de Notas
 - [x] Calculadora de faltas por módulo y trimestre
+- [x] Resumen del inicio y exámenes en el calendario
+- [x] Grupos de horario (IA y Big Data, 1º DAM-B tarde)
+- [x] Entregar desde la app, con entrega con retraso y poder cambiar o borrar lo entregado
+- [x] Avisos y confirmaciones con diseño propio
 - [ ] Buscador también en el móvil
 - [ ] Faltas: confirmar el límite real (10 % o 20 %) y avisar al acercarte al límite
 - [x] Nota por asignatura: la de Moodle o, si no la da, una aproximada con sus pesos (sin contar las evaluaciones iniciales)
