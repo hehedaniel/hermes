@@ -35,6 +35,7 @@ import { BusquedaProvider } from '@/lib/busqueda-estado';
 import { MoodleProvider } from '@/lib/store';
 import { HorarioRemoto } from '@/lib/use-horario';
 import { DetectarRol } from '@/lib/use-es-profesor';
+import { DialogoModal } from '@/components/dialogo-modal';
 import { NovedadesModal } from '@/components/novedades-modal';
 import { SyncDatosProvider } from '@/lib/use-sync-datos';
 
@@ -120,6 +121,7 @@ function RootLayoutContent() {
                   <StatusBar style={oscuro ? 'light' : 'dark'} />
                   <ExtractorPdf />
                   <NovedadesModal />
+                  <DialogoModal />
                   <Stack
                     screenOptions={{
                       headerBackButtonDisplayMode: 'minimal',
