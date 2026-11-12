@@ -317,7 +317,7 @@ export function TareaObsidiana({ entrega: e, nowMs }: { entrega: Entrega; nowMs:
               <EntregaPropia entrega={e} cambiando onCancelar={() => setCambiando(false)} />
             ) : null}
             {e.envio?.puedeCambiar && !cambiando ? (
-              <View style={{ marginTop: abierta ? 12 : 0, marginBottom: abierta ? 4 : 0 }}>
+              <View style={{ marginTop: 12, marginBottom: abierta ? 4 : 0 }}>
                 <AccionesEntrega
                   entrega={e}
                   onCambiar={e.estado === 'entregada' ? () => setCambiando(true) : undefined}

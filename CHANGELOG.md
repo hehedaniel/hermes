@@ -6,6 +6,15 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+### Añadido
+- **Cambiar o borrar una entrega ya hecha.** Mientras Moodle lo permita (plazo abierto, sin corregir ni bloquear), en la tarea salen *Cambiar entrega* y *Borrar entrega* (o *Borrar borrador*), con confirmación antes, igual que en Moodle.
+
+### Cambiado
+- **Avisos y confirmaciones con diseño propio.** Los diálogos de la app (entregar, borrar, descargas, ajustes…) usan el mismo modal que el aviso de actualización y las novedades, en lugar de los del navegador o del sistema.
+
+### Arreglado
+- Una tarea vencida cuyo cierre de Moodle aún no ha llegado ya deja **entregar con retraso** desde la app; antes el formulario desaparecía en cuanto pasaba la fecha de entrega.
+
 ## [2.6.0] - 2026-11-09
 
 ### Añadido
