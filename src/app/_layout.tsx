@@ -88,7 +88,8 @@ function RootLayoutContent() {
     JetBrainsMono_500Medium,
     JetBrainsMono_600SemiBold,
   });
-  useAbrirAviso();
+  // Hasta que el Stack esté montado no se navega: hacerlo antes vuelve a montar la raíz en bucle
+  useAbrirAviso(fuentes && listo);
 
   // Colores de la navegación con los del tema (sin destellos blancos entre pantallas)
   const temaNavegacion = useMemo(() => {

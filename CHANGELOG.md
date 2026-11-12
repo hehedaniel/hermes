@@ -6,6 +6,9 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+### Arreglado
+- Tocar una notificación con la app cerrada ya no la cierra con un error («Maximum update depth exceeded»): Hermes espera a estar cargado y abre la pantalla del aviso una sola vez.
+
 ## [2.7.0] - 2026-11-12
 
 ### Añadido
