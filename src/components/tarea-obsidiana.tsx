@@ -164,9 +164,11 @@ export function TareaObsidiana({ entrega: e, nowMs }: { entrega: Entrega; nowMs:
   const ancho = width >= 1100;
   const padX = usePadX(32);
   const chip = CHIP[e.estado];
-  const abierta = e.estado === 'pendiente' || e.estado === 'borrador';
   const texto = htmlATexto(e.enunciado);
   const corte = e.corte && e.corte !== e.fecha ? e.corte : undefined;
+  // Vencida pero con el cierre de Moodle aún por llegar: se puede entregar con retraso.
+  const conRetraso = e.estado === 'vencida' && !!corte && corte * 1000 > nowMs;
+  const abierta = e.estado === 'pendiente' || e.estado === 'borrador' || conRetraso;
   const abrirMoodle = e.url ? () => WebBrowser.openBrowserAsync(e.url!) : undefined;
   const irIA = () => router.push(`/ia/${encodeURIComponent(e.key)}`);
   const fechaTxt = (ts: number) => `${diaMes(ts)} · ${hora(new Date(ts * 1000))}`;

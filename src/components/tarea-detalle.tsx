@@ -79,9 +79,11 @@ export function TareaDetalle({
   const conChat = chat?.key === e.key && chat.hay;
 
   const urgente = esUrgente(e, nowMs);
-  const abierta = e.estado === 'pendiente' || e.estado === 'borrador';
   const texto = htmlATexto(e.enunciado);
   const corte = e.corte && e.corte !== e.fecha ? e.corte : undefined;
+  // Vencida pero con el cierre de Moodle aún por llegar: se puede entregar con retraso.
+  const conRetraso = e.estado === 'vencida' && !!corte && corte * 1000 > nowMs;
+  const abierta = e.estado === 'pendiente' || e.estado === 'borrador' || conRetraso;
 
   const fechas = [
     e.apertura ? { label: 'Apertura', ts: e.apertura, alerta: false } : null,
