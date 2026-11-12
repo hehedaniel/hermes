@@ -7,7 +7,55 @@ import type { Entrega } from '@/lib/data';
 import { formatoTamano } from '@/lib/downloads';
 import { useEntregaPropia } from '@/lib/use-entrega-propia';
 
-export function EntregaPropia({ entrega }: { entrega: Entrega }) {
+/** Cambiar o borrar lo que ya entregaste, mientras Moodle lo permita (como «Editar entrega»). */
+export function AccionesEntrega({
+  entrega,
+  onCambiar,
+}: {
+  entrega: Entrega;
+  /** Si se pasa, sale el botón «Cambiar entrega» (en un borrador el formulario ya está a la vista) */
+  onCambiar?: () => void;
+}) {
+  const { borrar, entregando } = useEntregaPropia(entrega);
+  const boton = (texto: string, icono: 'edit-2' | 'trash-2', color: string, onPress: () => void) => (
+    <Pressable
+      onPress={onPress}
+      disabled={entregando}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: '#292C36',
+        opacity: entregando ? 0.5 : 1,
+      }}>
+      <Feather name={icono} size={12} color={color} />
+      <T k="mono" up s={10} w={700} ls={0.05} c={color}>
+        {texto}
+      </T>
+    </Pressable>
+  );
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+      {onCambiar ? boton('Cambiar entrega', 'edit-2', '#E2E4EA', onCambiar) : null}
+      {boton(entrega.estado === 'borrador' ? 'Borrar borrador' : 'Borrar entrega', 'trash-2', '#F87171', borrar)}
+    </View>
+  );
+}
+
+export function EntregaPropia({
+  entrega,
+  cambiando,
+  onCancelar,
+}: {
+  entrega: Entrega;
+  /** Ya hay una entrega y se está sustituyendo por otra */
+  cambiando?: boolean;
+  onCancelar?: () => void;
+}) {
   const { cfg, archivos, texto, setTexto, elegir, quitar, entregar, entregando, hayAlgo } =
     useEntregaPropia(entrega);
   if (!cfg) return null;
@@ -16,7 +64,7 @@ export function EntregaPropia({ entrega }: { entrega: Entrega }) {
   return (
     <View style={{ gap: 12 }}>
       <T k="mono" up s={9.5} w={700} ls={0.18} c={O.lime}>
-        Entregar desde la app
+        {cambiando ? 'Cambiar la entrega' : 'Entregar desde la app'}
       </T>
 
       {cfg.archivos ? (
@@ -121,9 +169,19 @@ export function EntregaPropia({ entrega }: { entrega: Entrega }) {
           <Feather name="upload" size={12} color="#000" />
         )}
         <T k="mono" up s={10} w={700} ls={0.05} c="#000">
-          {entregando ? 'Entregando…' : 'Entregar'}
+          {entregando ? 'Entregando…' : cambiando ? 'Guardar cambios' : 'Entregar'}
         </T>
       </Pressable>
+      {cambiando && onCancelar ? (
+        <Pressable
+          onPress={onCancelar}
+          disabled={entregando}
+          style={{ alignItems: 'center', paddingVertical: 6 }}>
+          <T k="mono" up s={10} ls={0.05} c="#8E93A2">
+            Cancelar
+          </T>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

@@ -172,6 +172,35 @@ export async function entregarEnMoodle(
   return 'enviada';
 }
 
+/**
+ * Borra tu entrega (o tu borrador), como el botón «Eliminar entrega» de Moodle. Solo se puede
+ * mientras Moodle deja editarla. Moodle ha cambiado el nombre del parámetro de la tarea entre
+ * versiones, así que si rechaza el primero se prueba con el otro.
+ */
+export async function borrarEntrega(
+  client: Pick<ClienteMoodle, 'call'>,
+  cfg: Pick<ConfigEntrega, 'assignId'>,
+  userid: number,
+) {
+  const st = await client.call<SubmissionStatus>('mod_assign_get_submission_status', {
+    assignid: cfg.assignId,
+  });
+  if (st.lastattempt?.canedit === false) {
+    throw new MoodleError(
+      'nopuede',
+      'Moodle no deja borrar la entrega de esta tarea: el plazo está cerrado, ya está corregida o el profesor la ha bloqueado.',
+    );
+  }
+  let r: unknown;
+  try {
+    r = await client.call('mod_assign_remove_submission', { assignid: cfg.assignId, userid });
+  } catch (e) {
+    if (!(e instanceof MoodleError) || !/invalidparameter/i.test(e.code ?? '')) throw e;
+    r = await client.call('mod_assign_remove_submission', { assignmentid: cfg.assignId, userid });
+  }
+  comprobarAvisos(r);
+}
+
 /** Texto escrito a mano → HTML para el editor de Moodle (párrafos y saltos de línea). */
 export function textoAHtml(texto: string) {
   const esc = (s: string) =>

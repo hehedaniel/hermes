@@ -112,3 +112,11 @@ test('corrección con editpdf: solo el PDF anotado, sin imágenes de página ni 
     ['combined.pdf'],
   );
 });
+
+test('puedeCambiar sigue lo que dice Moodle (canedit)', () => {
+  const con = (canedit?: boolean) =>
+    detalleEntrega({ lastattempt: { submission: { status: 'submitted' }, canedit } }, 11, 105).envio;
+  assert.equal(con(true)?.puedeCambiar, true);
+  assert.equal(con(false)?.puedeCambiar, false);
+  assert.equal(con(undefined)?.puedeCambiar, true);
+});

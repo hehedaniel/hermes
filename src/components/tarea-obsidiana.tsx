@@ -18,7 +18,7 @@ import { diaMes, diaMesHora, hora, quedan } from '@/lib/format';
 import { htmlATexto } from '@/lib/html-texto';
 import { hayChat } from '@/lib/ia/chats';
 import { useAsignaturas } from '@/lib/store';
-import { EntregaPropia } from '@/components/entrega-propia';
+import { AccionesEntrega, EntregaPropia } from '@/components/entrega-propia';
 import { useEsProfesor } from '@/lib/use-es-profesor';
 
 const CHIP = {
@@ -160,6 +160,12 @@ export function TareaObsidiana({ entrega: e, nowMs }: { entrega: Entrega; nowMs:
   );
   const conChat = chat?.key === e.key && chat.hay;
   const esProfesor = useEsProfesor();
+  // Cambiando una entrega ya hecha: va ligado a la entrega actual, así que se cierra solo
+  // cuando Moodle registra la nueva (cambia su fecha)
+  const claveEnvio = `${e.key}:${e.envio?.fecha ?? ''}`;
+  const [cambiandoClave, setCambiandoClave] = useState<string | null>(null);
+  const cambiando = cambiandoClave === claveEnvio;
+  const setCambiando = (v: boolean) => setCambiandoClave(v ? claveEnvio : null);
 
   const ancho = width >= 1100;
   const padX = usePadX(32);
@@ -303,8 +309,22 @@ export function TareaObsidiana({ entrega: e, nowMs }: { entrega: Entrega; nowMs:
             Todavía no has enviado tu trabajo.
           </T>
         ) : null}
-        {abierta && !esProfesor && e.tipo === 'assign' && e.entregable && !e.entregable.prueba ? (
-          <EntregaPropia entrega={e} />
+        {!esProfesor && e.tipo === 'assign' && e.entregable && !e.entregable.prueba ? (
+          <>
+            {abierta ? (
+              <EntregaPropia entrega={e} />
+            ) : cambiando ? (
+              <EntregaPropia entrega={e} cambiando onCancelar={() => setCambiando(false)} />
+            ) : null}
+            {e.envio?.puedeCambiar && !cambiando ? (
+              <View style={{ marginTop: abierta ? 12 : 0, marginBottom: abierta ? 4 : 0 }}>
+                <AccionesEntrega
+                  entrega={e}
+                  onCambiar={e.estado === 'entregada' ? () => setCambiando(true) : undefined}
+                />
+              </View>
+            ) : null}
+          </>
         ) : null}
         {abierta && abrirMoodle ? (
           <Pressable

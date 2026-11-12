@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 
 import {
+  borrarEntrega,
   type ConfigEntrega,
   configEntrega,
   entregarEnMoodle,
@@ -9,7 +10,7 @@ import {
   textoAHtml,
   tipoAdmitido,
 } from '@/lib/entregar';
-import type { Assignment } from '@/lib/moodle';
+import { type Assignment, MoodleError } from '@/lib/moodle';
 
 const tarea = (extra: Partial<Assignment>): Assignment => ({
   id: 77,
@@ -193,4 +194,73 @@ test('el texto escrito a mano se entrega como párrafos y escapa el HTML', () =>
     '<p>Hola<br>mundo</p><p>Segundo &lt;b&gt;párrafo&lt;/b&gt; &amp; fin</p>',
   );
   assert.equal(textoAHtml('  una línea  '), '<p>una línea</p>');
+});
+
+test('Borrar la entrega: llama a Moodle con la tarea y el usuario', async () => {
+  const llamadas: [string, unknown][] = [];
+  await borrarEntrega(
+    {
+      call: (async (fn: string, params?: unknown) => {
+        llamadas.push([fn, params]);
+        return fn === 'mod_assign_get_submission_status' ? { lastattempt: { canedit: true } } : [];
+      }) as never,
+    },
+    { assignId: 77 },
+    5,
+  );
+  assert.deepEqual(llamadas[1], ['mod_assign_remove_submission', { assignid: 77, userid: 5 }]);
+});
+
+test('Borrar la entrega: si Moodle rechaza el nombre del parámetro, prueba con el otro', async () => {
+  const probados: unknown[] = [];
+  await borrarEntrega(
+    {
+      call: (async (fn: string, params?: unknown) => {
+        if (fn === 'mod_assign_get_submission_status') return { lastattempt: { canedit: true } };
+        probados.push(params);
+        if (probados.length === 1) throw new MoodleError('invalidparameter', 'Parámetro no válido');
+        return [];
+      }) as never,
+    },
+    { assignId: 77 },
+    5,
+  );
+  assert.deepEqual(probados, [
+    { assignid: 77, userid: 5 },
+    { assignmentid: 77, userid: 5 },
+  ]);
+});
+
+test('Borrar la entrega: no se intenta si Moodle ya no deja editarla', async () => {
+  let borrada = false;
+  await assert.rejects(
+    borrarEntrega(
+      {
+        call: (async (fn: string) => {
+          if (fn === 'mod_assign_remove_submission') borrada = true;
+          return { lastattempt: { canedit: false } };
+        }) as never,
+      },
+      { assignId: 77 },
+      5,
+    ),
+    /no deja borrar/,
+  );
+  assert.equal(borrada, false);
+});
+
+test('Borrar la entrega: si Moodle avisa de que no ha podido, se enseña el motivo', async () => {
+  await assert.rejects(
+    borrarEntrega(
+      {
+        call: (async (fn: string) =>
+          fn === 'mod_assign_get_submission_status'
+            ? { lastattempt: { canedit: true } }
+            : [{ warningcode: 'x', message: 'Plazo cerrado' }]) as never,
+      },
+      { assignId: 77 },
+      5,
+    ),
+    /Plazo cerrado/,
+  );
 });

@@ -56,6 +56,8 @@ export type Envio = {
   archivos: Archivo[];
   texto?: string; // HTML del texto en línea, si la tarea lo pide
   pendienteDeCorregir: boolean;
+  /** Moodle deja cambiar o borrar la entrega (plazo abierto, sin corregir ni bloquear) */
+  puedeCambiar: boolean;
 };
 
 export type Correccion = {
@@ -133,6 +135,7 @@ export function detalleEntrega(
           sub?.status === 'submitted' &&
           !st.feedback?.gradefordisplay &&
           st.lastattempt?.gradingstatus !== 'graded',
+        puedeCambiar: st.lastattempt?.canedit !== false,
       }
     : undefined;
 

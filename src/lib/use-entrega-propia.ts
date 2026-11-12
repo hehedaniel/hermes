@@ -6,6 +6,7 @@ import { formatoTamano } from './downloads';
 import { elegirArchivosParaEntregar } from './entrega-propia';
 import {
   type ArchivoParaSubir,
+  borrarEntrega,
   entregarEnMoodle,
   subirBorrador,
   textoAHtml,
@@ -15,7 +16,8 @@ import { useMoodle } from './store';
 
 /** Entregar en Moodle archivos o texto propios (sin IA), con confirmación antes. */
 export function useEntregaPropia(e: Entrega | undefined) {
-  const { client, refresh } = useMoodle();
+  const { client, refresh, snapshot } = useMoodle();
+  const userid = snapshot?.site.userid;
   const cfg = e?.entregable;
   const [archivos, setArchivos] = useState<ArchivoParaSubir[]>([]);
   const [texto, setTexto] = useState('');
@@ -92,15 +94,38 @@ export function useEntregaPropia(e: Entrega | undefined) {
           await refresh();
           setArchivos([]);
           setTexto('');
-          avisar('Entregada', `Tu trabajo ya está entregado en «${e.nombre}».`);
+          avisar('Entregada', `Tu trabajo ya está entregado en «${e.nombre}».`, 'ok');
         } catch (err) {
-          avisar('No se pudo entregar', (err as Error).message ?? String(err));
+          avisar('No se pudo entregar', (err as Error).message ?? String(err), 'error');
         } finally {
           setEntregando(false);
         }
       },
     });
   }, [e, cfg, client, archivos, texto, hayAlgo, refresh]);
+
+  /** Borra lo entregado (o el borrador) en Moodle, con confirmación antes. */
+  const borrar = useCallback(() => {
+    if (!e || !cfg || !client || userid === undefined) return;
+    confirmar({
+      titulo: '¿Borrar tu entrega?',
+      texto: `Se borrará lo que has entregado en «${e.nombre}». Podrás volver a entregar mientras Moodle siga abierto.`,
+      boton: 'Borrar',
+      destructivo: true,
+      onOk: async () => {
+        setEntregando(true);
+        try {
+          await borrarEntrega(client, cfg, userid);
+          await refresh();
+          avisar('Entrega borrada', `Ya no tienes nada entregado en «${e.nombre}».`, 'ok');
+        } catch (err) {
+          avisar('No se pudo borrar', (err as Error).message ?? String(err), 'error');
+        } finally {
+          setEntregando(false);
+        }
+      },
+    });
+  }, [e, cfg, client, userid, refresh]);
 
   return {
     cfg,
@@ -110,6 +135,7 @@ export function useEntregaPropia(e: Entrega | undefined) {
     elegir,
     quitar,
     entregar,
+    borrar,
     entregando,
     hayAlgo: !!hayAlgo,
   };
