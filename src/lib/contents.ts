@@ -13,6 +13,8 @@ export type Modulo = {
   enlace?: string; // para actividades "URL": la web externa
   archivos: Archivo[];
   entregaKey?: string; // si es una tarea con entrega, su clave en Pendientes
+  /** Subapartado de la unidad al que pertenece (la última etiqueta de Moodle que lo precede) */
+  grupo?: string;
 };
 
 export type Bloque = {
@@ -74,6 +76,31 @@ export function resumenATexto(html?: string) {
 /** Actividades que no aportan nada en la lista (etiquetas de texto, subsecciones…). */
 const OCULTAR = new Set(['label', 'subsection', 'qbank']);
 
+/** Una etiqueta más larga que esto es un párrafo de texto, no el título de un subapartado. */
+const MAX_TITULO_GRUPO = 80;
+
+/**
+ * Las etiquetas de Moodle («Ejercicios y Ejemplos de Python y R», «Prácticas Evaluables»…)
+ * hacen de subtítulos dentro de una unidad: cada actividad pertenece a la última etiqueta
+ * corta que tiene delante. Devuelve el grupo de cada actividad por su cmid.
+ */
+export function gruposDeSeccion(
+  modules: { id: number; modname: string; name?: string; uservisible?: boolean }[],
+): Map<number, string> {
+  const grupos = new Map<number, string>();
+  let actual: string | undefined;
+  for (const m of modules) {
+    if (m.uservisible === false) continue;
+    if (m.modname === 'label') {
+      const t = strip(m.name);
+      if (t && t.length <= MAX_TITULO_GRUPO) actual = t;
+    } else if (actual) {
+      grupos.set(m.id, actual);
+    }
+  }
+  return grupos;
+}
+
 export async function fetchCourseContents(
   client: MoodleClient,
   cursoId: number,
@@ -86,6 +113,7 @@ export async function fetchCourseContents(
 
   const bloques: Bloque[] = sections
     .map((sec, i) => {
+      const grupos = gruposDeSeccion(sec.modules ?? []);
       const modulos: Modulo[] = (sec.modules ?? [])
         .filter((m) => m.uservisible !== false && !OCULTAR.has(m.modname))
         .map((m) => {
@@ -116,6 +144,7 @@ export async function fetchCourseContents(
               m.modname === 'url' ? contents.find((c) => c.type === 'url')?.fileurl : undefined,
             archivos,
             entregaKey: entrega?.key,
+            grupo: grupos.get(m.id),
           };
         });
       return {

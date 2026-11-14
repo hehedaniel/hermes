@@ -347,8 +347,15 @@ function BloqueView({ bloque, nocturno }: { bloque: Bloque; nocturno: boolean })
       {abierto ? (
         <View style={[styles.bloqueCuerpo, nocturno && styles.nocturnoBloqueCuerpo]}>
           {bloque.modulos.length ? (
-            bloque.modulos.map((m) => (
-              <ModuloView key={m.cmid} modulo={m} nocturno={nocturno} />
+            bloque.modulos.map((m, i) => (
+              <View key={m.cmid}>
+                {m.grupo && m.grupo !== bloque.modulos[i - 1]?.grupo ? (
+                  <ThemedText type="label" themeColor="ink3" style={styles.grupoTitulo}>
+                    {m.grupo}
+                  </ThemedText>
+                ) : null}
+                <ModuloView modulo={m} nocturno={nocturno} />
+              </View>
             ))
           ) : (
             <ThemedText type="small" themeColor="ink3" style={styles.bloqueVacio}>
@@ -504,6 +511,7 @@ const styles = StyleSheet.create({
   },
   bloqueCuerpo: { paddingLeft: 32, paddingBottom: Spacing.two },
   bloqueVacio: { paddingVertical: 12 },
+  grupoTitulo: { paddingTop: Spacing.three, paddingBottom: 4 },
   modulo: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   nocturnoModulo: { borderBottomWidth: 1 },
   nocturnoModuloFila: { paddingHorizontal: 8 },

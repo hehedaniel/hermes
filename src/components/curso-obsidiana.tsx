@@ -493,7 +493,25 @@ function BloqueFila({
             </T>
           ) : null}
           {n ? (
-            bloque.modulos.map((m) => <ModuloFila key={m.cmid} modulo={m} entregas={entregas} />)
+            bloque.modulos.map((m, i) => (
+              <View key={m.cmid} style={{ gap: 10 }}>
+                {m.grupo && m.grupo !== bloque.modulos[i - 1]?.grupo ? (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 10,
+                      paddingTop: i === 0 ? 0 : 14,
+                    }}>
+                    <Etiqueta s={10} ls={0.14} w={500} c="#8E8E9C">
+                      {m.grupo}
+                    </Etiqueta>
+                    <View style={{ flex: 1, height: 1, backgroundColor: '#1B1B22' }} />
+                  </View>
+                ) : null}
+                <ModuloFila modulo={m} entregas={entregas} />
+              </View>
+            ))
           ) : bloque.descripcion ? null : (
             <T s={12} c="#6B6B77">
               Este apartado no tiene nada todavía.
