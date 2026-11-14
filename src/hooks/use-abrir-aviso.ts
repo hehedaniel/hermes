@@ -1,22 +1,24 @@
 import { router } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
+import { rutaDeAviso } from '@/lib/abrir-aviso';
 import { Notifications } from '@/lib/notif-nativo';
 
 // Sin el módulo nativo (cliente antiguo) no hay respuestas a notificaciones
 const useUltimaRespuesta = Notifications?.useLastNotificationResponse ?? (() => null);
 
-/** Al tocar una notificación, abre su pantalla (la entrega o Novedades). */
-export function useAbrirAviso() {
+// Fuera del componente: si la raíz se vuelve a montar, un aviso ya abierto no se abre otra vez
+const abiertas = new Set<string>();
+
+/**
+ * Al tocar una notificación, abre su pantalla (la entrega o Novedades).
+ * `listo`: la navegación ya está montada (fuentes y tema cargados). Hasta entonces se espera.
+ */
+export function useAbrirAviso(listo: boolean) {
   const respuesta = useUltimaRespuesta();
-  const abierta = useRef<string | null>(null);
   useEffect(() => {
-    if (!respuesta) return;
-    const id = respuesta.notification.request.identifier;
-    const ruta = respuesta.notification.request.content.data?.ruta;
-    if (abierta.current === id || typeof ruta !== 'string') return;
-    abierta.current = id;
+    const ruta = rutaDeAviso(respuesta, listo, abiertas);
     // Las pestañas quedan debajo (anchor en _layout), así que se puede volver atrás
-    router.push(ruta as never);
-  }, [respuesta]);
+    if (ruta) router.push(ruta as never);
+  }, [respuesta, listo]);
 }
