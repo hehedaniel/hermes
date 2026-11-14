@@ -9,6 +9,14 @@ export type NovedadVersion = { version: string; titulo: string; puntos: string[]
 
 export const NOVEDADES_APP: NovedadVersion[] = [
   {
+    version: '2.7.1',
+    titulo: 'Unidades más ordenadas',
+    puntos: [
+      'Dentro de cada unidad se ven los subapartados del profesor: ejercicios, prácticas evaluables, contenido adicional…',
+      'Tocar un aviso con la app cerrada ya no cierra la app con un error.',
+    ],
+  },
+  {
     version: '2.7.0',
     titulo: 'Cambia o borra tus entregas',
     puntos: [

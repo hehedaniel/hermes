@@ -6,6 +6,11 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.7.1] - 2026-11-14
+
+### Añadido
+- **Subapartados dentro de cada unidad.** Los títulos que pone el profesor en Moodle («Ejercicios y Ejemplos de Python y R», «Prácticas Evaluables», «Contenido adicional»…) ahora se ven como encabezados dentro de la unidad, en lugar de una lista plana.
+
 ### Arreglado
 - Tocar una notificación con la app cerrada ya no la cierra con un error («Maximum update depth exceeded»): Hermes espera a estar cargado y abre la pantalla del aviso una sola vez.
 
