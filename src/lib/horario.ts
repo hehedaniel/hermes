@@ -101,12 +101,13 @@ export let INICIO_CURSO = '2026-09-28';
 export let FIN_CURSO = '2027-06-22';
 
 /** Días sin clase (fechas "YYYY-MM-DD", ambos extremos incluidos). */
-export type TipoSinClase = 'festivo' | 'vacaciones' | 'formacion' | 'excursion' | 'otro';
+export type TipoSinClase = 'festivo' | 'vacaciones' | 'formacion' | 'excursion' | 'huelga' | 'otro';
 export const TIPOS_SIN_CLASE: Record<TipoSinClase, string> = {
   festivo: 'Festivo',
   vacaciones: 'Vacaciones',
   formacion: 'Formación',
   excursion: 'Excursión',
+  huelga: 'Huelga',
   otro: 'Sin clase',
 };
 /** Un examen (u otra fecha señalada) de un módulo: sale en el calendario y no cambia las clases. */

@@ -124,8 +124,10 @@ test('el calendario no retrocede más allá del mes en que empieza el curso', ()
 test('los días sin clase tienen tipo: formación, excursión…, y por defecto festivo o vacaciones', () => {
   const c = horarioIncluido();
   c.sinClase.push({ desde: '2026-11-17', motivo: 'Visita a una empresa', tipo: 'excursion' });
+  c.sinClase.push({ desde: '2026-11-11', motivo: 'Huelga general', tipo: 'huelga' });
   assert.equal(aplicarHorario(c), null);
   assert.equal(tipoSinClase(dia(2026, 11, 17)), 'excursion');
+  assert.equal(tipoSinClase(dia(2026, 11, 11)), 'huelga');
   assert.equal(tipoSinClase(dia(2026, 10, 29)), 'formacion'); // el de public/horario.json
   assert.equal(tipoSinClase(dia(2026, 12, 8)), 'festivo');
   assert.equal(tipoSinClase(dia(2026, 12, 28)), 'vacaciones');

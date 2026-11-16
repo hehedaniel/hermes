@@ -22,7 +22,7 @@ Módulos: `MIA`, `SAA`, `BDA`, `PIA`, `SBD`. Fechas siempre `AAAA-MM-DD`, horas 
 ### Un día sin clase para todos (festivo, formación, excursión…)
 
 En `sinClase` (con `hasta` para varios días seguidos). `tipo` es opcional y decide cómo se ve en el calendario:
-`festivo`, `vacaciones`, `formacion`, `excursion` u `otro` («Sin clase»). Si no lo pones, es «Vacaciones» cuando el
+`festivo`, `vacaciones`, `formacion`, `excursion`, `huelga` u `otro` («Sin clase»). Si no lo pones, es «Vacaciones» cuando el
 motivo lo dice y «Festivo» en el resto.
 Si ese día hay un evento, añade `inicio`, `fin`, `descripcion` y `enlace` (todos opcionales): salen en una tarjeta al abrir el día.
 
