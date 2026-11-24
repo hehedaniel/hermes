@@ -6,6 +6,14 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.8.1] - 2026-11-24
+
+### Cambiado
+- **Las presentaciones salen con el color de su asignatura** (antes eran violeta).
+
+### Arreglado
+- **Una presentación solo cuenta los días en que hay clase de ese módulo.** Antes salía en todos los días de la ventana, también cuando esa asignatura no tenía clase.
+
 ## [2.8.0] - 2026-11-24
 
 ### Añadido

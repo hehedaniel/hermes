@@ -542,14 +542,20 @@ export function eventoSinClase(d: Date): DiaSinClase | null {
 export const examenesDelDia = (fecha: string): Examen[] =>
   EXAMENES.filter((x) => x.fecha === fecha);
 
-/** Las presentaciones que se pueden hacer un día (fecha «YYYY-MM-DD»): lunes a viernes dentro de su ventana. */
+/**
+ * Las presentaciones de un día (fecha «YYYY-MM-DD»): solo dentro de su ventana y solo si ese día
+ * hay clase de ese módulo (con los cambios y los días sin clase ya aplicados).
+ */
 export const presentacionesDelDia = (fecha: string): Presentacion[] => {
   const [y, m, d] = fecha.split('-').map(Number);
-  const dow = new Date(y, m - 1, d).getDay();
-  if (dow === 0 || dow === 6) return [];
-  return PRESENTACIONES.filter(
+  const dia = new Date(y, m - 1, d, 12);
+  const candidatas = PRESENTACIONES.filter(
     (x) => fecha >= x.desde && fecha <= (x.hasta ?? x.desde) && !x.sin?.includes(fecha),
   );
+  if (!candidatas.length) return [];
+  const h = horarioDelDia(dia);
+  if (h.tipo !== 'clases') return [];
+  return candidatas.filter((x) => h.clases.some((c) => c.modulo === x.modulo));
 };
 
 /** Qué tipo de día sin clase es (por defecto, vacaciones si el motivo lo dice y festivo si no). */

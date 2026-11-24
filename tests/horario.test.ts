@@ -46,22 +46,40 @@ test('moduloDe reconoce cursos de Moodle y eventos de Google', () => {
   assert.equal(moduloDe('Punto de encuentro del I.E.S. La Marisma'), null);
 });
 
-test('presentaciones: ventana de días de clase, sin fines de semana ni días excluidos', () => {
+test('presentaciones: solo los días de la ventana en que hay clase de ese módulo', () => {
   const base = h.horarioIncluido();
   const cfg = {
     ...base,
     presentaciones: [
-      { desde: '2026-11-19', hasta: '2026-11-27', modulo: 'SBD', titulo: 'Business Case', sin: ['2026-11-26'] },
+      {
+        desde: '2026-11-19',
+        hasta: '2026-11-27',
+        modulo: 'SBD',
+        titulo: 'Business Case',
+        sin: ['2026-11-26'],
+      },
     ],
   };
   assert.equal(h.aplicarHorario(cfg), null);
-  assert.equal(h.presentacionesDelDia('2026-11-19').length, 1);
+  let con = 0;
+  for (let d = 16; d <= 30; d++) {
+    const k = `2026-11-${d}`;
+    const dd = new Date(2026, 10, d, 12);
+    const dia = h.horarioDelDia(dd);
+    const hayClase = dia.tipo === 'clases' && dia.clases.some((c) => c.modulo === 'SBD');
+    const dentro = k >= '2026-11-19' && k <= '2026-11-27' && k !== '2026-11-26';
+    const esperado = hayClase && dentro;
+    assert.equal(h.presentacionesDelDia(k).length > 0, esperado, k);
+    if (esperado) con++;
+  }
+  assert.ok(con > 0);
   assert.equal(h.presentacionesDelDia('2026-11-21').length, 0); // sábado
   assert.equal(h.presentacionesDelDia('2026-11-26').length, 0); // formación
-  assert.equal(h.presentacionesDelDia('2026-11-27').length, 1);
-  assert.equal(h.presentacionesDelDia('2026-11-30').length, 0);
   assert.notEqual(
-    h.aplicarHorario({ ...base, presentaciones: [{ desde: '2026-11-19', hasta: '2026-11-01', modulo: 'SBD', titulo: 'x' }] }),
+    h.aplicarHorario({
+      ...base,
+      presentaciones: [{ desde: '2026-11-19', hasta: '2026-11-01', modulo: 'SBD', titulo: 'x' }],
+    }),
     null,
   );
   h.aplicarHorario(base);
