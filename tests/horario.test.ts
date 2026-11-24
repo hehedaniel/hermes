@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+import * as h from '@/lib/horario';
 import { horarioDelDia, moduloDe, motivoSinClase } from '@/lib/horario';
 
 const dia = (y: number, m: number, d: number) => new Date(y, m - 1, d, 12);
@@ -43,4 +44,25 @@ test('moduloDe reconoce cursos de Moodle y eventos de Google', () => {
   assert.equal(moduloDe('S A A (Sistemas de Aprendizaje Automático)'), 'SAA');
   assert.equal(moduloDe('Clase: Programación de Inteligencia Artificial'), 'PIA');
   assert.equal(moduloDe('Punto de encuentro del I.E.S. La Marisma'), null);
+});
+
+test('presentaciones: ventana de días de clase, sin fines de semana ni días excluidos', () => {
+  const base = h.horarioIncluido();
+  const cfg = {
+    ...base,
+    presentaciones: [
+      { desde: '2026-11-19', hasta: '2026-11-27', modulo: 'SBD', titulo: 'Business Case', sin: ['2026-11-26'] },
+    ],
+  };
+  assert.equal(h.aplicarHorario(cfg), null);
+  assert.equal(h.presentacionesDelDia('2026-11-19').length, 1);
+  assert.equal(h.presentacionesDelDia('2026-11-21').length, 0); // sábado
+  assert.equal(h.presentacionesDelDia('2026-11-26').length, 0); // formación
+  assert.equal(h.presentacionesDelDia('2026-11-27').length, 1);
+  assert.equal(h.presentacionesDelDia('2026-11-30').length, 0);
+  assert.notEqual(
+    h.aplicarHorario({ ...base, presentaciones: [{ desde: '2026-11-19', hasta: '2026-11-01', modulo: 'SBD', titulo: 'x' }] }),
+    null,
+  );
+  h.aplicarHorario(base);
 });

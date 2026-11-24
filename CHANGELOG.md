@@ -6,6 +6,11 @@ Las notas de cada release del APK salen de aquí.
 
 ## [Sin publicar]
 
+## [2.8.0] - 2026-11-24
+
+### Añadido
+- **Presentaciones y defensas en el calendario.** Las presentaciones de prácticas y proyectos salen en violeta, con borde discontinuo y el rótulo «Present.», distintas de los exámenes en rojo. Cubren una ventana de días de clase (sin fines de semana ni los días que no toquen, como una formación). Ya están la del Business Case de Sistemas de Big Data (19–27 nov) y la de la práctica I de Programación (2–11 dic).
+
 ## [2.7.1] - 2026-11-14
 
 ### Añadido

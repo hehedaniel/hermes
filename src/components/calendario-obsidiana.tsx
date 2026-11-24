@@ -23,6 +23,7 @@ import {
   claveDia,
   eventoSinClase,
   examenesDelDia,
+  presentacionesDelDia,
   horarioDelDia,
   limitarMes,
   motivoSinClase,
@@ -49,6 +50,8 @@ const deClave = (k: string) => {
 /** Semanas (lunes a domingo) que cubren el mes. */
 /** Violeta: no se confunde con el rojo de los festivos, el ámbar de formación ni el lima de hoy. */
 const COLOR_EXAMEN = '#FF1744';
+/** Presentaciones/defensas: violeta, con borde discontinuo para distinguirlas de un examen. */
+const COLOR_PRESENTACION = '#A78BFA';
 
 function semanasDe(mes: Date) {
   const primero = new Date(mes.getFullYear(), mes.getMonth(), 1);
@@ -255,6 +258,7 @@ export function CalendarioObsidiana() {
                         ? '#E0A93C'
                         : '#E0564C';
                     const examenes = examenesDelDia(k);
+                    const presentaciones = presentacionesDelDia(k);
                     const entregas = porDia.get(k) ?? [];
                     const eventos = (googlePorDia.get(k) ?? []).length;
                     const colorNum = fuera ? ZINC.z600 : finde ? ZINC.z400 : ZINC.z300;
@@ -277,7 +281,9 @@ export function CalendarioObsidiana() {
                             ? '#1C1D22'
                             : examenes.length
                               ? 'rgba(255,23,68,0.13)'
-                              : finde
+                              : presentaciones.length
+                                ? 'rgba(167,139,250,0.10)'
+                                : finde
                                 ? 'rgba(9,9,11,0.5)'
                                 : 'transparent',
                           opacity: fuera ? 0.6 : 1,
@@ -330,12 +336,20 @@ export function CalendarioObsidiana() {
                             ))}
                             {eventos ? <Punto color={ZINC.z500} size={5} /> : null}
                             {examenes.length ? <Punto color={COLOR_EXAMEN} size={7} /> : null}
+                            {presentaciones.length ? (
+                              <Punto color={COLOR_PRESENTACION} size={6} />
+                            ) : null}
                           </View>
                         ) : (
                           <View style={{ gap: 2 }}>
                             {examenes.length ? (
                               <T k="mono" up w={700} s={9.5} ls={0.05} c={COLOR_EXAMEN}>
                                 Examen
+                              </T>
+                            ) : null}
+                            {presentaciones.length ? (
+                              <T k="mono" up w={700} s={9.5} ls={0.05} c={COLOR_PRESENTACION}>
+                                Present.
                               </T>
                             ) : null}
                             {festivo ? (
@@ -418,6 +432,7 @@ function PanelDia({
   useHorario();
   const horario = horarioDelDia(dia);
   const examenes = examenesDelDia(claveDia(dia));
+  const presentaciones = presentacionesDelDia(claveDia(dia));
   const ev = eventoSinClase(dia);
   const agenda = [...eventos].sort(
     (a, b) => Number(b.todoElDia) - Number(a.todoElDia) || a.inicio - b.inicio,
@@ -467,6 +482,34 @@ function PanelDia({
             }}>
             <T k="mono" up w={700} s={10} ls={0.2} c={COLOR_EXAMEN}>
               Examen{x.hora ? ` · ${x.hora}` : ''}
+            </T>
+            <T w={700} s={15} lh={20} c={ZINC.z100}>
+              {x.titulo}
+            </T>
+            <T k="mono" up s={9.5} ls={0.05} c={ZINC.z300}>
+              {MODULOS[x.modulo].nombre}
+            </T>
+          </View>
+        ))}
+
+        {presentaciones.map((x) => (
+          <View
+            key={x.titulo}
+            style={{
+              marginBottom: 14,
+              borderRadius: 12,
+              borderWidth: 1.5,
+              borderStyle: 'dashed',
+              borderColor: COLOR_PRESENTACION,
+              backgroundColor: 'rgba(167,139,250,0.10)',
+              padding: 14,
+              gap: 4,
+            }}>
+            <T k="mono" up w={700} s={10} ls={0.2} c={COLOR_PRESENTACION}>
+              Presentación
+              {x.hasta && x.hasta !== x.desde
+                ? ` · del ${x.desde.split('-').reverse().slice(0, 2).join('/')} al ${x.hasta.split('-').reverse().slice(0, 2).join('/')}`
+                : ''}
             </T>
             <T w={700} s={15} lh={20} c={ZINC.z100}>
               {x.titulo}

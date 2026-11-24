@@ -192,5 +192,22 @@
       "modulo": "PIA",
       "titulo": "Examen de Programación"
     }
+  ],
+  "presentaciones": [
+    {
+      "desde": "2026-11-19",
+      "hasta": "2026-11-27",
+      "modulo": "SBD",
+      "titulo": "Presentación de la práctica Business Case",
+      "sin": [
+        "2026-11-26"
+      ]
+    },
+    {
+      "desde": "2026-12-02",
+      "hasta": "2026-12-11",
+      "modulo": "PIA",
+      "titulo": "Presentación práctica I EDA 2026"
+    }
   ]
 }

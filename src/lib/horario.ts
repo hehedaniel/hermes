@@ -113,6 +113,21 @@ export const TIPOS_SIN_CLASE: Record<TipoSinClase, string> = {
 /** Un examen (u otra fecha señalada) de un módulo: sale en el calendario y no cambia las clases. */
 export type Examen = { fecha: string; modulo: ModuloId; titulo: string; hora?: string };
 
+/**
+ * Una presentación o defensa de un trabajo/práctica: no es un día fijo, sino una ventana
+ * (entre `desde` y `hasta`, solo días de clase) en la que se va defendiendo. `sin` son los días
+ * de esa ventana en los que no toca (p. ej. una formación).
+ */
+export type Presentacion = {
+  desde: string;
+  hasta?: string;
+  modulo: ModuloId;
+  titulo: string;
+  sin?: string[];
+};
+
+export const PRESENTACIONES: Presentacion[] = [];
+
 export const EXAMENES: Examen[] = [
   { fecha: '2026-11-12', modulo: 'PIA', titulo: 'Examen de Programación' },
 ];
@@ -222,6 +237,7 @@ export type ConfigHorario = {
   sinClaseModulo: { fecha: string; modulo: ModuloId; motivo: string }[];
   cambios: CambioDia[];
   examenes?: Examen[];
+  presentaciones?: Presentacion[];
 };
 
 const FECHA = /^\d{4}-\d{2}-\d{2}$/;
@@ -345,6 +361,23 @@ export function validarHorario(d: unknown): string | null {
         return `examenes (${x.fecha}): hora con formato HH:MM`;
     }
   }
+  if (d.presentaciones !== undefined) {
+    if (!Array.isArray(d.presentaciones)) return 'presentaciones: tiene que ser una lista';
+    for (const x of d.presentaciones) {
+      if (
+        !esObjeto(x) ||
+        !esFecha(x.desde) ||
+        !esModulo(x.modulo, ids) ||
+        typeof x.titulo !== 'string' ||
+        !x.titulo
+      )
+        return 'presentaciones: cada una necesita desde, modulo y titulo';
+      if (x.hasta !== undefined && (!esFecha(x.hasta) || String(x.hasta) < String(x.desde)))
+        return `presentaciones (${x.desde}): hasta tiene que ser una fecha igual o posterior`;
+      if (x.sin !== undefined && (!Array.isArray(x.sin) || !x.sin.every(esFecha)))
+        return `presentaciones (${x.desde}): sin tiene que ser una lista de fechas`;
+    }
+  }
   if (!Array.isArray(d.cambios)) return 'cambios: falta';
   for (const x of d.cambios) {
     if (!esObjeto(x) || !esFecha(x.fecha)) return 'cambios: cada uno necesita fecha';
@@ -384,6 +417,7 @@ const HORARIO_INCLUIDO: ConfigHorario = {
   sinClaseModulo: clonar(SIN_CLASE_MODULO),
   cambios: [],
   examenes: clonar(EXAMENES),
+  presentaciones: clonar(PRESENTACIONES),
 };
 
 /** El horario que lleva la app de serie (el mismo que public/horario.json al publicarlo). */
@@ -414,6 +448,7 @@ export function aplicarHorario(d: unknown): string | null {
   reemplazar(SIN_CLASE_MODULO, c.sinClaseModulo);
   reemplazar(CAMBIOS, c.cambios);
   reemplazar(EXAMENES, c.examenes ?? []);
+  reemplazar(PRESENTACIONES, c.presentaciones ?? []);
   c.trimestres.forEach((t, i) => {
     TRIMESTRES[i].desde = t.desde;
     TRIMESTRES[i].hasta = t.hasta;
@@ -448,6 +483,7 @@ export function aplicarSinGrupo() {
   reemplazar(SIN_CLASE_MODULO, []);
   reemplazar(CAMBIOS, []);
   reemplazar(EXAMENES, []);
+  reemplazar(PRESENTACIONES, []);
   notificarHorario();
 }
 
@@ -505,6 +541,16 @@ export function eventoSinClase(d: Date): DiaSinClase | null {
 /** Los exámenes de un día (fecha «YYYY-MM-DD»). */
 export const examenesDelDia = (fecha: string): Examen[] =>
   EXAMENES.filter((x) => x.fecha === fecha);
+
+/** Las presentaciones que se pueden hacer un día (fecha «YYYY-MM-DD»): lunes a viernes dentro de su ventana. */
+export const presentacionesDelDia = (fecha: string): Presentacion[] => {
+  const [y, m, d] = fecha.split('-').map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  if (dow === 0 || dow === 6) return [];
+  return PRESENTACIONES.filter(
+    (x) => fecha >= x.desde && fecha <= (x.hasta ?? x.desde) && !x.sin?.includes(fecha),
+  );
+};
 
 /** Qué tipo de día sin clase es (por defecto, vacaciones si el motivo lo dice y festivo si no). */
 export function tipoSinClase(d: Date): TipoSinClase | null {

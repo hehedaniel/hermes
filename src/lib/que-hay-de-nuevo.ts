@@ -9,6 +9,14 @@ export type NovedadVersion = { version: string; titulo: string; puntos: string[]
 
 export const NOVEDADES_APP: NovedadVersion[] = [
   {
+    version: '2.8.0',
+    titulo: 'Presentaciones en el calendario',
+    puntos: [
+      'Las presentaciones y defensas de prácticas salen en el calendario en violeta, distintas de los exámenes.',
+      'Cubren una ventana de días de clase, sin fines de semana ni días sin clase.',
+    ],
+  },
+  {
     version: '2.7.1',
     titulo: 'Unidades más ordenadas',
     puntos: [
